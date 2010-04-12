@@ -1,0 +1,9 @@
+<stack>
+  <description brief="au-automow">au_automow_common</description>
+  <author>Maintained by William Woodall</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://redmine.ausparc.com/wiki/automow-2010/Au_automow_common</url>
+  <depend stack="ros" />
+
+</stack>
