@@ -1,0 +1,17 @@
+<package>
+  <description brief="ax2550">
+
+     Controls the ax2550 motor controller.
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ax2550</url>
+  <depend package="rospy"/>
+  <depend package="roslib"/>
+  <depend package="std_msgs"/>
+
+</package>
+
+
