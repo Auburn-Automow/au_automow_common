@@ -1,19 +1,25 @@
 #!/usr/bin/env python
+
 import roslib; roslib.load_manifest('ax2550')
 import rospy
 from std_msgs.msg import String
+from ax2550.srv import Move
 
-import sys
-
-print sys.path
+def testMove():
+    """Tests the Move srv provided by ax2550_driver.py"""
+    rospy.wait_for_service('move')
+    try:
+        move = rospy.ServiceProxy('move', Move)
+        resp1 = move(1, 0)
+        return resp1.Result
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
 
 def talker():
     pub = rospy.Publisher('motor_control', String)
     rospy.init_node('ax2550_test')
     while not rospy.is_shutdown():
-        str = "hello world %s"%rospy.get_time()
-        rospy.loginfo(str)
-        pub.publish(String(str))
+        testMove()
         rospy.sleep(1.0)
 
 if __name__ == '__main__':
