@@ -1,4 +1,4 @@
-#!/usr/bin/env python -OO
+#!/usr/bin/env python
 # encoding: utf-8
 
 """
@@ -38,7 +38,7 @@ class AX2550(object):
     def __init__(self, serial_port=None):
         """Function called after object instantiation"""
         # Get the serial port name
-        self.serial_port = serial_port or '/dev/ttyUSB0'
+        self.serial_port = serial_port or '/dev/ttyUSB1'
         
         # Try to open and configure the serial port
         self.serial = Serial(self.serial_port)
@@ -87,7 +87,6 @@ class AX2550(object):
     def handleMove(self, data):
         """Handles the Move srv requests"""
         self.move(data.speed, data.direction)
-        rospy.logdebug("Move srv command received: %s speed and %s direction" % (data.speed, data.direction))
         return 0
         
     def controlCommandReceived(self, msg):

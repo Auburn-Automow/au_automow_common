@@ -10,8 +10,8 @@ def testMove():
     rospy.wait_for_service('move')
     try:
         move = rospy.ServiceProxy('move', Move)
-        resp1 = move(1, 0)
-        return resp1.Result
+        resp1 = move(0, 1)
+        return resp1.result
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
