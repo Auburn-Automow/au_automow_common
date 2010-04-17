@@ -21,7 +21,6 @@ from joy.msg import Joy
 
 def move(speed, direction):
     """Calls the move srv on ax2550_driver.py"""
-#    rospy.wait_for_service('move')
     try:
         move = rospy.ServiceProxy('move', Move)
         resp1 = move(speed, -1*direction)
@@ -36,7 +35,7 @@ def joystickCallback(data):
 def joystickListener():
     """Listens for Joystick signals"""
     rospy.init_node('ax2550_teleop', anonymous=True)
-    rospy.Subscriber("joy", Joy, joystickCallback)
+    s = rospy.Subscriber("joy", Joy, joystickCallback, queue_size=10)
     rospy.spin()
 
 

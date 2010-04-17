@@ -12,6 +12,7 @@ __copyright__ = "Copyright (c) 2010 John Harrison, William Woodall"
 
 ###  Imports  ###
 from threading import Thread, Event, Lock
+import sys
 import inspect
 import rospy
 from logerror import logError
@@ -94,6 +95,8 @@ serial_listener.listen()
         self._listening = False
         self._listening_lock = Lock()
         self._listening_event = Event()
+        self.latest_unhandled_message = None
+        self.received_unhandled_message = Event()
         self.handlers = []
         self.delimiters = delimiters
         self._start()
@@ -189,7 +192,11 @@ serial_listener.listen()
                         break
                     # Read until you get a delimiter
                     while token not in self.delimiters:
-                        token = serial.read()
+                        if serial.isOpen():
+                            token = serial.read()
+                        else:
+                            print "wtf, seriously.... who closed the serial port???"
+                            return
                         message += token
                         self._listening_lock.acquire()
                         temp_listening = self._listening
@@ -206,16 +213,36 @@ serial_listener.listen()
                             if ((inspect.isfunction(comparator) or inspect.ismethod(comparator)) and comparator(message)) or \
                                                                             (isinstance(comparator, bool) and comparator):
                                 callback_event = callback(message)
+                            else:
+                                self.unhandledMessage(message)
                         except Exception as err:
                             logError(sys.exc_info(), rospy.logerr, 'Exception handling serial message:')
             
                 # Close everything after exiting the loop
                 serial.close()
+                self.latest_unhandled_message = None
+                self.received_unhandled_message.set()
                 # Wait for either __del__ or listen to be called again
                 self._listening_event.wait()
                 self._listening_event.clear()
         except Exception as err:
             logError(sys.exc_info(), rospy.logerr, 'Exception in Serial Listener:')
+    
+    def unhandledMessage(self, msg):
+        """Called when a message is unhandled"""
+        self.latest_unhandled_message = msg
+        self.received_unhandled_message.set()
+        
+    def grabNextUnhandledMessage(self, timeout=1):
+        """Blocks until an unhadled exception occurs, then returns it"""
+        if self._listening and self._running:
+            self.received_unhandled_message.wait(timeout)
+            if self.received_unhandled_message.isSet():
+                self.received_unhandled_message.clear()
+                result = self.latest_unhandled_message
+            else:
+                result = None
+            return result
     
     def addHandler(self, comparator, callback):
         """Adds a handler to the SerialListener

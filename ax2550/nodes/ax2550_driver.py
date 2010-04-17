@@ -18,11 +18,13 @@ import rospy
 
 # ROS msg and srv imports
 from std_msgs.msg import String
+from ax2550.msg import Encoder
 from ax2550.srv import Move
 
 # Python Libraries
 from threading import Timer, Lock
 from time import sleep
+import sys
 
 # pySerial
 from serial import Serial
@@ -50,6 +52,9 @@ class AX2550(object):
         self.serial.close()
         self.serial.open()
         self.keep_alive_timer = None
+        self.encoder_timer = None
+        self.encoder_rate = 0.1
+        self.encoder_count = 0
         
         # Setup the lock to synchronize the setting of motor speeds
         self.speed_lock = Lock()
@@ -72,6 +77,9 @@ class AX2550(object):
         # Subscribe to the /motor_control topic to listen for motor commands
         rospy.Subscriber('motor_control', String, self.controlCommandReceived)
         
+        # Setup Publisher for publishing encoder data to the /motor_control_encoders topic
+        self.encoders_pub = rospy.Publisher('motor_control_encoders', Encoder)
+        
         # Setup Publisher for publishing status related data to the /motor_control_status topic
         self.status_pub = rospy.Publisher('motor_control_status', String)
         
@@ -80,6 +88,9 @@ class AX2550(object):
         
         # Register shutdown function
         rospy.on_shutdown(self.shutdown)
+        
+        # Start polling the encoders
+        self.pollEncoders()
         
         # Handle ros srv requests
         rospy.spin()
@@ -167,6 +178,83 @@ class AX2550(object):
     def disableKeepAlive(self):
         """Stops any running keep alive mechanism"""
         self.stop()
+    
+    def decodeEncoderValue(self, data):
+        """Decodes the Encoder Value"""
+        # Determine if the value is negative or positive
+        if data[0] in "01234567": # Positive
+            fill_byte = "0"
+        else: # Negative
+            fill_byte = "F"
+        # Fill the rest of the data with the filler byte
+        while len(data) != 8:
+            data = fill_byte+data
+        # Now that the data has 8 Hex characters translate to decimal
+        data = int(data, 16)
+        if fill_byte == "F": # If negative subtract 2**32
+            data -= 4294967296
+        # Return the processed data
+        return data
+    
+    def getHexData(self, msg, timeout=0.05):
+        """Given a message to send the motor controller it will wait for the next Hex response"""
+        if self.serial.isOpen():
+            self.serial.write(msg) # Send the given request
+            message = ""
+            while True: # Data not received
+                if not hasattr(self, 'serial_listener'): # Incase we are here during a ctrl-C
+                    break
+                message = self.serial_listener.grabNextUnhandledMessage(timeout) # Get next unhandled Message
+                if message == None: # If None, timeout occured, drop data read
+                    break
+                if message[0] in 'ABCDEF0123456789': # If if starts with Hex data keep it
+                    message = message.strip()
+                    break
+            return message
+        else:
+            return None
+    
+    def pollEncoders(self):
+        """Polls the encoder on a period"""
+        # Kick off the next polling iteration timer
+        if self.running:
+            self.encoder_timer = Timer(self.encoder_rate, self.pollEncoders)
+            self.encoder_timer.start()
+        else:
+            return
+        encoder_1 = None
+        encoder_2 = None
+        try:
+            # Lock the speed lock
+            self.speed_lock.acquire()
+            # Lock the serial lock
+            self.serial_lock.acquire()
+            # Query encoder 1
+            encoder_1 = self.getHexData("?Q4\r")
+            # Query encoder 2
+            encoder_2 = self.getHexData("?Q5\r")
+            # Release the serial lock
+            self.serial_lock.release()
+            # Release the speed lock
+            self.speed_lock.release()
+            # Convert the encoder data to ints
+            if encoder_1 != None:
+                encoder_1 = self.decodeEncoderValue(encoder_1)
+            else:
+                encoder_1 = 0
+            if encoder_2 != None:
+                encoder_2 = self.decodeEncoderValue(encoder_2)
+            else:
+                encoder_2 = 0
+            # Publish the encoder data
+            message = Encoder(encoder_1, encoder_2)
+            try:
+                self.encoders_pub.publish(message)
+            except:
+                pass
+        except Exception as err:
+            logError(sys.exc_info(), rospy.logerr, "Exception while Querying the Encoders: ")
+            self.encoder_timer.cancel()
     
     def keepAlive(self):
         """This functions sends the latest motor speed to prevent the dead man 
