@@ -249,7 +249,10 @@ class AX2550(object):
             else:
                 encoder_2 = 0
             # Publish the encoder data
-            message = Encoder(Time.from_seconds(time.time()), encoder_1, encoder_2)
+            header = roslib.msg._Header.Header()
+            header.stamp = Time.from_seconds(time.time())
+            header.frame_id = "0"
+            message = Encoder(header=header, left=encoder_1, right=encoder_2)
             try:
                 self.encoders_pub.publish(message)
             except:
