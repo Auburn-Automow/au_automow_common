@@ -1,0 +1,18 @@
+<package>
+  <description brief="ax2550odom">
+
+     ax2550odom
+
+  </description>
+  <author>Michael Carroll</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ax2550odom</url>
+  <depend package="ax2550"/>
+  <depend package="geometry_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="rospy"/>
+
+</package>
+
+
