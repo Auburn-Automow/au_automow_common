@@ -15,6 +15,7 @@ __copyright__ = "Copyright (c) William Woodall"
 # ROS imports
 import roslib; roslib.load_manifest('ax2550')
 import rospy
+from rospy.rostime import Time
 
 # ROS msg and srv imports
 from std_msgs.msg import String
@@ -23,6 +24,7 @@ from ax2550.srv import Move
 
 # Python Libraries
 from threading import Timer, Lock
+import time
 from time import sleep
 import sys
 
@@ -53,7 +55,7 @@ class AX2550(object):
         self.serial.open()
         self.keep_alive_timer = None
         self.encoder_timer = None
-        self.encoder_rate = 0.1
+        self.encoder_rate = 0.05
         self.encoder_count = 0
         
         # Setup the lock to synchronize the setting of motor speeds
@@ -247,7 +249,7 @@ class AX2550(object):
             else:
                 encoder_2 = 0
             # Publish the encoder data
-            message = Encoder(encoder_1, encoder_2)
+            message = Encoder(Time.from_seconds(time.time()), encoder_1, encoder_2)
             try:
                 self.encoders_pub.publish(message)
             except:
