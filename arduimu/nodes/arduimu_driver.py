@@ -28,23 +28,17 @@ class ImuDriver(object):
         p \s+
         (?P<number>\d+)
         \s+
-        (?P<x>\d+) # x acceleration
+        (?P<x>[+\-]?\d+(?:\.\d+)?) # x acceleration
         \s+
-        (?P<y>\d+) # y acceleration
+        (?P<y>[+\-]?\d+(?:\.\d+)?) # y acceleration
         \s+
-        (?P<z>\d+) # z acceleration
+        (?P<z>[+\-]?\d+(?:\.\d+)?) # z acceleration
         \s+
         (?P<roll>[+\-]?\d+(?:\.\d+)?)  # roll
         \s+
-        (?P<roll_atd>\d+) # roll analog to digital value
+        (?P<pitch>[+\-]?\d+(?:\.\d+)?)  # pitch 
         \s+
-        (?P<pitch>[+\-]?\d+(?:\.\d+)?)  # roll
-        \s+
-        (?P<pitch_atd>\d+) # roll analog to digital value
-        \s+
-        (?P<yaw>[+\-]?\d+(?:\.\d+)?)  # roll
-        \s+
-        (?P<yaw_atd>\d+) # roll analog to digital value
+        (?P<yaw>[+\-]?\d+(?:\.\d+)?)  # yaw
         \s+
         P''', re.X)
     self.ser.write('c')
@@ -55,7 +49,7 @@ class ImuDriver(object):
     self.mode = None
     rospy.loginfo("IMU Ready")
 
-  def set_mode(self, mode_id):
+  def setMode(self, mode_id):
     result = None
     if mode_id not in ['p', 'c', 'g']:
       raise Exception("Bad mode_id")
@@ -81,19 +75,19 @@ class ImuDriver(object):
     return result
 
   def broadcaster(self):
-    self.set_mode('p')
+    self.setMode('p')
     while not rospy.is_shutdown():
-      raw_msg = self.get_msg()
+      raw_msg = self.getMsg()
       msg = self.msg_scanner.match(raw_msg)
       if msg:
         print "got: ", msg
         rospy.loginfo('pitch' + msg.group('pitch'))
-        self.pub.publish(Imu(angular_velocity = [1, 2, 3]))
+        self.pub.publish(Imu(angular_velocity = [msg.group('roll'), msg.group('pitch'), msg.group('yaw')], acceleration=[msg.group('x'), msg.group('y'), msg.group('z')]))
         rospy.sleep(1.0/2.0)
       else:
         raise Exception("Bad message from the IMU: " + raw_msg)
 
-  def get_msg(self):
+  def getMsg(self):
     self.ser.flushOutput()
     if self.mode == 'p':
       return self.ser.readline()
