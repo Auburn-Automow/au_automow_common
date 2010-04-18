@@ -1,0 +1,15 @@
+<package>
+  <description brief="arduimu">
+
+     arduimu
+
+  </description>
+  <author>John Harrison</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/arduimu</url>
+  <depend package="rospy"/>
+  <depend package="sensor_msgs"/>
+</package>
+
+
