@@ -11,6 +11,8 @@
   <depend package="rospy"/>
   <depend package="roslib"/>
   <depend package="std_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="nav_msgs"/>
   <depend package="joy"/>
 
 </package>
