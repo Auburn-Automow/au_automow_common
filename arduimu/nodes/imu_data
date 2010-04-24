@@ -13,7 +13,8 @@ import roslib; roslib.load_manifest('arduimu')
 import rospy
 
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Quaternion
+import tf
 
 from hw_interface.arduimu_driver import ImuDriver, ImuBadMessage
 
@@ -29,11 +30,21 @@ def main():
   lin_covar = [ 0.00714232, 0, 0,
                 0, 0.00634921, 0,
                 0, 0, 0.0054584 ]
+  last_time = rospy.Time.now()
   while not rospy.is_shutdown():
     try: 
       msg = imu.getMsg()
+      new_time = rospy.Time.now()
+
+      time_diff = (new_time - last_time).to_sec()
+
+      change_roll = float(msg.group('roll')) * time_diff
+      change_pitch = float(msg.group('pitch')) * time_diff
+      change_yaw = float(msg.group('yaw')) * time_diff
+      orientation = tf.transformations.quaternion_from_euler(change_roll, change_pitch, change_yaw) 
+
       imu_msg = Imu(header = None,
-                    orientation = None,
+                    orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]),
                     orientation_covariance = orientation_covariance,
                     angular_velocity = 
                       Vector3(x=float(msg.group('roll')), 
@@ -47,6 +58,7 @@ def main():
                     linear_acceleration_covariance = lin_covar)
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
+      last_time = new_time
     except ImuBadMessage as e:
       rospy.logerr(e.msg)
 
