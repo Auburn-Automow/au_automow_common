@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+"""
+Drivers for ArduIMU
+
+Created by John Harrison on 2010-04-16.
+"""
+__author__ = "John Harrison, William Woodall"
+__copyright__ = "Copyright (c) John harrison, William Woodall"
+
+import roslib; roslib.load_manifest('arduimu')
+import rospy
+
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import Vector3
+
+from hw_interface.arduimu_driver import ImuDriver, ImuBadMessage
+
+def main():
+  rospy.init_node("ardimu_driver")
+  imu_data_topic = rospy.Publisher("imu_data", Imu)
+  rate = rospy.Rate(25)
+  imu = ImuDriver(logger = rospy)
+  imu.setMode('p')
+  while not rospy.is_shutdown():
+    try: 
+      msg = imu.getMsg()
+      imu_data_topic.publish(Imu(angular_velocity = 
+                                    Vector3(x=float(msg.group('roll')), 
+                                            y=float(msg.group('pitch')), 
+                                            z=float(msg.group('yaw'))), 
+                                 linear_acceleration =
+                                    Vector3(x=float(msg.group('x')), 
+                                            y=float(msg.group('y')), 
+                                            z=float(msg.group('z')))))
+      rate.sleep()
+    except ImuBadMessage as e:
+      rospy.logerr(e.msg)
+
+if __name__ == '__main__':
+  main()
