@@ -91,6 +91,17 @@ class ImuDriver(object):
     else:
       raise ImuBadMessage(raw_msg)
 
+  def getMsgProcessed(self):
+    msg = self.getMsg()
+    return { 
+        'ang_vel' : [float(msg.group('roll')),
+                     float(msg.group('pitch')),
+                     float(msg.group('yaw'))],
+        'lin_acc' : [float(msg.group('x')),
+                     float(msg.group('y')),
+                     float(msg.group('z'))]
+      }
+
   def getMsgRaw(self):
     if self.mode == 'p':
       return self.ser.readline()

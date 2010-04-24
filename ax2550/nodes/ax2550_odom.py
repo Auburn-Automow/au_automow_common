@@ -60,7 +60,7 @@ def encoderDataReceived(data):
     odom_broadcaster.sendTransform((x,y,0),
                      tf.transformations.quaternion_from_euler(0,0,theta),
                      rospy.Time.now(),
-                     "odometry",
+                     "base_link",
                      "world")
 
 def ax2550EncodersListener():

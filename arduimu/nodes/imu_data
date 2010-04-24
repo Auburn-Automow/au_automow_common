@@ -20,21 +20,28 @@ from hw_interface.arduimu_driver import ImuDriver, ImuBadMessage
 def main():
   rospy.init_node("ardimu_driver")
   imu_data_topic = rospy.Publisher("imu_data", Imu)
-  rate = rospy.Rate(25)
   imu = ImuDriver(logger = rospy)
   imu.setMode('p')
+  ang_covar = [ 2.08508876e-06, 0, 0,
+                0, 3.81202560e-07, 0,
+                0, 0, 8.58619000e-07]
+  lin_covar = [ 0.00714232, 0, 0,
+                0, 0.00634921, 0
+                0, 0, 0.0054584 ]
   while not rospy.is_shutdown():
     try: 
       msg = imu.getMsg()
-      imu_data_topic.publish(Imu(angular_velocity = 
-                                    Vector3(x=float(msg.group('roll')), 
-                                            y=float(msg.group('pitch')), 
-                                            z=float(msg.group('yaw'))), 
-                                 linear_acceleration =
-                                    Vector3(x=float(msg.group('x')), 
-                                            y=float(msg.group('y')), 
-                                            z=float(msg.group('z')))))
-      rate.sleep()
+      imu_msg = Imu(angular_velocity = 
+                      Vector3(x=float(msg.group('roll')), 
+                              y=float(msg.group('pitch')), 
+                              z=float(msg.group('yaw'))),
+                    angular_velocity_covariance = ang_covar,
+                    linear_acceleration =
+                      Vector3(x=float(msg.group('x')), 
+                              y=float(msg.group('y')), 
+                              z=float(msg.group('z'))))
+                    linear_acceleration_covariance = lin_covar
+      imu_data_topic.publish(imu_msg)
     except ImuBadMessage as e:
       rospy.logerr(e.msg)
 
