@@ -20,7 +20,7 @@ wheel_circum = math.pi * wheel_diameter
 encoder_resolution = 250*4 #motor controller reads * 4 (quadrature)
 prev_theta=0
 prev_x=0
-prev_y=0
+prev_y=0 
 
 def encoderDataReceived(data):
     """Called when encoder data is received"""
@@ -28,26 +28,34 @@ def encoderDataReceived(data):
     global odom_broadcaster
     global wheel_base_width, wheel_base_length, wheel_diameter, wheel_circum,encoder_resolution
     global prev_theta,prev_x,prev_y
-
     left = data.left * wheel_circum/encoder_resolution # left encoder ticks
     right = data.right * wheel_circum/encoder_resolution # right encoder ticks
     ### Do math here
+    if(right == left):
+        v = right
+        w = 0
+    else if(left == -right):
+        v = 0
+        w = 2/wheel_base_width * right
+    else:
+        w = right-left/wheel_base_width
+        v = 1/2 * (right+left)
     
-    sbar = (right+left)/2
-    theta = (right-left)/(2*wheel_base_width) + prev_theta
-    x = sbar * math.cos(theta) + prev_x
-    y = sbar * math.sin(theta) + prev_y
-    
-    (prev_x,prev_y,prev_theta) = (x,y,theta)
+    theta = w + prev_theta
+    x = v * math.cos(theta) + prev_x
+    y = v * math.sin(theta) + prev_y
+
+    (prev_x,prev_y,prev_theta,prev_time) = (x,y,theta,time)
  
     quat = tf.transformations.quaternion_from_euler(0,0,theta)
    
     ### Insert math into Odom msg so it can be published
     odom_msg = Odometry()
-    odom_msg.header.frame_id="world"
+    odom_msg.header.frame_id="odom"
+    odom_msg.child_frame_id="base_link"
     odom_msg.pose.pose.position.x = x
     odom_msg.pose.pose.position.y = y
-    odom_msg.pose.pose.position.z = 0
+    odom_msg.pose.pose.position.z = 0.0
     odom_msg.pose.pose.orientation.x = quat[0]
     odom_msg.pose.pose.orientation.y = quat[1]
     odom_msg.pose.pose.orientation.z = quat[2]
@@ -61,7 +69,7 @@ def encoderDataReceived(data):
                      tf.transformations.quaternion_from_euler(0,0,theta),
                      rospy.Time.now(),
                      "base_link",
-                     "world")
+                     "odom")
 
 def ax2550EncodersListener():
     """Main loop"""
