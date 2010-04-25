@@ -20,7 +20,9 @@ wheel_circum = math.pi * wheel_diameter
 encoder_resolution = 250*4 #motor controller reads * 4 (quadrature)
 prev_theta=0
 prev_x=0
-prev_y=0 
+prev_y=0
+
+MAX_DBL = 1e+100  
 
 def encoderDataReceived(data):
     """Called when encoder data is received"""
@@ -60,7 +62,15 @@ def encoderDataReceived(data):
     odom_msg.pose.pose.orientation.y = quat[1]
     odom_msg.pose.pose.orientation.z = quat[2]
     odom_msg.pose.pose.orientation.w = quat[3]
-    
+
+    odom_msg.pose.covariance = [0.004, 0, 0, 0, 0, 0,
+			        0, 0.004, 0, 0, 0, 0,
+				0, 0, MAX_DBL, 0, 0, 0,
+				0, 0, 0, MAX_DBL, 0, 0,
+				0, 0, 0, 0, MAX_DBL, 0,
+				0, 0, 0, 0, 0, 0.000289]
+    odom_msg.twist.covariance = odom_msg.pose.covariance
+ 
     ### Publishing Odom_msg
     odom_pub.publish(odom_msg)
 
