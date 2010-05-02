@@ -1,0 +1,15 @@
+<package>
+  <description brief="automow-urdf">
+
+     automow-urdf
+
+  </description>
+  <author>Michael Carroll</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow-urdf</url>
+  <depend package="urdf"/>
+
+</package>
+
+

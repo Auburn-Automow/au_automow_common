@@ -32,11 +32,12 @@ def encoderDataReceived(data):
     global prev_theta,prev_x,prev_y
     left = data.left * wheel_circum/encoder_resolution # left encoder ticks
     right = data.right * wheel_circum/encoder_resolution # right encoder ticks
+    
     ### Do math here
     if(right == left):
         v = right
         w = 0
-    else if(left == -right):
+    elif(left == -right):
         v = 0
         w = 2/wheel_base_width * right
     else:
@@ -47,7 +48,7 @@ def encoderDataReceived(data):
     x = v * math.cos(theta) + prev_x
     y = v * math.sin(theta) + prev_y
 
-    (prev_x,prev_y,prev_theta,prev_time) = (x,y,theta,time)
+    (prev_x,prev_y,prev_theta) = (x,y,theta)
  
     quat = tf.transformations.quaternion_from_euler(0,0,theta)
    
