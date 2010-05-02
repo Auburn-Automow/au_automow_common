@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+"""
+driver.py - Provides an interface for communicating with the housekeeping board.
+
+Created by William Woodall on 2010-05-02.
+"""
+__author__ = "William Woodall"
+
+###  Imports  ###
+
+# ROS imports
+import roslib; roslib.load_manifest('housekeeping')
+import rospy
+
+# ROS msg and srv imports
+from housekeeping.msg import Housekeeping
+from housekeeping.srv import CuttersControl
+from housekeeping.srv import LeftCutterControl
+from housekeeping.srv import RightCutterControl
+
+# Python Libraries
+import sys
+
+# Peer Libraries
+import housekeeping.interface as interface
+
+###  Variables  ###
+hkb = None
+housekeeping_publisher = None
+
+###  Functions  ###
+
+def publishHousekeepingData(data):
+    """Publishes encoder data"""
+    global housekeeping_publisher
+    pass
+
+def handleCuttersCmd(msg):
+    """Called when a Cutter command is received"""
+    global hkb
+    return 0
+
+def main():
+    global hkb, housekeeping_publisher
+    # ROS init
+    rospy.init_node("housekeeping_board_driver")
+    # Get the command line arguments
+    cmd_line_args = rospy.myargv(argv=sys.argv)
+    # If the serial port command was passed use it otherwise pass nothing
+    if len(cmd_line_args) > 1:
+        hkb = interface.HousekeepingBoard(cmd_line_args[1])
+    else:
+        hkb = interface.HousekeepingBoard()
+    # Register publishing callbacks
+    hkb.onHousekeepingData = publishHousekeepingData
+    # Setup Proteus Logging
+    interface.info = rospy.loginfo
+    interface.logerr = rospy.logerr
+    # Setup Services and Topics
+    encoder_topic = rospy.Publisher("housekeeping", Housekeeping)
+    rospy.Service("cutterControl", CutterControl, handleCuttersCmd)
+    rospy.Service("leftCutterControl", LeftCutterControl, handleCuttersCmd)
+    rospy.Service("RightCutterControl", RightCutterControl, handleCuttersCmd)
+    # Handle Service Requests until shutdown
+    rospy.spin()
+    # Tell Proteus to stop cleanly
+    hkb.shutdown()
+
+###  If Main  ###
+if __name__ == '__main__':
+    main()
