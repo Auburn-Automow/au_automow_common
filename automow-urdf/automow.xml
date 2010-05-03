@@ -1,0 +1,104 @@
+<robot name="automow">
+  <material name="Blue">
+    <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+  <material name="Green">
+    <color rgba="0.0 0.8 0.0 1.0"/>
+  </material>
+  <material name="Grey">
+    <color rgba="0.7 0.7 0.7 1.0"/>
+  </material>
+  <material name="Grey2">
+    <color rgba="0.9 0.9 0.9 1.0"/>
+  </material>
+  <material name="Red">
+    <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
+  
+  <link name="base_link">
+    <inertial>
+      <mass value="100.0"/>
+      <origin xyz="0.635 0.0 0.0635"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>	
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.635 0 0.0635"/>
+      <geometry>
+        <box size="1.27 0.8128 0.533"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+  </link>
+
+	<link name="base_footprint">
+		<inertial>
+			<mass value="1.0" />
+			<origin xyz="0 0 0"/>
+			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+		</inertial>
+		<visual>
+			<origin rpy="0 0 0" xyz="0 0 0"/>
+			<geometry>
+				<box size="0.01 0.01 0.01"/>
+			</geometry>
+			<material name="Green"/>
+		</visual>
+	</link>
+
+	<link name="base_odom">
+    <inertial>
+      <mass value="1.0" />
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+
+	<link name="base_laser_link" type="laser">
+		<inertial>
+      <mass value="1.0" />
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+		<visual>
+			<origin rpy="0 0 0" xyz="0 0 0"/>
+			<geometry>
+				<box size="0.001 0.001 0.001"/>
+			</geometry>
+			<material name="Red"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 0" xyz="0 0 0"/>
+			<geometry>
+				<box size="0.001 0.001 0.001"/>
+			</geometry>
+		</collision>
+	</link>
+	
+	<joint name="base_footprint_joint" type="fixed">
+		<origin rpy="0 0 0" xyz="0 0 0" />
+		<child link="base_link"/>
+		<parent link="base_footprint"/>
+	</joint>
+
+	<joint name="base_laser_joint" type="fixed">
+		<origin rpy="0 0 0" xyz="1.27 0.4064 0.05"/>
+		<child link="base_laser_link"/>
+		<parent link="base_link"/>
+	</joint>
+
+	<joint name="base_odom_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.203 0 0"/>
+    <child link="base_odom"/>
+		<parent link="base_link"/>
+	</joint>
+</robot>
+		
