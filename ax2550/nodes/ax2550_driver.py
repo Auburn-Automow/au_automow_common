@@ -42,7 +42,7 @@ class AX2550(object):
     def __init__(self, serial_port=None):
         """Function called after object instantiation"""
         # Get the serial port name
-        self.serial_port = serial_port or '/dev/ttyUSB1'
+        self.serial_port = serial_port or '/dev/motor_controller'
         
         # Try to open and configure the serial port
         self.serial = Serial(self.serial_port)

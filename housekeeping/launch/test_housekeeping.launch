@@ -1,0 +1,3 @@
+<launch>
+    <node name="housekeeping_driver" pkg="housekeeping" type="driver" output="screen" />
+</launch>

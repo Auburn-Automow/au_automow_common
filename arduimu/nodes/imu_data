@@ -21,7 +21,7 @@ from hw_interface.arduimu_driver import ImuDriver, ImuBadMessage
 def main():
   rospy.init_node("ardimu_driver")
   imu_data_topic = rospy.Publisher("imu_data", Imu)
-  imu = ImuDriver(logger = rospy)
+  imu = ImuDriver(logger = rospy, tty_file="/dev/imu")
   imu.setMode('p')
   orientation_covariance = [-1.,0.,0.,0.,0.,0.,0.,0.,0.]
   ang_covar = [ 2.08508876e-06, 0, 0,
