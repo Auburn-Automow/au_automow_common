@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="dg14" type="driver" name="dg14_gps_driver" output="screen"></node>
+</launch>

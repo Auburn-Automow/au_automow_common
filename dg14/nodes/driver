@@ -1,29 +1,90 @@
-#!/usr/bin/env python -OO
+#!/usr/bin/env python
 # encoding: utf-8
 
 """
-driver.py
+driver.py - ROS Node for publishing GPS data.
 
-Created by William Woodall on 2010-04-24.
+Created by William Woodall on 2010-05-18.
 """
 __author__ = "William Woodall"
 
 ###  Imports  ###
 
-# Standard Python Libraries
+# ROS imports
+import roslib; roslib.load_manifest('dg14')
+import rospy
+
+# ROS msg and srv imports
+from applanix.msg import GpsInfo
+
+# Python Libraries
 import sys
-import os
+from time import sleep
 
-###  Class  ###
+# Peer Libraries
+import dg14.interface
+from dg14.interface import DG14GPS
+from logerror import logError
 
+###  Variables  ###
+gps = None
+gps_publisher = None
 
 ###  Functions  ###
 
+def publishGPSData(data):
+    """Publishes encoder data"""
+    global gps_publisher
+    msg = GpsInfo()
+    try:
+        msg.latitude = data[1] or 0.0
+        msg.longitude = data[2] or 0.0
+        msg.altitude = data[3] or 0.0
+        msg.utm_e = data[4] or 0.0
+        msg.utm_n = data[5] or 0.0
+        msg.zone = data[6]
+        msg.hdop = data[7] or 0.0
+        msg.vdop = data[8] or 0.0
+        msg.err_horz = data[9] or 0.0
+        msg.err_vert = data[10] or 0.0
+        msg.quality = data[11] or 0
+        msg.num_sats = data[12] or 0
+    except:
+        logError(sys.exc_info(), rospy.logerr, "Exception generating GPSInfo Message")
+    gps_publisher.publish(msg)
+
 def main():
-	pass
+    global gps, gps_publisher
+    # ROS init
+    rospy.init_node("dg14_gps_driver")
+    # Get the command line arguments
+    cmd_line_args = rospy.myargv(argv=sys.argv)
+    # If the serial port command was passed use it otherwise pass nothing
+    if len(cmd_line_args) > 1:
+        gps = DG14GPS(cmd_line_args[1])
+    else:
+        gps = DG14GPS()
+    # Register publishing callbacks
+    gps.onPublishGPS = publishGPSData
+    # Setup Logging
+    gps.info = rospy.loginfo
+    gps.logerr = rospy.logerr
+    # Setup Services and Topics
+    gps_publisher = rospy.Publisher("gps_data", GpsInfo)
+    # Start the GPS
+    rospy.loginfo("GPS Starting")
+    while not rospy.is_shutdown():
+        if gps.start():
+            break
+        rospy.logerr("GPS Not Responding, retrying in 2s")
+        sleep(2)
+    rospy.loginfo("GPS Started")
+    # Handle GPS Data until shutdown
+    while not rospy.is_shutdown():
+        gps.getData()
+    # Tell the GPS to stop cleanly
+    gps.shutdown()
 
-###  IfMain  ###
-
+###  If Main  ###
 if __name__ == '__main__':
-	main()
-
+    main()
