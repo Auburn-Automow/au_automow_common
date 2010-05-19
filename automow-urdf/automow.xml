@@ -50,6 +50,19 @@
 			</geometry>
 		</visual>
 	</link>
+	<link name="base_imu">
+		<inertial>
+			<mass value="1.0"/>
+			<origin xyz="0 0 0"/>
+			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+		</inertial>
+		<visual>
+			<origin rpy="0 0 0" xyz="0 0 0"/>
+			<geometry>
+				<box size="0.01 0.01 0.01"/>
+			</geometry>
+		</visual>
+	</link>
 	<link name="base_laser" type="laser">
 		<inertial>
 			<mass value="1.0"/>
@@ -129,18 +142,20 @@
 			</geometry>
 		</collision>
 	</link>
-	
-					
-			
 	<joint name="base_laser_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.31 -0.3 0.14"/>
 		<child link="base_laser"/>
 		<parent link="base_link"/>
 	</joint>
+	<joint name="base_imu_joint" type="fixed">
+		<origin rpy="0 0 0" xyz="0.220 0 0.1"/>
+		<child link="base_imu"/>
+		<parent link="base_link"/>
+	</joint>
 	<joint name="base_odom_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="0.220 0 -0.07"/>
-		<child link="base_link"/>
-		<parent link="base_odom"/>
+		<child link="base_odom"/>
+		<parent link="base_link"/>
 	</joint>
 	<joint name="base_gps_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="0.8 0 0.55"/>
