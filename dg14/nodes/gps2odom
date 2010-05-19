@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+"""
+driver.py - ROS Node for converting GPS data into odometry data.
+
+Created by William Woodall on 2010-05-19.
+"""
+__author__ = "William Woodall"
+
+###  Imports  ###
+
+# ROS imports
+import roslib; roslib.load_manifest('dg14')
+import rospy
+
+# ROS msg and srv imports
+from applanix.msg import GpsInfo
+from nav_msgs.msg import Odometry
+
+# Python Libraries
+import sys
+
+# Peer Libraries
+from logerror import logError
+
+###  Variables  ###
+odom_publisher = None
+initial_position = None
+
+###  Functions  ###
+
+def publishOdomData(data):
+    """Publishes Odometry Data give GPS data"""
+    global odom_publisher, initial_position
+    # If first message received, save as initial position
+    if data.quality == 0:
+        return
+    if initial_position == None:
+        initial_position = data
+        return
+    # Calculate Change in position    
+    x = data.utm_e - initial_position.utm_e
+    y = data.utm_n - initial_position.utm_n
+    z = 0 # Ignoring altitude
+    # Setup Odometry message
+    msg = Odometry()
+    msg.header.stamp = data.header.stamp
+    msg.header.frame_id = "base_gps"
+    msg.pose.pose.position.x = x
+    msg.pose.pose.position.y = y
+    msg.pose.pose.position.z = z
+    msg.pose.pose.orientation.x = 1
+    msg.pose.pose.orientation.y = 0
+    msg.pose.pose.orientation.z = 0
+    msg.pose.pose.orientation.w = 0
+    msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
+                           0, 0.01, 0, 0, 0, 0,
+                           0, 0, 0.01, 0, 0, 0,
+                           0, 0, 0, 99999, 0, 0,
+                           0, 0, 0, 0, 99999, 0,
+                           0, 0, 0, 0, 0, 99999]
+    # Publish the message
+    odom_publisher.publish(msg)
+
+def main():
+    global odom_publisher
+    # ROS init
+    rospy.init_node("gps2odom", anonymous=True)
+    # Get the command line arguments
+    cmd_line_args = rospy.myargv(argv=sys.argv)
+    # Setup Services and Topics
+    odom_publisher = rospy.Publisher("gps_odom", Odometry)
+    gps_subscriber = rospy.Subscriber("gps_data", GpsInfo, publishOdomData)
+    # Handle GPS Data until shutdown
+    rospy.spin()
+
+###  If Main  ###
+if __name__ == '__main__':
+    main()
