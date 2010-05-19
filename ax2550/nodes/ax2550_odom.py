@@ -54,8 +54,9 @@ def encoderDataReceived(data):
    
     ### Insert math into Odom msg so it can be published
     odom_msg = Odometry()
-    odom_msg.header.frame_id="odom"
-    odom_msg.child_frame_id="base_link"
+    odom_msg.header.stamp = rospy.Time.now()
+    odom_msg.header.frame_id="world"
+    odom_msg.child_frame_id="base_odom"
     odom_msg.pose.pose.position.x = x
     odom_msg.pose.pose.position.y = y
     odom_msg.pose.pose.position.z = 0.0
@@ -79,8 +80,8 @@ def encoderDataReceived(data):
     odom_broadcaster.sendTransform((x,y,0),
                      tf.transformations.quaternion_from_euler(0,0,theta),
                      rospy.Time.now(),
-                     "base_link",
-                     "odom")
+                     "base_odom",
+                     "world")
 
 def ax2550EncodersListener():
     """Main loop"""
