@@ -46,7 +46,7 @@ def publishOdomData(data):
     # Setup Odometry message
     msg = Odometry()
     msg.header.stamp = data.header.stamp
-    msg.header.frame_id = "base_gps"
+    msg.header.frame_id = "odom_combined"
     msg.pose.pose.position.x = x
     msg.pose.pose.position.y = y
     msg.pose.pose.position.z = z

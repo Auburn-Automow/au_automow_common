@@ -53,7 +53,7 @@ def encoderDataReceived(data):
     ### Insert math into Odom msg so it can be published
     odom_msg = Odometry()
     odom_msg.header.stamp = rospy.Time.now()
-    odom_msg.header.frame_id="base_odom"
+    odom_msg.header.frame_id="odom_combined"
     odom_msg.pose.pose.position.x = x
     odom_msg.pose.pose.position.y = y
     odom_msg.pose.pose.position.z = 0.0
