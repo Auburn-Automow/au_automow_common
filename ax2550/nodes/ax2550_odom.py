@@ -12,7 +12,6 @@ import tf
 import math
 
 odom_pub = None
-odom_broadcaster = None
 wheel_base_width = 0.6477 #meters = 25.5 in
 wheel_base_length =  0.9144 #meters =  36 in
 wheel_diameter = 0.3175 #meters = 13 in
@@ -27,7 +26,6 @@ MAX_DBL = 1e+100
 def encoderDataReceived(data):
     """Called when encoder data is received"""
     global odom_pub
-    global odom_broadcaster
     global wheel_base_width, wheel_base_length, wheel_diameter, wheel_circum,encoder_resolution
     global prev_theta,prev_x,prev_y
     left = data.left * wheel_circum/encoder_resolution # left encoder ticks
@@ -39,10 +37,10 @@ def encoderDataReceived(data):
         w = 0
     elif(left == -right):
         v = 0
-        w = 2/wheel_base_width * right
+        w = (2/wheel_base_width) * right
     else:
-        w = right-left/wheel_base_width
-        v = 1/2 * (right+left)
+        w = (right-left)/wheel_base_width
+        v = 0.5 * (right+left)
     
     theta = w + prev_theta
     x = v * math.cos(theta) + prev_x
@@ -54,8 +52,8 @@ def encoderDataReceived(data):
    
     ### Insert math into Odom msg so it can be published
     odom_msg = Odometry()
-    odom_msg.header.frame_id="odom"
-    odom_msg.child_frame_id="base_link"
+    odom_msg.header.stamp = rospy.Time.now()
+    odom_msg.header.frame_id="base_odom"
     odom_msg.pose.pose.position.x = x
     odom_msg.pose.pose.position.y = y
     odom_msg.pose.pose.position.z = 0.0
@@ -75,23 +73,14 @@ def encoderDataReceived(data):
     ### Publishing Odom_msg
     odom_pub.publish(odom_msg)
 
-    ### Publishing tf broadcaster
-    odom_broadcaster.sendTransform((x,y,0),
-                     tf.transformations.quaternion_from_euler(0,0,theta),
-                     rospy.Time.now(),
-                     "base_link",
-                     "odom")
-
 def ax2550EncodersListener():
     """Main loop"""
     global odom_pub
-    global odom_broadcaster
     
-    rospy.init_node('ax2550_odom', anonymous=True)
+    rospy.init_node('base_odom', anonymous=True)
     rospy.Subscriber('motor_control_encoders', Encoder, encoderDataReceived)
-    odom_broadcaster = tf.TransformBroadcaster()
         
-    odom_pub = rospy.Publisher('ax2550_odometry', Odometry)
+    odom_pub = rospy.Publisher('base_odom', Odometry)
     rospy.spin()
     
 if __name__ == '__main__':
