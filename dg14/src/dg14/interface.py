@@ -82,9 +82,10 @@ class DG14GPS(object):
         self.serial.timeout = 0.25
         msg = self.serial.readline()
         if msg == None or msg == '':
-            return
+            return False
         else:
             self.handleResponse(msg)
+            return True
     
     def handleResponse(self, msg):
         """Handles incoming responses from the GPS"""

@@ -81,7 +81,9 @@ def main():
     rospy.loginfo("GPS Started")
     # Handle GPS Data until shutdown
     while not rospy.is_shutdown():
-        gps.getData()
+        if not gps.getData():
+		#rospy.logwarn("Not gps data received, this time...")
+		pass
     # Tell the GPS to stop cleanly
     gps.shutdown()
 
