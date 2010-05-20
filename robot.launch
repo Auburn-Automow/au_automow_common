@@ -7,6 +7,15 @@
         <node name="joy_node" pkg="joy" type="joy_node" />
         <node name="ax2550_odom" pkg="ax2550" type="ax2550_odom.py" output="screen" />
         <node name="imu_data" pkg="atomic_imu" type="imu_data" output="screen" />
+	<node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node">
+		<param name="intensity" type="bool" value="False" />
+		<param name="port" type="str" value="/dev/ttyACM0" />
+		<param name="calibrate_time" type="bool" value="True" />
+		<param name="frame_id" type="str" value="base_laser" />
+		<param name="time_offset" type="double" value="0.0" />
+		<param name="allow_unsafe_settings" type="bool" value="False" />
+	</node>
+
         <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
                 <param name="freq" value="30.0"/>
                 <param name="sensor_timeout" value="1.0"/>
