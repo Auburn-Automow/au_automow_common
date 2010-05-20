@@ -9,7 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow-urdf</url>
   <depend package="urdf"/>
-
+  <depend package="sensor_msgs"/>
+  <depend package="tf"/>
 </package>
 
 
