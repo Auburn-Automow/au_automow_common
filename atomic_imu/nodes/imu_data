@@ -20,7 +20,6 @@ from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
 
 def main():
   rospy.init_node("atomic_imu_driver")
-  #imu_broadcaster = tf.TransformBroadcaster()
   imu_data_topic = rospy.Publisher("imu_data", Imu)
   imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
@@ -34,6 +33,9 @@ def main():
                 0, 0.00634921, 0,
                 0, 0, 0.0054584 ]
   last_time = rospy.Time.now()
+  change_roll = 0
+  change_pitch = 0
+  change_yaw = 0
   while not rospy.is_shutdown():
     try: 
       msg = imu.getMsg()
@@ -41,9 +43,11 @@ def main():
 
       time_diff = (new_time - last_time).to_sec()
 
-      change_roll = float(msg.group('roll')) * time_diff
-      change_pitch = float(msg.group('pitch')) * time_diff
-      change_yaw = float(msg.group('yaw')) * time_diff
+      # Accumulate changes
+      change_roll += float(msg.group('roll')) * time_diff
+      change_pitch += float(msg.group('pitch')) * time_diff
+      change_yaw += float(msg.group('yaw')) * time_diff
+      # Calculate orientation quaterion 
       orientation = tf.transformations.quaternion_from_euler(change_roll, change_pitch, change_yaw) 
       imu_msg = Imu(header = None,
                     orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]),
@@ -61,13 +65,6 @@ def main():
       imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
-      sleep(0.01)
-      ### Publishing tf broadcaster
-#      imu_broadcaster.sendTransform((0, 0, 0),
-#                     orientation,
-#                     rospy.Time.now(),
-#                     "base_footprint",
-#                     "imu_data")
 
       last_time = new_time
     except ImuBadMessage as e:
