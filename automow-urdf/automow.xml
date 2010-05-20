@@ -124,25 +124,6 @@
 			</geometry>
 		</collision>
 	</link>
-	<link name="trimmer_arm">
-		<inertial>
-		   	<mass value="1.0"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-		</inertial>
-		<visual>
-			<origin rpy="0 0 0" xyz="0 0 0"/>
-			<geometry>
-				<box size="0.97 0.32 0.56"/>
-			</geometry>
-		</visual>
-		<collision>
-			<origin rpy="0 0 0" xyz="0 0 0"/>
-			<geometry>
-				<box size="0.97 0.32 0.56"/>
-			</geometry>
-		</collision>
-	</link>
 	<joint name="base_laser_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.31 -0.3 0.14"/>
 		<child link="base_laser"/>
