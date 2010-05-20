@@ -9,21 +9,25 @@ Created by John Harrison on 2010-04-16.
 __author__ = "John Harrison, William Woodall"
 __copyright__ = "Copyright (c) John harrison, William Woodall"
 
-import roslib; roslib.load_manifest('arduimu')
+import roslib; roslib.load_manifest('atomic_imu')
 import rospy
 
+from time import sleep
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3, Quaternion
 import tf
 
-from hw_interface.arduimu_driver import ImuDriver, ImuBadMessage
+from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
 
 def main():
-  rospy.init_node("ardimu_driver")
+  rospy.init_node("atomic_imu_driver")
+  imu_broadcaster = tf.TransformBroadcaster()
   imu_data_topic = rospy.Publisher("imu_data", Imu)
-  imu = ImuDriver(logger = rospy, tty_file="/dev/imu")
+  imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
-  orientation_covariance = [-1.,0.,0.,0.,0.,0.,0.,0.,0.]
+  orientation_covariance = [1e-5,0.,0.,
+                            0.,1e-5,0.,
+                            0.,0.,1e-5]
   ang_covar = [ 2.08508876e-06, 0, 0,
                 0, 3.81202560e-07, 0,
                 0, 0, 8.58619000e-07]
@@ -42,7 +46,6 @@ def main():
       change_pitch = float(msg.group('pitch')) * time_diff
       change_yaw = float(msg.group('yaw')) * time_diff
       orientation = tf.transformations.quaternion_from_euler(change_roll, change_pitch, change_yaw) 
-
       imu_msg = Imu(header = None,
                     orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]),
                     orientation_covariance = orientation_covariance,
@@ -56,8 +59,17 @@ def main():
                               y=float(msg.group('y')), 
                               z=float(msg.group('z'))),
                     linear_acceleration_covariance = lin_covar)
+      imu_msg.header.frame_id = "imu_data"
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
+      sleep(0.01)
+      ### Publishing tf broadcaster
+      imu_broadcaster.sendTransform((0, 0, 0),
+                     orientation,
+                     rospy.Time.now(),
+                     "base_footprint",
+                     "imu_data")
+
       last_time = new_time
     except ImuBadMessage as e:
       rospy.logerr(e.msg)

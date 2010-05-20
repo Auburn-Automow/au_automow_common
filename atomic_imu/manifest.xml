@@ -1,13 +1,13 @@
 <package>
-  <description brief="arduimu">
+  <description brief="atomic_imu">
 
-     arduimu
+     Drivers for the Atomic IMU from SparkFun
 
   </description>
   <author>John Harrison</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/arduimu</url>
+  <url>http://ros.org/wiki/atomic_imu</url>
   <depend package="rospy"/>
   <depend package="sensor_msgs"/>
   <depend package="tf"/>

@@ -48,7 +48,7 @@
 		</visual>
 	</link>
 
-	<link name="base_odom">
+        <link name="base_odom">
     <inertial>
       <mass value="1.0" />
       <origin xyz="0 0 0"/>
@@ -89,6 +89,7 @@
 		<parent link="base_footprint"/>
 	</joint>
 
+		
 	<joint name="base_laser_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.27 0.4064 0.05"/>
 		<child link="base_laser_link"/>

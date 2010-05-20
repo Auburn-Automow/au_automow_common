@@ -7,7 +7,7 @@
         <node name="ax2550_odom" pkg="ax2550" type="ax2550_odom.py" output="screen" />
         <node name="imu_data" pkg="arduimu" type="imu_data" output="screen" />
         <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
-                <param name="freq" value="10.0"/>
+                <param name="freq" value="30.0"/>
                 <param name="sensor_timeout" value="1.0"/>
                 <param name="publish_tf" value="true"/>
                 <param name="odom_used" value="true"/>
