@@ -77,10 +77,10 @@ def ax2550EncodersListener():
     """Main loop"""
     global odom_pub
     
-    rospy.init_node('ax2550_odom', anonymous=True)
+    rospy.init_node('base_odom', anonymous=True)
     rospy.Subscriber('motor_control_encoders', Encoder, encoderDataReceived)
         
-    odom_pub = rospy.Publisher('ax2550_odometry', Odometry)
+    odom_pub = rospy.Publisher('base_odom', Odometry)
     rospy.spin()
     
 if __name__ == '__main__':

@@ -59,7 +59,7 @@ def main():
                               y=float(msg.group('y')), 
                               z=float(msg.group('z'))),
                     linear_acceleration_covariance = lin_covar)
-      imu_msg.header.frame_id = "imu_data"
+      imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
       sleep(0.01)
