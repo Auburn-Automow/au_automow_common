@@ -19,7 +19,6 @@ from applanix.msg import GpsInfo
 
 # Python Libraries
 import sys
-from time import sleep
 
 # Peer Libraries
 import dg14.interface
@@ -37,6 +36,7 @@ def publishGPSData(data):
     global gps_publisher
     msg = GpsInfo()
     try:
+	msg.header.stamp = rospy.Time.now()
         msg.latitude = data[1] or 0.0
         msg.longitude = data[2] or 0.0
         msg.altitude = data[3] or 0.0
@@ -77,7 +77,7 @@ def main():
         if gps.start():
             break
         rospy.logerr("GPS Not Responding, retrying in 2s")
-        sleep(2)
+        rospy.sleep(2)
     rospy.loginfo("GPS Started")
     # Handle GPS Data until shutdown
     while not rospy.is_shutdown():

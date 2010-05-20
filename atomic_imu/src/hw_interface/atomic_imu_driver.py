@@ -16,9 +16,9 @@ class ImuBadMessage(Exception):
   def __init__(self, msg):
     self.msg = "Bad Message:\n" + str(msg)
 
-class ImuDriver(object):
+class AtomicImuDriver(object):
   __slots__ = ['ser', 'mode', 'logger', 'rdy_marker', 'msg_scanner']
-  def __init__(self, tty_file = "/dev/ttyUSB0", logger = None, timeout = 0.3):
+  def __init__(self, tty_file = "/dev/imu", logger = None, timeout = 0.3):
     self.ser = Serial(tty_file, 115200, timeout=timeout)
     self.logger = logger
     # reference line:
@@ -110,5 +110,5 @@ class ImuDriver(object):
       return self.ser.readline()
 
 if __name__ == '__main__':
-  arduimu = ImuDriver()
+  atomic_imu = AtomicImuDriver()
 

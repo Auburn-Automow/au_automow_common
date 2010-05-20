@@ -37,19 +37,6 @@
 			</geometry>
 		</collision>
 	</link>
-	<link name="base_footprint">
-		<inertial>
-			<mass value="1.0"/>
-			<origin xyz="0 0 0"/>
-			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
-		</inertial>
-		<visual>
-			<origin rpy="0 0 0" xyz="0 0 0"/>
-			<geometry>
-				<box size="0.01 0.01 0.01"/>
-			</geometry>
-		</visual>
-	</link>
 	<link name="base_imu">
 		<inertial>
 			<mass value="1.0"/>
@@ -63,6 +50,20 @@
 			</geometry>
 		</visual>
 	</link>
+        <link name="base_footprint">
+    		<inertial>
+      			<mass value="1.0" />
+ 			<origin xyz="0 0 0"/>
+      			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    		</inertial>
+    		<visual>
+      			<origin rpy="0 0 0" xyz="0 0 0"/>
+      			<geometry>
+				<box size="0.01 0.01 0.01"/>
+		      	</geometry>
+	    	</visual>
+	  </link>
+
 	<link name="base_laser" type="laser">
 		<inertial>
 			<mass value="1.0"/>
@@ -152,7 +153,7 @@
 		<child link="base_imu"/>
 		<parent link="base_link"/>
 	</joint>
-	<joint name="base_odom_joint" type="fixed">
+	<joint name="base_footprint_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="-0.220 0 0.07"/>
 		<child link="base_link"/>
 		<parent link="base_footprint"/>
@@ -161,16 +162,10 @@
 		<origin rpy="0 0 0" xyz="0.8 0 0.55"/>
 		<child link="base_gps"/>
 		<parent link="base_link"/>
-	</joint>
+	</joint>	
 	<joint name="base_camera_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.12 -0.34 0.5"/>
 		<child link="base_camera"/>
 		<parent link="base_link"/>
 	</joint>
-	<joint name="trimmer_arm_joint" type="revolute">
-		<origin rpy="0 0 3.14" xyz="0.62 0.32 0.39"/>
-		<limit lower="0" upper="3.2" effort="1000" velocity="1000"/>
-		<child link="trimmer_arm"/>
-		<parent link="base_link"/>
-	</joint>		
 </robot>

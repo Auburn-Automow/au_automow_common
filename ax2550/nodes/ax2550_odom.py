@@ -37,10 +37,10 @@ def encoderDataReceived(data):
         w = 0
     elif(left == -right):
         v = 0
-        w = 2/wheel_base_width * right
+        w = (2/wheel_base_width) * right
     else:
-        w = right-left/wheel_base_width
-        v = 1/2 * (right+left)
+        w = (right-left)/wheel_base_width
+        v = 0.5 * (right+left)
     
     theta = w + prev_theta
     x = v * math.cos(theta) + prev_x
@@ -53,8 +53,7 @@ def encoderDataReceived(data):
     ### Insert math into Odom msg so it can be published
     odom_msg = Odometry()
     odom_msg.header.stamp = rospy.Time.now()
-    odom_msg.header.frame_id="world"
-    odom_msg.child_frame_id="base_odom"
+    odom_msg.header.frame_id="base_odom"
     odom_msg.pose.pose.position.x = x
     odom_msg.pose.pose.position.y = y
     odom_msg.pose.pose.position.z = 0.0
