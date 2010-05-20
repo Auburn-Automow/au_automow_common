@@ -13,7 +13,7 @@ import rospy
 
 from time import sleep
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3, Quaternion
+from geometry_msgs.msg import Vector3, Quaternion, PoseStamped, Point
 import tf
 
 from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
@@ -21,6 +21,7 @@ from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
 def main():
   rospy.init_node("atomic_imu_driver")
   imu_data_topic = rospy.Publisher("imu_data", Imu)
+  imu_pose_topic = rospy.Publisher("imu_pose", PoseStamped)
   imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
   orientation_covariance = [1e-5,0.,0.,
@@ -65,6 +66,13 @@ def main():
       imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
+
+      pose_msg = PoseStamped()
+      pose_msg.header.frame_id = "base_imu"
+      pose_msg.header.stamp = rospy.Time.now()
+      pose_msg.pose.orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3])
+      pose_msg.pose.position=Point(0,0,0)
+      imu_pose_topic.publish(pose_msg)
 
       last_time = new_time
     except ImuBadMessage as e:
