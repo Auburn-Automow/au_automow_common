@@ -2,12 +2,11 @@
 # encoding: utf-8
 
 """
-Drivers for ArduIMU
+Drivers for Atomic IMU
 
 Created by John Harrison on 2010-04-16.
 """
 __author__ = "John Harrison, William Woodall"
-__copyright__ = "Copyright (c) John harrison, William Woodall"
 
 import roslib; roslib.load_manifest('atomic_imu')
 import rospy
@@ -21,7 +20,7 @@ from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
 
 def main():
   rospy.init_node("atomic_imu_driver")
-  imu_broadcaster = tf.TransformBroadcaster()
+  #imu_broadcaster = tf.TransformBroadcaster()
   imu_data_topic = rospy.Publisher("imu_data", Imu)
   imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
@@ -64,11 +63,11 @@ def main():
       imu_data_topic.publish(imu_msg)
       sleep(0.01)
       ### Publishing tf broadcaster
-      imu_broadcaster.sendTransform((0, 0, 0),
-                     orientation,
-                     rospy.Time.now(),
-                     "base_footprint",
-                     "imu_data")
+#      imu_broadcaster.sendTransform((0, 0, 0),
+#                     orientation,
+#                     rospy.Time.now(),
+#                     "base_footprint",
+#                     "imu_data")
 
       last_time = new_time
     except ImuBadMessage as e:
