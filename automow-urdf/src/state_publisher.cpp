@@ -9,8 +9,6 @@ int main(int argc, char** argv) {
     ros::Publisher joint_pub = n.advertise<sensor_msgs::JointState>("joint_states", 1);
     ros::Rate loop_rate(30);
 
-    const double degree = M_PI/180;
-
     // message declarations
     sensor_msgs::JointState joint_state;
 
