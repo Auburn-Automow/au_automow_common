@@ -41,18 +41,35 @@ class AtomicImuDriver(object):
         (?P<yaw>  [+\-]?\d+(?:\.\d+)?) # yaw
         \s+
         P''', re.X | re.I | re.M)
-    self.ser.write('r')
-    self.rdy_marker = re.compile('(?:IMU\s+Initialized!)|(?:R,\d+.*P,\d+.*Y,\d+.*,.*X,\d+.*,.*Y,\d+.*,\sZ,\d+.*)')
+    # self.ser.write('r')
+    # self.rdy_marker = re.compile('(?:IMU\s+Initialized!)|(?:R,\d+.*P,\d+.*Y,\d+.*,.*X,\d+.*,.*Y,\d+.*,\sZ,\d+.*)')
+    # self.log("IMU Initializing")
+    # count = 0
+    # while True:
+    #   raw_msg = self.ser.readline()
+    #   if self.rdy_marker.match(raw_msg):
+    #     count += 1
+    #   if count == 2:
+    #     break
+    # self.mode = None
+    # self.log("IMU Ready")
+    
+    # Initialiaze IMU
+    self.ser.write('r') # Reset
     self.log("IMU Initializing")
-    count = 0
-    while True:
-      raw_msg = self.ser.readline()
-      if self.rdy_marker.match(raw_msg):
-        count += 1
-      if count == 2:
-        break
+    # Watch for Initialized!
+    while "IMU Initialized!" not in self.ser.readline():
+        pass
+    self.log("IMU Initialized")
+    # Watch for Calibrating
+    self.log("IMU Calibrating")
+    while "Calibrating - Start" not in self.ser.readline():
+        pass
+    # Watch for Calibration Finish
+    while "R," not in self.ser.readline():
+        pass
+    self.log("IMU Calibrated")
     self.mode = None
-    self.log("IMU Ready")
 
   def log(self, msg):
     if self.logger:
@@ -67,18 +84,18 @@ class AtomicImuDriver(object):
       self.ser.write('p')
       self.mode = None
     if mode_id == 'p':
-      self.log("Polling...")
+      self.log("IMU Polling...")
       self.ser.write('p')
       self.mode = 'p'
     elif mode_id == 'c':
-      self.log("Reconfiguring...")
+      self.log("IMU Reconfiguring...")
       self.ser.write('c')
       while True:
         if self.rdy_marker.match(self.ser.readline()):
           break
-      self.log("Done Reconfiguring")
+      self.log("IMU Done Reconfiguring")
     elif mode_id == 'g':
-      self.log("Grabbing a single line")
+      self.log("IMU Grabbing a single line")
       self.ser.write('g')
       result = self.ser.readline()
     return result

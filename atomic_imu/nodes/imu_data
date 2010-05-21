@@ -15,6 +15,7 @@ from time import sleep
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3, Quaternion, PoseStamped, Point
 import tf
+import math
 
 from hw_interface.atomic_imu_driver import AtomicImuDriver, ImuBadMessage
 
@@ -42,12 +43,15 @@ def main():
       msg = imu.getMsg()
       new_time = rospy.Time.now()
 
-      time_diff = (new_time - last_time).to_sec()
+      # time_diff = (new_time - last_time).to_sec()
+      time_diff = 0.04
 
       # Accumulate changes
       abs_roll  += float(msg.group('roll')) * time_diff 
       abs_pitch += float(msg.group('pitch')) * time_diff 
       abs_yaw   += float(msg.group('yaw')) * time_diff 
+      
+      # rospy.loginfo("Roll: %f, Pitch: %f, Yaw: %f" % (math.degrees(abs_roll), math.degrees(abs_pitch), math.degrees(abs_yaw)))
       # Calculate orientation quaterion 
       orientation = tf.transformations.quaternion_from_euler(abs_roll, abs_pitch, abs_yaw) 
       imu_msg = Imu(header = None,
