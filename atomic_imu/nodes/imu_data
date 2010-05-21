@@ -34,9 +34,9 @@ def main():
                 0, 0.00634921, 0,
                 0, 0, 0.0054584 ]
   last_time = rospy.Time.now()
-  last_acceleration_roll
-  last_acceleration_pitch
-  last_acceleration_yaw
+  last_velocity_roll = 0
+  last_velocity_pitch = 0
+  last_velocity_yaw = 0
   abs_roll = 0
   abs_pitch = 0
   abs_yaw = 0

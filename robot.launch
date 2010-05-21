@@ -23,11 +23,17 @@
                 <param name="sensor_timeout" value="1.2"/>
                 <param name="publish_tf" value="true"/>
                 <param name="odom_used" value="true"/>
-                <param name="imu_used" value="false"/>
+                <param name="imu_used" value="true"/>
                 <param name="vo_used" value="true"/>
 		<remap from="odom" to="base_odom"/>
 		<remap from="vo" to="gps_odom" />
         </node>
 
-
+	<node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="log"> 
+		<!-- params go here, if we need to confiugre the usb cam -->
+	</node>
+	<node name="line_processing" pkg="line_processing" type="line_processing" output="screen">
+		<param name="birds_eye" value="/home/william/automow/automow/au_automow_vision/line_processing/birdeye_convert_mat.xml" />
+		<!-- params go here, we need to make some of the settings of the algorithm dynamic -->
+	</node>
 </launch>
