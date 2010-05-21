@@ -34,9 +34,12 @@ def main():
                 0, 0.00634921, 0,
                 0, 0, 0.0054584 ]
   last_time = rospy.Time.now()
-  change_roll = 0
-  change_pitch = 0
-  change_yaw = 0
+  last_acceleration_roll
+  last_acceleration_pitch
+  last_acceleration_yaw
+  abs_roll = 0
+  abs_pitch = 0
+  abs_yaw = 0
   while not rospy.is_shutdown():
     try: 
       msg = imu.getMsg()
@@ -45,11 +48,15 @@ def main():
       time_diff = (new_time - last_time).to_sec()
 
       # Accumulate changes
-      change_roll += float(msg.group('roll')) * time_diff
-      change_pitch += float(msg.group('pitch')) * time_diff
-      change_yaw += float(msg.group('yaw')) * time_diff
+      # distance = Initial_Velocity * time + (acceleration * time ** 2) / 2
+      abs_roll  += last_velocity_roll * time_diff + (float(msg.group('roll')) * (time_diff ** 2))/2
+      abs_pitch += last_velocity_pitch * time_diff + (float(msg.group('pitch')) * (time_diff ** 2))/2
+      abs_yaw   += last_velocity_yaw * time_diff + (float(msg.group('yaw')) * (time_diff ** 2))/2
+      last_velocity_roll = float(msg.group('roll')) * time_diff 
+      last_velocity_pitch = float(msg.group('pitch')) * time_diff
+      last_velocity_yaw = float(msg.group('yaw')) * time_diff
       # Calculate orientation quaterion 
-      orientation = tf.transformations.quaternion_from_euler(change_roll, change_pitch, change_yaw) 
+      orientation = tf.transformations.quaternion_from_euler(abs_roll, abs_pitch, abs_yaw) 
       imu_msg = Imu(header = None,
                     orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]),
                     orientation_covariance = orientation_covariance,
@@ -80,3 +87,5 @@ def main():
 
 if __name__ == '__main__':
   main()
+
+# vim: set ft=python expandtab softtabstop=2 shiftwidth=2 tabstop=2
