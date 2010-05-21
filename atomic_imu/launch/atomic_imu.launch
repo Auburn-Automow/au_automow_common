@@ -1,0 +1,3 @@
+<launch>
+    <node name="imu_data" pkg="atomic_imu" type="imu_data" output="screen" />
+</launch>

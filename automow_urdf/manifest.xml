@@ -1,13 +1,13 @@
 <package>
-  <description brief="automow-urdf">
+  <description brief="automow_urdf">
 
-     automow-urdf
+     automow_urdf
 
   </description>
   <author>Michael Carroll</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/automow-urdf</url>
+  <url>http://ros.org/wiki/automow_urdf</url>
   <depend package="urdf"/>
   <depend package="sensor_msgs"/>
   <depend package="tf"/>

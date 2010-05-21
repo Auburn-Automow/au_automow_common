@@ -1,4 +1,3 @@
 <launch>
-        <node name="ax2550_driver" pkg="ax2550" type="ax2550_driver.py" output="screen" />
-        <node name="ax2550_odom" pkg="ax2550" type="ax2550_odom.py" output="screen" />
+        <include file="$(find ax2550)/launch/motor_control.launch" />
 </launch>

@@ -9,7 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/2dnav_automow</url>
   <depend package="move_base"/>
-  <depend package="automow-urdf"/>
+  <depend package="automow_urdf"/>
   <depend package="atomic_imu"/>
   <depend package="ax2550"/>
   <depend package="dg14"/>
