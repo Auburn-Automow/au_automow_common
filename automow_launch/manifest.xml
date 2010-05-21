@@ -1,10 +1,10 @@
 <package>
   <description brief="automow_launch">
 
-     automow_launch
+    A wrapper package for all of the Auburn Automow 2010 competition robot. 
 
   </description>
-  <author></author>
+  <author>Michael Carroll</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_launch</url>

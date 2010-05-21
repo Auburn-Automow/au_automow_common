@@ -6,9 +6,6 @@
         <node name="ax2550_teleop" pkg="ax2550" type="ax2550_teleop.py" />
         <node name="joy_node" pkg="joy" type="joy_node" />
         <node name="ax2550_odom" pkg="ax2550" type="ax2550_odom.py" output="screen" />
-        <node name="imu_data" pkg="atomic_imu" type="imu_data" output="screen" />
-	<node name="dg14_gps_driver" pkg="dg14" type="driver" output="screen" />
-	<node name="dg14_gps2odom" pkg="dg14" type="gps2odom" output="screen" />
 	<node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node">
 		<param name="intensity" type="bool" value="False" />
 		<param name="port" type="str" value="/dev/ttyACM0" />
@@ -28,14 +25,6 @@
 		<remap from="/odom" to="/base_odom"/>
 		<remap from="vo" to="gps_odom" />
         </node>
-
-
-	<node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-		<param name="scan" value="scan" />
-		<param name="base_frame" value="base_footprint" />
-		<param name="odom_frame" value="odom_combined" />
-		<param name="maxUrange" value="1.5" />
-	</node>
 
 
 </launch>
