@@ -34,9 +34,6 @@ def main():
                 0, 0.00634921, 0,
                 0, 0, 0.0054584 ]
   last_time = rospy.Time.now()
-  last_velocity_roll = 0
-  last_velocity_pitch = 0
-  last_velocity_yaw = 0
   abs_roll = 0
   abs_pitch = 0
   abs_yaw = 0
@@ -48,13 +45,9 @@ def main():
       time_diff = (new_time - last_time).to_sec()
 
       # Accumulate changes
-      # distance = Initial_Velocity * time + (acceleration * time ** 2) / 2
-      abs_roll  += last_velocity_roll * time_diff + (float(msg.group('roll')) * (time_diff ** 2))/2
-      abs_pitch += last_velocity_pitch * time_diff + (float(msg.group('pitch')) * (time_diff ** 2))/2
-      abs_yaw   += last_velocity_yaw * time_diff + (float(msg.group('yaw')) * (time_diff ** 2))/2
-      last_velocity_roll = float(msg.group('roll')) * time_diff 
-      last_velocity_pitch = float(msg.group('pitch')) * time_diff
-      last_velocity_yaw = float(msg.group('yaw')) * time_diff
+      abs_roll  += float(msg.group('roll')) * time_diff 
+      abs_pitch += float(msg.group('pitch')) * time_diff 
+      abs_yaw   += float(msg.group('yaw')) * time_diff 
       # Calculate orientation quaterion 
       orientation = tf.transformations.quaternion_from_euler(abs_roll, abs_pitch, abs_yaw) 
       imu_msg = Imu(header = None,
@@ -75,7 +68,7 @@ def main():
       imu_data_topic.publish(imu_msg)
 
       pose_msg = PoseStamped()
-      pose_msg.header.frame_id = "base_imu"
+      pose_msg.header.frame_id = "odom_combined"
       pose_msg.header.stamp = rospy.Time.now()
       pose_msg.pose.orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3])
       pose_msg.pose.position=Point(0,0,0)
