@@ -31,9 +31,28 @@
 			<material name="Grey"/>
 		</visual>
 		<collision>
-			<origin rpy="0 0 0" xyz="0.64 0 0.36"/>
+			<origin rpy="0 0 0" xyz="0.2605 0 0.36"/>
 			<geometry>
-				<box size="1.27 0.79 0.79"/>
+				<box size="0.521 0.79 0.79"/>
+			</geometry>
+		</collision>
+	</link>
+	<link name="cutting_deck">
+		<inertial>
+			<mass value="20"/>
+			<origin xyz="0 0 0"/>
+			<inertia ixx="0.01" ixy="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+		</inertial>
+		<visual>
+			<origin rpy="0 0 0" xyz="0 0 -0.05">
+			<geometry>
+				<box size="0.383 0.78 0.1"\>
+			</geometry>
+		</visual>
+		<collision>
+			<origin rpy="0 0 0" xyz="0 0 -0.05">
+			<geometry>
+				<box size="0.383 0.78 0.1"\>
 			</geometry>
 		</collision>
 	</link>
@@ -62,8 +81,7 @@
 				<box size="0.01 0.01 0.01"/>
 		      	</geometry>
 	    	</visual>
-	  </link>
-
+	</link>
 	<link name="base_laser" type="laser">
 		<inertial>
 			<mass value="1.0"/>
@@ -124,6 +142,11 @@
 			</geometry>
 		</collision>
 	</link>
+	<joint name="cutter_deck_joint" type="fixed">
+		<origin rpy="0 0 0" xyz="0.767 0 0.113"/>
+		<child link="cutter_deck"/>
+		<parent link="base_link"/>
+	</joint>
 	<joint name="base_laser_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.31 -0.3 0.14"/>
 		<child link="base_laser"/>
