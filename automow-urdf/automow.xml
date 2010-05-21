@@ -24,9 +24,9 @@
 			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
 		</inertial>
 		<visual>
-			<origin rpy="0 0 0" xyz="0.64 0 0.36"/>
+			<origin rpy="0 0 0" xyz="0.2605 0 0.2579"/>
 			<geometry>
-				<box size="1.27 0.79 0.79"/>
+				<box size="0.521 0.5157 0.5157"/>
 			</geometry>
 			<material name="Grey"/>
 		</visual>
@@ -37,22 +37,23 @@
 			</geometry>
 		</collision>
 	</link>
-	<link name="cutting_deck">
+	<link name="cutter_deck">
 		<inertial>
 			<mass value="20"/>
 			<origin xyz="0 0 0"/>
-			<inertia ixx="0.01" ixy="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
 		</inertial>
 		<visual>
-			<origin rpy="0 0 0" xyz="0 0 -0.05">
+			<origin rpy="0 0 0" xyz="0 0 -0.05"/>
 			<geometry>
-				<box size="0.383 0.78 0.1"\>
+				<box size="0.383 0.78 0.1"/>
 			</geometry>
+			<material name="Blue"/>
 		</visual>
 		<collision>
-			<origin rpy="0 0 0" xyz="0 0 -0.05">
+			<origin rpy="0 0 0" xyz="0 0 -0.05"/>
 			<geometry>
-				<box size="0.383 0.78 0.1"\>
+				<box size="0.383 0.78 0.1"/>
 			</geometry>
 		</collision>
 	</link>
@@ -142,11 +143,31 @@
 			</geometry>
 		</collision>
 	</link>
-	<joint name="cutter_deck_joint" type="fixed">
-		<origin rpy="0 0 0" xyz="0.767 0 0.113"/>
-		<child link="cutter_deck"/>
-		<parent link="base_link"/>
-	</joint>
+        <link name="cutter_right">
+                <inertial>
+                        <mass value="1.0"/>
+                        <origin xyz="0 0 0"/>
+                        <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+                <inertial>
+                <visual>
+                        <origin rpy="0 0 0" xyz="0 0 0.075"/>
+                        <geometry>
+                                <cylinder radius="0.3556" length="0.15"/>
+                        </geometry>
+                        <material name="Green"/>
+                </visual>
+                <collision>
+                        <origin rpy="0 0 0" xyz="0 0 0.075"/>
+                        <geometry>
+                                <cylinder radius="0.3556" length="0.15"/>
+                        </geometry>
+                </collision>
+        </link>
+        <joint name="base_footprint_joint" type="fixed">
+                <origin rpy="0 0 0" xyz="-0.220 0 0.07"/>
+                <child link="base_link"/>
+                <parent link="base_footprint"/>
+        </joint>
 	<joint name="base_laser_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="1.31 -0.3 0.14"/>
 		<child link="base_laser"/>
@@ -156,11 +177,6 @@
 		<origin rpy="0 0 0" xyz="0.220 0 0.1"/>
 		<child link="base_imu"/>
 		<parent link="base_link"/>
-	</joint>
-	<joint name="base_footprint_joint" type="fixed">
-		<origin rpy="0 0 0" xyz="-0.220 0 0.07"/>
-		<child link="base_link"/>
-		<parent link="base_footprint"/>
 	</joint>
 	<joint name="base_gps_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="0.8 0 0.55"/>
@@ -172,4 +188,15 @@
 		<child link="base_camera"/>
 		<parent link="base_link"/>
 	</joint>
+        <joint name="cutter_deck_joint" type="fixed">
+                <origin rpy="0 0 0" xyz="0.767 0 0.113"/>
+                <child link="cutter_deck"/>
+                <parent link="base_link"/>
+        </joint>
+        <joint name="cutter_right_joint" type="fixed">
+                <origin rpy="0 0 0" xyz="0 0.180 0"/>
+                <child link="cutter_right"/>
+                <parent link="base_link"/>
+        </joint>
+
 </robot>
