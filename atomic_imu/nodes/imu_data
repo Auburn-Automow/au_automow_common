@@ -47,10 +47,13 @@ def main():
       time_diff = 0.04
 
       # Accumulate changes
-      abs_roll  += float(msg.group('roll')) * time_diff 
-      abs_pitch += float(msg.group('pitch')) * time_diff 
-      abs_yaw   += float(msg.group('yaw')) * time_diff 
-      
+      #abs_roll  += float(msg.group('roll')) * time_diff 
+      #abs_pitch += float(msg.group('pitch')) * time_diff 
+      if msg.group('yaw') != "-0.0681":
+        abs_yaw   += float(msg.group('yaw')) * time_diff 
+     
+      if msg.group('yaw') != "+0.0000":
+        rospy.loginfo("Diff: %s %s %s" % (msg.group('roll'), msg.group('pitch'), msg.group('yaw')))
       # rospy.loginfo("Roll: %f, Pitch: %f, Yaw: %f" % (math.degrees(abs_roll), math.degrees(abs_pitch), math.degrees(abs_yaw)))
       # Calculate orientation quaterion 
       orientation = tf.transformations.quaternion_from_euler(abs_roll, abs_pitch, abs_yaw) 
@@ -67,10 +70,10 @@ def main():
       pose_msg = PoseStamped()
       pose_msg.header.frame_id = "odom_combined"
       pose_msg.header.stamp = rospy.Time.now()
-      pose_msg.orientation.x = orientation[0]
-      pose_msg.orientation.y = orientation[1]
-      pose_msg.orientation.z = orientation[2]
-      pose_msg.orientation.w = orientation[3]
+      pose_msg.pose.orientation.x = orientation[0]
+      pose_msg.pose.orientation.y = orientation[1]
+      pose_msg.pose.orientation.z = orientation[2]
+      pose_msg.pose.orientation.w = orientation[3]
       pose_msg.pose.position=Point(0,0,0)
       imu_pose_topic.publish(pose_msg)
 
