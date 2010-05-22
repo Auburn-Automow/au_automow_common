@@ -47,22 +47,26 @@ def main():
       time_diff = 0.04
 
       # Accumulate changes
-      #abs_roll  += float(msg.group('roll')) * time_diff 
-      #abs_pitch += float(msg.group('pitch')) * time_diff 
-      if msg.group('yaw') != "-0.0681":
-        abs_yaw   += float(msg.group('yaw')) * time_diff 
-     
-      if msg.group('yaw') != "+0.0000":
-        rospy.loginfo("Diff: %s %s %s" % (msg.group('roll'), msg.group('pitch'), msg.group('yaw')))
+      abs_roll  += float(msg.group('roll')) * time_diff 
+      abs_pitch += float(msg.group('pitch')) * time_diff 
+      abs_yaw   += float(msg.group('yaw')) * time_diff 
+      
       # rospy.loginfo("Roll: %f, Pitch: %f, Yaw: %f" % (math.degrees(abs_roll), math.degrees(abs_pitch), math.degrees(abs_yaw)))
       # Calculate orientation quaterion 
       orientation = tf.transformations.quaternion_from_euler(abs_roll, abs_pitch, abs_yaw) 
-      imu_msg = Imu()
-      imu_msg.orientation.x = orientation[0]
-      imu_msg.orientation.y = orientation[1]
-      imu_msg.orientation.z = orientation[2]
-      imu_msg.orientation.w = orientation[3]
-      imu_msg.orientation_covariance = orientation_covariance
+      imu_msg = Imu(header = None,
+                    orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]),
+                    orientation_covariance = orientation_covariance,
+                    angular_velocity = 
+                      Vector3(x=float(msg.group('roll')), 
+                              y=float(msg.group('pitch')), 
+                              z=float(msg.group('yaw'))),
+                    angular_velocity_covariance = ang_covar,
+                    linear_acceleration =
+                      Vector3(x=float(msg.group('x')), 
+                              y=float(msg.group('y')), 
+                              z=float(msg.group('z'))),
+                    linear_acceleration_covariance = lin_covar)
       imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
       imu_data_topic.publish(imu_msg)
@@ -70,10 +74,7 @@ def main():
       pose_msg = PoseStamped()
       pose_msg.header.frame_id = "odom_combined"
       pose_msg.header.stamp = rospy.Time.now()
-      pose_msg.pose.orientation.x = orientation[0]
-      pose_msg.pose.orientation.y = orientation[1]
-      pose_msg.pose.orientation.z = orientation[2]
-      pose_msg.pose.orientation.w = orientation[3]
+      pose_msg.pose.orientation = Quaternion(orientation[0], orientation[1], orientation[2], orientation[3])
       pose_msg.pose.position=Point(0,0,0)
       imu_pose_topic.publish(pose_msg)
 

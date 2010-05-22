@@ -9,12 +9,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_launch</url>
 
-  <depend package="atomic_imu"/>
-  <depend package="automow_urdf"/>
-  <depend package="ax2550"/>
-  <depend package="dg14"/>
-  <depend package="housekeeping"/>
-  <depend package="2dnav_automow"/>
 </package>
 
 

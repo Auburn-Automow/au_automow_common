@@ -1,0 +1,13 @@
+<launch>
+    <!-- Start the ACML Node -->
+    <!-- <include file="$(find amcl)/examples/amcl_omni.launch" /> -->
+    
+    <!-- Start the move_base Node -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find 2dnav_automow)/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find 2dnav_automow)/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find 2dnav_automow)/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find 2dnav_automow)/global_costmap_params.yaml" command="load" />
+        <rosparam file="$(find 2dnav_automow)/base_local_planner_params.yaml" command="load" />
+    </node>
+</launch>

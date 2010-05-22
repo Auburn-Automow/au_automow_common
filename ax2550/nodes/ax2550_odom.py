@@ -7,12 +7,10 @@ from rospy.rostime import Time
 
 from ax2550.msg import Encoder 
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseStamped,Point
 
 import tf
 import math
 
-odom_pose = None
 odom_pub = None
 wheel_base_width = 0.6477 #meters = 25.5 in
 wheel_base_length =  0.9144 #meters =  36 in
@@ -27,7 +25,7 @@ MAX_DBL = 1e+100
 
 def encoderDataReceived(data):
     """Called when encoder data is received"""
-    global odom_pub,odom_pose
+    global odom_pub
     global wheel_base_width, wheel_base_length, wheel_diameter, wheel_circum,encoder_resolution
     global prev_theta,prev_x,prev_y
     left = data.left * wheel_circum/encoder_resolution # left encoder ticks
@@ -72,29 +70,17 @@ def encoderDataReceived(data):
 				0, 0, 0, 0, 0, 0.000289]
     odom_msg.twist.covariance = odom_msg.pose.covariance
  
-    odom_pose_msg = PoseStamped()
-    odom_pose_msg.header.stamp = rospy.Time.now()
-    odom_pose_msg.header.frame_id="odom_combined"
-    odom_pose_msg.pose.orientation.x = quat[0]
-    odom_pose_msg.pose.orientation.y = quat[1]
-    odom_pose_msg.pose.orientation.z = quat[2]
-    odom_pose_msg.pose.orientation.w = quat[3]
-    odom_pose_msg.pose.position=Point(0,0,0)
-
     ### Publishing Odom_msg
     odom_pub.publish(odom_msg)
-    odom_pose.publish(odom_pose_msg)    
 
 def ax2550EncodersListener():
     """Main loop"""
     global odom_pub
-    global odom_pose
- 
+    
     rospy.init_node('base_odom', anonymous=True)
     rospy.Subscriber('motor_control_encoders', Encoder, encoderDataReceived)
         
     odom_pub = rospy.Publisher('base_odom', Odometry)
-    odom_pose = rospy.Publisher('base_pose', PoseStamped)
     rospy.spin()
     
 if __name__ == '__main__':
