@@ -21,12 +21,14 @@ from rospy.rostime import Time
 from std_msgs.msg import String
 from ax2550.msg import Encoder
 from ax2550.srv import Move
+from geometry_msgs.msg import Twist
 
 # Python Libraries
 from threading import Timer, Lock
 import time
 from time import sleep
 import sys
+import math
 
 # pySerial
 from serial import Serial
@@ -35,6 +37,10 @@ from serial import Serial
 from seriallistener import SerialListener
 from logerror import logError
 
+###  Variables  ###
+WHEEL_BASE_LENGTH   = 0.6477 # meters
+WHEEL_RADIUS        = 0.3175 # meters
+MAX_WHEEL_VELOCITY  = 1.75 # m/s
 
 ###  Classes  ###
 class AX2550(object):
@@ -77,7 +83,7 @@ class AX2550(object):
         rospy.init_node('ax2550_driver', anonymous=True)
         
         # Subscribe to the /motor_control topic to listen for motor commands
-        rospy.Subscriber('motor_control', String, self.controlCommandReceived)
+        rospy.Subscriber('cmd_vel', Twist, self.cmd_velReceived)
         
         # Setup Publisher for publishing encoder data to the /motor_control_encoders topic
         self.encoders_pub = rospy.Publisher('motor_control_encoders', Encoder)
@@ -101,7 +107,53 @@ class AX2550(object):
         """Handles the Move srv requests"""
         self.move(data.speed, data.direction)
         return 0
+    
+    def cmd_velReceived(self, msg):
+        """Handles incoming messages from the cmd_vel topic"""
+        rospy.loginfo(str(msg))
+        # Extract Vx, Vy, and w
+        v_x = msg.linear.x
+        v_y = msg.linear.y
+        w   = msg.angular.z
         
+        # Calculate the magnitutde of the velocity vector, V, and the Radius of Rotation R
+        v = math.sqrt((v_x**2) + (v_y**2))
+        if w == 0:
+            R = 0
+        else:
+            R = v/w
+        
+        # Calculate the difference in velocity between the wheels
+        if R == 0:
+            dV = 0
+        else:
+            dV  = 2 * ((v*WHEEL_BASE_LENGTH)/R)
+        
+        # Calculate the velocity of each wheel
+        if v == 0:
+            v_l = w
+            v_r = w * -1
+        else:
+            v_l = (v + (0.5 * dV))
+            v_r = (v - (0.5 * dV))
+        
+        # Calculate the percent of max velocity for each wheel
+        if v_l == 0:
+            speed_left = 0
+        elif abs(v_l) > MAX_WHEEL_VELOCITY:
+            speed_left = 1
+        else:
+            speed_left = v_l / MAX_WHEEL_VELOCITY
+        if v_r == 0:
+            speed_right = 0
+        elif abs(v_r) > MAX_WHEEL_VELOCITY:
+            speed_right = 1
+        else:
+            speed_right = v_r / MAX_WHEEL_VELOCITY
+            
+        rospy.loginfo("Speed from Twist: left speed: %f, right speed: %f, Vx: %f, Vy: %f, w: %f" % (speed_left, speed_right, v_x, v_y, w))
+        self.setSpeeds(speed_left, speed_right)
+    
     def controlCommandReceived(self, msg):
         """Handle's messages received on the /motor_control topic"""
         self.move(msg.speed, msg.direction)

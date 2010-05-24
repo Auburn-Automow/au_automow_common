@@ -19,6 +19,12 @@
     <!-- Start the Extended Kalman Filter -->
     <include file="$(find automow_launch)/launch/ekf.launch" />
     
+    <!-- Start the Navigation Subsystem -->
+    <include file="$(find 2dnav_automow)/launch/automow_navigation.launch" />
+    
     <!-- Start the Vision system's Line Processing -->
     <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
+    
+    <!-- Start Housekeeping -->
+    <include file="$(find housekeeping)/launch/housekeeping.launch" />
 </launch>

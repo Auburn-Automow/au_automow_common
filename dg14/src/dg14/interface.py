@@ -178,7 +178,7 @@ class DG14GPS(object):
                     msg[13]                     # Differential reference station ID
                 
                 if time_pos != time_utm:
-                    self.logerr("Clock skew detected in POS and UTM messages:\nPOS - Time: %f, Message: %s\nUTM - Time: %f, Message: %s\n", 
+                    self.logerr("Clock skew detected in POS and UTM messages:\nPOS - Time: %f, Message: %s\nUTM - Time: %f, Message: %s\n" % \
                                 (time_pos, ','.join(self.current_pos), time_utm, ','.join(self.current_utm)))
                     return
                 # Assemble and publish the message

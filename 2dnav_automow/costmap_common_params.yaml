@@ -1,9 +1,9 @@
 obstacle_range: 7.5
 raytrace_range: 5.0
-footprint: [[0, 0], [0, 1.35], [.81, 1.35], [.81, 0]]
+footprint: [[-0.675, -0.405], [-0.675, 0.405], [0.675, 0.405], [0.675, -0.405]]
 #robot_radius: ir_of_robot
-inflation_radius: 0.55
+inflation_radius: 0.5
 
 observation_sources: laser_scan_sensor
 
-laser_scan_sensor: {sensor_frame: base_laser, data_type: LaserScan, topic: scan, marking: true, clearing: true}
+laser_scan_sensor: {sensor_frame: base_laser, data_type: LaserScan, topic: /scan, marking: true, clearing: true}
