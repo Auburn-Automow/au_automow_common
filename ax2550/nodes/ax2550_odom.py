@@ -22,6 +22,8 @@ encoder_resolution = 250*4 #motor controller reads * 4 (quadrature)
 prev_theta=0
 prev_x=0
 prev_y=0
+current_time = 0 
+previous_time = 0
 
 MAX_DBL = 1e+100  
 
@@ -30,9 +32,12 @@ def encoderDataReceived(data):
     global odom_pub,odom_pose
     global wheel_base_width, wheel_base_length, wheel_diameter, wheel_circum,encoder_resolution
     global prev_theta,prev_x,prev_y
+    global current_time,previous_time
     left = data.left * wheel_circum/encoder_resolution # left encoder ticks
     right = data.right * wheel_circum/encoder_resolution # right encoder ticks
     
+    current_time = rospy.Time.now()
+
     ### Do math here
     if(right == left):
         v = right
@@ -48,7 +53,12 @@ def encoderDataReceived(data):
     x = v * math.cos(theta) + prev_x
     y = v * math.sin(theta) + prev_y
 
-    (prev_x,prev_y,prev_theta) = (x,y,theta)
+    time_delta = (current_time - previous_time).to_sec()
+    r_dot = right/time_delta
+    l_dot = left/time_delta
+    theta_dot = (theta)/time_delta
+
+    (prev_x,prev_y,prev_theta,previous_time) = (x,y,theta,current_time)
  
     quat = tf.transformations.quaternion_from_euler(0,0,theta)
    
@@ -70,6 +80,9 @@ def encoderDataReceived(data):
 				0, 0, 0, MAX_DBL, 0, 0,
 				0, 0, 0, 0, MAX_DBL, 0,
 				0, 0, 0, 0, 0, 0.000289]
+    odom_msg.twist.twist.linear.x = r_dot
+    odom_msg.twist.twist.linear.y = l_dot
+    odom_msg.twist.twist.angular.x = theta_dot
     odom_msg.twist.covariance = odom_msg.pose.covariance
  
     odom_pose_msg = PoseStamped()
@@ -89,12 +102,17 @@ def ax2550EncodersListener():
     """Main loop"""
     global odom_pub
     global odom_pose
+    global current_time,previous_time
  
     rospy.init_node('base_odom', anonymous=True)
     rospy.Subscriber('motor_control_encoders', Encoder, encoderDataReceived)
         
     odom_pub = rospy.Publisher('base_odom', Odometry)
     odom_pose = rospy.Publisher('base_pose', PoseStamped)
+
+    current_time=rospy.Time.now()
+    previous_time = current_time
+
     rospy.spin()
     
 if __name__ == '__main__':
