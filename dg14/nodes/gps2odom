@@ -16,7 +16,7 @@ import rospy
 import tf
 
 # ROS msg and srv imports
-from dg14.msg import AutomowGpsInfo
+from dg14.msg import AutomowGPSInfo
 from nav_msgs.msg import Odometry
 
 # Python Libraries
@@ -36,7 +36,7 @@ def publishOdomData(data):
     """Publishes Odometry Data give GPS data"""
     global odom_publisher, initial_position
     # If first message received, save as initial position
-    if data.quality == 0:
+    if data.status == 0:
         return
     if initial_position == None:
         initial_position = data
@@ -71,7 +71,7 @@ def main():
     cmd_line_args = rospy.myargv(argv=sys.argv)
     # Setup Services and Topics
     odom_publisher = rospy.Publisher("gps_odom", Odometry)
-    gps_subscriber = rospy.Subscriber("gps_data", AutomowGpsInfo, publishOdomData)
+    gps_subscriber = rospy.Subscriber("gps_data", AutomowGPSInfo, publishOdomData)
     # Handle GPS Data until shutdown
     rospy.spin()
 

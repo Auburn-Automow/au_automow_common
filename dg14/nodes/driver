@@ -10,15 +10,15 @@ __author__ = "William Woodall"
 
 ###  Imports  ###
 
+# Python Libraries
+import sys
+
 # ROS imports
 import roslib; roslib.load_manifest('dg14')
 import rospy
 
 # ROS msg and srv imports
-from dg14.msg import AutomowGpsInfo
-
-# Python Libraries
-import sys
+from dg14.msg import AutomowGPSInfo
 
 # Peer Libraries
 import dg14.interface
@@ -34,7 +34,7 @@ gps_publisher = None
 def publishGPSData(data):
     """Publishes encoder data"""
     global gps_publisher
-    msg = AutomowGpsInfo()
+    msg = AutomowGPSInfo()
     try:
 	msg.header.stamp = rospy.Time.now()
         msg.latitude = data[1] or 0.0
@@ -42,7 +42,7 @@ def publishGPSData(data):
         msg.altitude = data[3] or 0.0
         msg.utm_e = data[4] or 0.0
         msg.utm_n = data[5] or 0.0
-        msg.zone = data[6]
+        msg.utm_zone = data[6]
         msg.track = data[7] or 0.0
         msg.hdop = data[8] or 0.0
         msg.vdop = data[9] or 0.0
@@ -71,7 +71,7 @@ def main():
     gps.info = rospy.loginfo
     gps.logerr = rospy.logerr
     # Setup Services and Topics
-    gps_publisher = rospy.Publisher("gps_data", AutomowGpsInfo)
+    gps_publisher = rospy.Publisher("gps_data", AutomowGPSInfo)
     # Start the GPS
     rospy.loginfo("GPS Starting")
     while not rospy.is_shutdown():
