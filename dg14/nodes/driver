@@ -15,7 +15,7 @@ import roslib; roslib.load_manifest('dg14')
 import rospy
 
 # ROS msg and srv imports
-from applanix.msg import GpsInfo
+from dg14.msg import AutomowGpsInfo
 
 # Python Libraries
 import sys
@@ -34,7 +34,7 @@ gps_publisher = None
 def publishGPSData(data):
     """Publishes encoder data"""
     global gps_publisher
-    msg = GpsInfo()
+    msg = AutomowGpsInfo()
     try:
 	msg.header.stamp = rospy.Time.now()
         msg.latitude = data[1] or 0.0
@@ -43,12 +43,13 @@ def publishGPSData(data):
         msg.utm_e = data[4] or 0.0
         msg.utm_n = data[5] or 0.0
         msg.zone = data[6]
-        msg.hdop = data[7] or 0.0
-        msg.vdop = data[8] or 0.0
-        msg.err_horz = data[9] or 0.0
-        msg.err_vert = data[10] or 0.0
-        msg.quality = data[11] or 0
-        msg.num_sats = data[12] or 0
+        msg.track = data[7] or 0.0
+        msg.hdop = data[8] or 0.0
+        msg.vdop = data[9] or 0.0
+        msg.err_horz = data[10] or 0.0
+        msg.err_vert = data[11] or 0.0
+        msg.status = data[12] or 0
+        msg.satellites = data[13] or 0
     except:
         logError(sys.exc_info(), rospy.logerr, "Exception generating GPSInfo Message")
     gps_publisher.publish(msg)
@@ -70,7 +71,7 @@ def main():
     gps.info = rospy.loginfo
     gps.logerr = rospy.logerr
     # Setup Services and Topics
-    gps_publisher = rospy.Publisher("gps_data", GpsInfo)
+    gps_publisher = rospy.Publisher("gps_data", AutomowGpsInfo)
     # Start the GPS
     rospy.loginfo("GPS Starting")
     while not rospy.is_shutdown():

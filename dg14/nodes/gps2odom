@@ -13,13 +13,15 @@ __author__ = "William Woodall"
 # ROS imports
 import roslib; roslib.load_manifest('dg14')
 import rospy
+import tf
 
 # ROS msg and srv imports
-from applanix.msg import GpsInfo
+from dg14.msg import AutomowGpsInfo
 from nav_msgs.msg import Odometry
 
 # Python Libraries
 import sys
+import math
 
 # Peer Libraries
 from logerror import logError
@@ -43,6 +45,7 @@ def publishOdomData(data):
     x = data.utm_e - initial_position.utm_e
     y = data.utm_n - initial_position.utm_n
     z = 0 # Ignoring altitude
+    yaw = math.radians(data.track - initial_position.track)
     # Setup Odometry message
     msg = Odometry()
     msg.header.stamp = data.header.stamp
@@ -50,10 +53,7 @@ def publishOdomData(data):
     msg.pose.pose.position.x = x
     msg.pose.pose.position.y = y
     msg.pose.pose.position.z = z
-    msg.pose.pose.orientation.x = 1
-    msg.pose.pose.orientation.y = 0
-    msg.pose.pose.orientation.z = 0
-    msg.pose.pose.orientation.w = 0
+    msg.pose.pose.orientation = tf.transformations.quaternion_from_euler(0, 0, yaw)
     msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
                            0, 0.01, 0, 0, 0, 0,
                            0, 0, 0.01, 0, 0, 0,
@@ -71,7 +71,7 @@ def main():
     cmd_line_args = rospy.myargv(argv=sys.argv)
     # Setup Services and Topics
     odom_publisher = rospy.Publisher("gps_odom", Odometry)
-    gps_subscriber = rospy.Subscriber("gps_data", GpsInfo, publishOdomData)
+    gps_subscriber = rospy.Subscriber("gps_data", AutomowGpsInfo, publishOdomData)
     # Handle GPS Data until shutdown
     rospy.spin()
 
