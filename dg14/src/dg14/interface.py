@@ -25,14 +25,14 @@ from seriallistener import SerialListener
 
 CMD_TERMINATOR = '\r\n'
 
-CMD_POS_ON = '$PASHS,NME,POS,A,ON,1' + CMD_TERMINATOR
-CMD_POS_OFF = '$PASHS,NME,POS,A,OFF,1' + CMD_TERMINATOR
+CMD_POS_ON = '$PASHS,NME,POS,A,ON,0.2' + CMD_TERMINATOR
+CMD_POS_OFF = '$PASHS,NME,POS,A,OFF,0.2' + CMD_TERMINATOR
 
-CMD_SAT_ON = '$PASHS,NME,SAT,A,ON,1' + CMD_TERMINATOR
-CMD_SAT_OFF = '$PASHS,NME,SAT,A,OFF,1' + CMD_TERMINATOR
+CMD_SAT_ON = '$PASHS,NME,SAT,A,ON,0.2' + CMD_TERMINATOR
+CMD_SAT_OFF = '$PASHS,NME,SAT,A,OFF,0.2' + CMD_TERMINATOR
 
-CMD_UTM_ON = '$PASHS,NME,UTM,A,ON,1' + CMD_TERMINATOR
-CMD_UTM_OFF = '$PASHS,NME,UTM,A,OFF,1' + CMD_TERMINATOR
+CMD_UTM_ON = '$PASHS,NME,UTM,A,ON,0.2' + CMD_TERMINATOR
+CMD_UTM_OFF = '$PASHS,NME,UTM,A,OFF,0.2' + CMD_TERMINATOR
 
 ###  Functions  ###
 
@@ -59,7 +59,7 @@ class DG14GPS(object):
         # Create and setup the serial port
         self.serial = Serial()
         self.serial.port = self.serial_port
-        self.serial.baudrate = 9600
+        self.serial.baudrate = 115200
         self.serial.timeout = 2
         self.serial.open()
         
