@@ -1,0 +1,14 @@
+<package>
+  <description brief="lcd4linux">
+
+     lcd4linux
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/lcd4linux</url>
+
+</package>
+
+
