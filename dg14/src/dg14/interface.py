@@ -25,14 +25,14 @@ from seriallistener import SerialListener
 
 CMD_TERMINATOR = '\r\n'
 
-CMD_POS_ON = '$PASHS,NME,POS,A,ON,1' + CMD_TERMINATOR
-CMD_POS_OFF = '$PASHS,NME,POS,A,OFF,1' + CMD_TERMINATOR
+CMD_POS_ON = '$PASHS,NME,POS,A,ON,0.2' + CMD_TERMINATOR
+CMD_POS_OFF = '$PASHS,NME,POS,A,OFF,0.2' + CMD_TERMINATOR
 
-CMD_SAT_ON = '$PASHS,NME,SAT,A,ON,1' + CMD_TERMINATOR
-CMD_SAT_OFF = '$PASHS,NME,SAT,A,OFF,1' + CMD_TERMINATOR
+CMD_SAT_ON = '$PASHS,NME,SAT,A,ON,0.2' + CMD_TERMINATOR
+CMD_SAT_OFF = '$PASHS,NME,SAT,A,OFF,0.2' + CMD_TERMINATOR
 
-CMD_UTM_ON = '$PASHS,NME,UTM,A,ON,1' + CMD_TERMINATOR
-CMD_UTM_OFF = '$PASHS,NME,UTM,A,OFF,1' + CMD_TERMINATOR
+CMD_UTM_ON = '$PASHS,NME,UTM,A,ON,0.2' + CMD_TERMINATOR
+CMD_UTM_OFF = '$PASHS,NME,UTM,A,OFF,0.2' + CMD_TERMINATOR
 
 ###  Functions  ###
 
@@ -59,7 +59,7 @@ class DG14GPS(object):
         # Create and setup the serial port
         self.serial = Serial()
         self.serial.port = self.serial_port
-        self.serial.baudrate = 9600
+        self.serial.baudrate = 115200
         self.serial.timeout = 2
         self.serial.open()
         
@@ -79,7 +79,7 @@ class DG14GPS(object):
     
     def getData(self, timeout=0.25):
         """Waits for serial data and processes it if received with in the timeout period"""
-        self.serial.timeout = 0.25
+        self.serial.timeout = timeout
         msg = self.serial.readline()
         if msg == None or msg == '':
             return False
@@ -130,7 +130,7 @@ class DG14GPS(object):
                                                 # If f1 positive, “+” sign not mentioned
                 site_id                 = \
                     msg[10]                     # Site ID
-                course                  = \
+                heading                 = \
                     floatOrNone(msg[11])        # True track/true course over ground in degrees (000.00 to 359.99 degrees)
                 speed                   = \
                     floatOrNone(msg[12])        # Speed over ground in knots
@@ -194,6 +194,7 @@ class DG14GPS(object):
                 result.append(utm_easting)
                 result.append(utm_northing)
                 result.append(utm_zone)
+                result.append(heading)
                 result.append(hdop)
                 result.append(vdop)
                 result.append(0) # err_horizontal
