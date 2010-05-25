@@ -5,6 +5,11 @@
 driver.py - ROS Node for converting GPS data into odometry data.
 
 Created by William Woodall on 2010-05-19.
+
+This node takes two parameters to set up the GPS coordinate frame.
+
+magnetic_heading	-	Heading relative to magnetic north, read from a compass
+magnetic_declination	-	Magnetic declination for the area, read from the NSGS
 """
 __author__ = "William Woodall"
 
@@ -29,12 +34,12 @@ from logerror import logError
 ###  Variables  ###
 odom_publisher = None
 initial_position = None
-
+odom_broadcaster = None
 ###  Functions  ###
 
 def publishOdomData(data):
     """Publishes Odometry Data give GPS data"""
-    global odom_publisher, initial_position
+    global odom_publisher, initial_position, gps_broadcaster
     # If first message received, save as initial position
     if data.status == 0:
         return
@@ -49,11 +54,10 @@ def publishOdomData(data):
     # Setup Odometry message
     msg = Odometry()
     msg.header.stamp = data.header.stamp
-    msg.header.frame_id = "odom_combined"
+    msg.header.frame_id = "gps_frame"
     msg.pose.pose.position.x = x
-    msg.pose.pose.position.y = -y
+    msg.pose.pose.position.y = y
     msg.pose.pose.position.z = z
-    msg.pose.pose.orientation = tf.transformations.quaternion_from_euler(0, 0, yaw)
     msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
                            0, 0.01, 0, 0, 0, 0,
                            0, 0, 0.01, 0, 0, 0,
@@ -62,9 +66,20 @@ def publishOdomData(data):
                            0, 0, 0, 0, 0, 99999]
     # Publish the message
     odom_publisher.publish(msg)
+    magnetic_heading = rospy.get_param('magnetic_heading','0')
+    magnetic_declination = rospy.get_param('magnetic_declination','0')
+    true_heading = magnetic_heading - magnetic_declination
+    if true_heading < 0:
+        true_heading += 360
+    gps_broadcaster.sendTransform((0,0,0),
+                                  tf.transformations.quaternion_from_euler(math.pi,0,math.radians(true_heading)),
+                                  rospy.Time.now(),
+                                  "gps_frame",
+                                  "odom_combined")
+		
 
 def main():
-    global odom_publisher
+    global odom_publisher,gps_broadcaster
     # ROS init
     rospy.init_node("gps2odom", anonymous=True)
     # Get the command line arguments
@@ -72,9 +87,13 @@ def main():
     # Setup Services and Topics
     odom_publisher = rospy.Publisher("gps_odom", Odometry)
     gps_subscriber = rospy.Subscriber("gps_data", AutomowGPSInfo, publishOdomData)
+    # Setup Transform to account for difference in heading
+    gps_broadcaster = tf.TransformBroadcaster() 
     # Handle GPS Data until shutdown
     rospy.spin()
 
 ###  If Main  ###
 if __name__ == '__main__':
     main()
+#vim: set ft=python expandtab softtabstop=2 shiftwidth=2 tabstop=2
+
