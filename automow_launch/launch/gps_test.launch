@@ -1,6 +1,6 @@
 <launch>
     <master auto="start" />
-    <param name="magnetic_heading" value="20" />
+    <param name="magnetic_heading" value="320" />
     <param name="magnetic_declination" value="-3.5" />
     
     <!-- Start the State publisher responsible for publishing tf's for the mower -->
