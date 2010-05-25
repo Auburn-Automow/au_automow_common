@@ -40,15 +40,15 @@ def publishOdomData(data):
         initial_position = data
         return
     # Calculate Change in position    
-    x = data.utm_e - initial_position.utm_e
-    y = data.utm_n - initial_position.utm_n
+    y = data.utm_e - initial_position.utm_e 
+    x = data.utm_n - initial_position.utm_n
     z = 0 # Ignoring altitude
     # Setup Odometry message
     msg = Odometry()
     msg.header.stamp = data.header.stamp
     msg.header.frame_id = "odom_combined"
     msg.pose.pose.position.x = x
-    msg.pose.pose.position.y = y
+    msg.pose.pose.position.y = -y
     msg.pose.pose.position.z = z
     msg.pose.pose.orientation.x = 1
     msg.pose.pose.orientation.y = 0
