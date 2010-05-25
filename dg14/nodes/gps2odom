@@ -35,11 +35,15 @@ from logerror import logError
 odom_publisher = None
 initial_position = None
 odom_broadcaster = None
+magnetic_heading = None
+magnetic_declination = None
+
 ###  Functions  ###
 
 def publishOdomData(data):
     """Publishes Odometry Data give GPS data"""
     global odom_publisher, initial_position, gps_broadcaster
+    global magnetic_heading,magnetic_declination
     # If first message received, save as initial position
     if data.status == 0:
         return
@@ -53,8 +57,8 @@ def publishOdomData(data):
     yaw = math.radians(data.track - initial_position.track)
     # Setup Odometry message
     msg = Odometry()
-    msg.header.stamp = data.header.stamp
-    msg.header.frame_id = "gps_frame"
+    msg.header.stamp = data.header.stamp 
+    msg.header.frame_id = "odom_combined"
     msg.pose.pose.position.x = x
     msg.pose.pose.position.y = y
     msg.pose.pose.position.z = z
@@ -66,20 +70,19 @@ def publishOdomData(data):
                            0, 0, 0, 0, 0, 99999]
     # Publish the message
     odom_publisher.publish(msg)
-    magnetic_heading = rospy.get_param('magnetic_heading','0')
-    magnetic_declination = rospy.get_param('magnetic_declination','0')
     true_heading = magnetic_heading - magnetic_declination
     if true_heading < 0:
         true_heading += 360
     gps_broadcaster.sendTransform((0,0,0),
                                   tf.transformations.quaternion_from_euler(math.pi,0,math.radians(true_heading)),
-                                  rospy.Time.now(),
-                                  "gps_frame",
+                                  data.header.stamp,
+				  "gps_frame",
                                   "odom_combined")
 		
 
 def main():
     global odom_publisher,gps_broadcaster
+    global magnetic_heading,magnetic_declination
     # ROS init
     rospy.init_node("gps2odom", anonymous=True)
     # Get the command line arguments
@@ -89,6 +92,8 @@ def main():
     gps_subscriber = rospy.Subscriber("gps_data", AutomowGPSInfo, publishOdomData)
     # Setup Transform to account for difference in heading
     gps_broadcaster = tf.TransformBroadcaster() 
+    magnetic_heading = rospy.get_param('magnetic_heading','0')
+    magnetic_declination = rospy.get_param('magnetic_declination','0')
     # Handle GPS Data until shutdown
     rospy.spin()
 
