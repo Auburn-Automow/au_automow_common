@@ -110,7 +110,7 @@ class AX2550(object):
     
     def cmd_velReceived(self, msg):
         """Handles incoming messages from the cmd_vel topic"""
-        rospy.loginfo(str(msg))
+        # rospy.loginfo(str(msg))
         # Extract Vx, Vy, and w
         v_x = msg.linear.x
         v_y = msg.linear.y
@@ -131,11 +131,11 @@ class AX2550(object):
         
         # Calculate the velocity of each wheel
         if v == 0:
-            v_l = w
-            v_r = w * -1
+            v_l = w * -1
+            v_r = w
         else:
-            v_l = (v + (0.5 * dV))
-            v_r = (v - (0.5 * dV))
+            v_l = (v - (0.5 * dV))
+            v_r = (v + (0.5 * dV))
         
         # Calculate the percent of max velocity for each wheel
         if v_l == 0:
@@ -151,7 +151,7 @@ class AX2550(object):
         else:
             speed_right = v_r / MAX_WHEEL_VELOCITY
             
-        rospy.loginfo("Speed from Twist: left speed: %f, right speed: %f, Vx: %f, Vy: %f, w: %f" % (speed_left, speed_right, v_x, v_y, w))
+        # rospy.loginfo("Speed from Twist: left speed: %f, right speed: %f, Vx: %f, Vy: %f, w: %f" % (speed_left, speed_right, v_x, v_y, w))
         self.setSpeeds(speed_left, speed_right)
     
     def controlCommandReceived(self, msg):

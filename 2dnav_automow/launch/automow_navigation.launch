@@ -1,6 +1,11 @@
 <launch>
+    <!-- Setup Map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find 2dnav_automow)/map_server.yaml">
+        <param name="frame_id" type="str" value="/odom_combined" />
+    </node>
+    
     <!-- Start the ACML Node -->
-    <!-- <include file="$(find amcl)/examples/amcl_omni.launch" /> -->
+    <include file="$(find amcl)/examples/amcl_omni.launch" />
     
     <!-- Start the move_base Node -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">

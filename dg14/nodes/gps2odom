@@ -52,17 +52,18 @@ def publishOdomData(data):
     true_heading = magnetic_heading - magnetic_declination
     if true_heading < 0:
         true_heading += 360
-
+    
     # Calculate Change in position    
     gps_y = data.utm_e - initial_position.utm_e 
     gps_y = -gps_y
     gps_x = data.utm_n - initial_position.utm_n
+    
     z = 0 # Ignoring altitude
     yaw = math.radians(data.track - initial_position.track)
     
     frame_x = (gps_x * math.cos(math.radians(true_heading))) - (gps_y * math.sin(math.radians(true_heading)))
     frame_y = (gps_y * math.cos(math.radians(true_heading))) + (gps_x * math.sin(math.radians(true_heading)))
-
+    
     # Setup Odometry message
     msg = Odometry()
     msg.header.stamp = data.header.stamp 
@@ -70,6 +71,10 @@ def publishOdomData(data):
     msg.pose.pose.position.x = frame_x
     msg.pose.pose.position.y = frame_y
     msg.pose.pose.position.z = z
+    msg.pose.pose.orientation.x = 1
+    msg.pose.pose.orientation.y = 0
+    msg.pose.pose.orientation.z = 0
+    msg.pose.pose.orientation.w = 0
     msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
                            0, 0.01, 0, 0, 0, 0,
                            0, 0, 0.01, 0, 0, 0,
