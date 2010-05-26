@@ -11,6 +11,8 @@
   <depend package="move_base_msgs"/>
   <depend package="actionlib"/>
   <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="tf"/>
 
 </package>
 

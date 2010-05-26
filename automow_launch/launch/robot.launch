@@ -11,7 +11,7 @@
     <include file="$(find atomic_imu)/launch/atomic_imu.launch" />
     
     <!-- Start the GPS for position odometry -->
-    <include file="$(find dg14)/launch/dg14_gps.launch" />
+    <!-- <include file="$(find dg14)/launch/dg14_gps.launch" /> -->
     
     <!-- Start the Hokuyo Laser Range Finder -->
     <include file="$(find automow_launch)/launch/hokuyo_lrf.launch" />
@@ -26,5 +26,5 @@
     <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
     
     <!-- Start Housekeeping -->
-    <include file="$(find housekeeping)/launch/housekeeping.launch" />
+    <!-- <include file="$(find housekeeping)/launch/housekeeping.launch" /> -->
 </launch>

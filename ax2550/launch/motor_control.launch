@@ -2,5 +2,6 @@
     <node name="ax2550_driver" pkg="ax2550" type="ax2550_driver.py" output="screen" />
     <node name="ax2550_teleop" pkg="ax2550" type="ax2550_teleop.py" />
     <node name="joy_node" pkg="joy" type="joy_node" output="screen" />
+    <!-- <node name="ps3joy" pkg="ax2550" type="startps3" output="screen" /> -->
     <node name="ax2550_odom" pkg="ax2550" type="ax2550_odom.py" output="screen" />
 </launch>

@@ -41,19 +41,23 @@ def publishOdomData(data):
     if initial_position == None:
         initial_position = data
         return
-    # Calculate Change in position    
+    # Calculate Change in position
     x = data.utm_e - initial_position.utm_e
     y = data.utm_n - initial_position.utm_n
     z = 0 # Ignoring altitude
     yaw = math.radians(data.track - initial_position.track)
     # Setup Odometry message
     msg = Odometry()
-    msg.header.stamp = data.header.stamp
+    msg.header.stamp = rospy.Time.now()
     msg.header.frame_id = "odom_combined"
     msg.pose.pose.position.x = x
     msg.pose.pose.position.y = y
     msg.pose.pose.position.z = z
-    msg.pose.pose.orientation = tf.transformations.quaternion_from_euler(0, 0, yaw)
+    msg.pose.pose.orientation.x = 1
+    msg.pose.pose.orientation.y = 0
+    msg.pose.pose.orientation.z = 0
+    msg.pose.pose.orientation.w = 0
+    # msg.pose.pose.orientation = tf.transformations.quaternion_from_euler(0, 0, 0)
     msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
                            0, 0.01, 0, 0, 0, 0,
                            0, 0, 0.01, 0, 0, 0,

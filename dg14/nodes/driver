@@ -36,7 +36,7 @@ def publishGPSData(data):
     global gps_publisher
     msg = AutomowGPSInfo()
     try:
-	msg.header.stamp = rospy.Time.now()
+        msg.header.stamp = rospy.Time.now()
         msg.latitude = data[1] or 0.0
         msg.longitude = data[2] or 0.0
         msg.altitude = data[3] or 0.0
@@ -83,8 +83,8 @@ def main():
     # Handle GPS Data until shutdown
     while not rospy.is_shutdown():
         if not gps.getData():
-		#rospy.logwarn("Not gps data received, this time...")
-		pass
+            #rospy.logwarn("Not gps data received, this time...")
+            pass
     # Tell the GPS to stop cleanly
     gps.shutdown()
 

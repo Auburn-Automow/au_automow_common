@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+###  Imports  ###
+
+# ROS imports
+import roslib; roslib.load_manifest('test_nav_goal')
+import rospy
+import actionlib
+from time import sleep
+import math
+import tf
+
+# ROS msg and srv imports
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+
+# Python Libraries
+import sys
+
+# Peer Libraries
+
+###  Variables  ###
+destination = None
+
+###  Functions  ###
+
+def main():
+    global destination
+    rospy.init_node("nav_test_node")
+    client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+    client.wait_for_server()
+    
+    # First move
+    destination = MoveBaseGoal()
+    destination.target_pose.header.frame_id = "odom_combined"
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 5.0
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result()
+    
+    # Second move
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 5.0
+    destination.target_pose.pose.position.y = 5.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(180))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result()
+    
+    # Third Move
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 0.0
+    destination.target_pose.pose.position.y = 5.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(270))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result()
+    
+    # Final Move
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 0.0
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result()
+
+###  If Main  ###
+if __name__ == '__main__':
+    main()
