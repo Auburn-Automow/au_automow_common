@@ -9,6 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/lcd4linux</url>
 
+  <depend package="rospy" />
+  <depend package="housekeeping" />
 </package>
 
 

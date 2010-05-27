@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+__author__ = "Michael Carroll"
+
+import roslib; roslib.load_manifest('lcd4linux')
+import rospy
+
+from housekeeping.msg import Housekeeping
+
+from time import sleep
+import math
+
+def handleHousekeeping(msg):
+  top_c = open('/tmp/lcd/top_temp_c','w')
+  bot_c = open('/tmp/lcd/bot_temp_c','w')
+  top_f = open('/tmp/lcd/top_temp_f','w')
+  bot_f = open('/tmp/lcd/bot_temp_f','w')
+	
+  top_c.write(str(msg.TopTemperature))
+  bot_c.write(str(msg.BottomTemperature))
+  top_f.write(str((1.8*msg.TopTemperature) + 32))
+  bot_f.write(str((1.8*msg.BottomTemperature) + 32))
+  top_f.close()
+  bot_f.close()
+  top_c.close()
+  bot_c.close()
+
+def main():
+  rospy.init_node("lcd_report")
+  housekeeping_sub = rospy.Subscriber("housekeeping",Housekeeping, handleHousekeeping)
+  rospy.spin()  
+
+
+if __name__ == '__main__':
+  main()
+
+# vim: set ft=python expandtab softtabstop=2 shiftwidth=2 tabstop=2
