@@ -57,7 +57,6 @@ def publishOdomData(data):
     
     # Calculate Change in position    
     gps_y = data.utm_e - initial_position.utm_e 
-    gps_y = -gps_y
     gps_x = data.utm_n - initial_position.utm_n
     
     z = 0 # Ignoring altitude
