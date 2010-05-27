@@ -38,6 +38,7 @@ magnetic_heading = None
 magnetic_declination = None
 odom_broadcaster = None
 
+MAX_DBL = 1e100
 ###  Functions  ###
 
 def publishOdomData(data):
@@ -74,12 +75,12 @@ def publishOdomData(data):
     msg.pose.pose.orientation.y = quat[1]
     msg.pose.pose.orientation.z = quat[2]
     msg.pose.pose.orientation.w = quat[3]
-    msg.pose.covariance = [1, 0, 0, 0, 0, 0,
-                           0, 1, 0, 0, 0, 0,
-                           0, 0, 1, 0, 0, 0,
-                           0, 0, 0, 99999, 0, 0,
-                           0, 0, 0, 0, 99999, 0,
-                           0, 0, 0, 0, 0, 99999]
+    msg.pose.covariance = [1.5, 0, 0, 0, 0, 0,
+                           0, 1.5, 0, 0, 0, 0,
+                           0, 0, MAX_DBL, 0, 0, 0,
+                           0, 0, 0, MAX_DBL, 0, 0,
+                           0, 0, 0, 0, MAX_DBL, 0,
+                           0, 0, 0, 0, 0, 1e2]
     # Publish the message
     odom_publisher.publish(msg)
     true_heading = magnetic_heading - magnetic_declination
