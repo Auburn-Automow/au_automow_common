@@ -90,7 +90,6 @@ def publishOdomData(data):
                                   rospy.Time.now(),
                                   "gps_frame",
                                   "odom_combined")
-		
 
 def main():
     global magnetic_heading, magnetic_declination
