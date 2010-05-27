@@ -11,6 +11,7 @@
 
   <depend package="rospy" />
   <depend package="housekeeping" />
+  <depend package="dg14" />
 </package>
 
 

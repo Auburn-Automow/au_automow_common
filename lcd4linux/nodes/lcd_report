@@ -7,6 +7,7 @@ import roslib; roslib.load_manifest('lcd4linux')
 import rospy
 
 from housekeeping.msg import Housekeeping
+from dg14.msg import AutomowGPSInfo
 
 from time import sleep
 import math
@@ -26,9 +27,24 @@ def handleHousekeeping(msg):
   top_c.close()
   bot_c.close()
 
+def handleGPS(msg):
+  gps_sats = open('/tmp/lcd/gps_sats','w')
+  gps_lock = open('/tmp/lcd/gps_lock','w')
+
+  gps_sats.write(str(msg.satellites))
+  if msg.status == 0:
+	gps_lock.write('No Lock')
+  elif msg.status == 1:
+	gps_lock.write('Single Lock')
+  elif msg.status == 3:
+	gps_lock.write('Differential')
+  gps_sats.close()
+  gps_lock.close()
+
 def main():
   rospy.init_node("lcd_report")
   housekeeping_sub = rospy.Subscriber("housekeeping",Housekeeping, handleHousekeeping)
+  gps_sub = rospy.Subscriber("gps_data",AutomowGPSInfo, handleGPS)
   rospy.spin()  
 
 
