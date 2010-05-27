@@ -42,7 +42,7 @@ magnetic_declination = None
 def publishOdomData(data):
     """Publishes Odometry Data give GPS data"""
     global odom_publisher, initial_position
-    global magnetic_heading,magnetic_declination
+    global magnetic_heading, magnetic_declination
     # If first message received, save as initial position
     if data.status == 0:
         return
@@ -86,7 +86,7 @@ def publishOdomData(data):
 
 def main():
     global odom_publisher
-    global magnetic_heading,magnetic_declination
+    global magnetic_heading, magnetic_declination
     # ROS init
     rospy.init_node("gps2odom", anonymous=True)
     # Get the command line arguments
@@ -95,8 +95,8 @@ def main():
     odom_publisher = rospy.Publisher("gps_odom", Odometry)
     gps_subscriber = rospy.Subscriber("gps_data", AutomowGPSInfo, publishOdomData)
     # Setup Transform to account for difference in heading
-    magnetic_heading = rospy.get_param('magnetic_heading','0')
-    magnetic_declination = rospy.get_param('magnetic_declination','0')
+    magnetic_heading = rospy.get_param('magnetic_heading', 0)
+    magnetic_declination = rospy.get_param('magnetic_declination', 0)
     # Handle GPS Data until shutdown
     rospy.spin()
 
