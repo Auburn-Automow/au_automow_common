@@ -71,6 +71,19 @@
             </geometry>
         </visual>
     </link>
+    <link name="camera_frame">
+        <inertial>
+            <mass value="1.0"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+    </link>
     <link name="base_footprint">
         <inertial>
             <mass value="1.0"/>
@@ -199,6 +212,12 @@
         <child link="base_imu"/>
         <parent link="base_link"/>
     </joint>
+    <joint name="camera_frame_link" type="fixed">
+        <origin rpy="0 0 0" xyz="1.6002 0 -0.07"/>
+        <child link="camera_frame"/>
+        <parent link="base_link"/>
+    </joint>
+
     <joint name="base_gps_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0.8 0 0.55"/>
         <child link="base_gps"/>
