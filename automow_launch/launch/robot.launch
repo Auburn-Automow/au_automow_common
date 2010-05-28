@@ -20,13 +20,14 @@
     <include file="$(find automow_launch)/launch/hokuyo_lrf.launch" />
     
     <!-- Start the Vision system's Line Processing -->
-    <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
+    <include file="$(find line_processing)/launch/line_processing.launch" />
     
     <!-- Start Housekeeping -->
     <include file="$(find housekeeping)/launch/housekeeping.launch" />
     
     <!-- Start the Navigation Subsystem -->
     <include file="$(find 2dnav_automow)/launch/automow_navigation.launch" />
-
-    <node name="lcd_report" pkg="lcd4linx" type="lcd_report"/> 
+    
+    <!-- LCD Panel -->
+    <!-- <node name="lcd_report" pkg="lcd4linux" type="lcd_report"/>  -->
 </launch>

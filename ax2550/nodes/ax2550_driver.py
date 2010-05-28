@@ -302,15 +302,15 @@ class AX2550(object):
                 encoder_2 = 0
             # Publish the encoder data
             header = roslib.msg._Header.Header()
-            header.stamp = Time.from_seconds(time.time())
+            header.stamp = rospy.Time.now()
             header.frame_id = "0"
             message = Encoder(header=header, left=encoder_1, right=encoder_2)
             try:
                 self.encoders_pub.publish(message)
             except:
                 pass
-	except ValueError:
-	    rospy.logerr("Invalid encoder data received, skipping this one.")
+        except ValueError:
+            rospy.logerr("Invalid encoder data received, skipping this one.")
         except Exception as err:
             logError(sys.exc_info(), rospy.logerr, "Exception while Querying the Encoders: ")
             self.encoder_timer.cancel()
