@@ -1,0 +1,3 @@
+<launch>
+    <node name="trimmer_arm_driver" pkg="trimmer_arm" type="driver" />
+</launch>
