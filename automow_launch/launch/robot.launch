@@ -20,7 +20,7 @@
     <!-- <include file="$(find automow_launch)/launch/hokuyo_lrf.launch" /> -->
     
     <!-- Start the Vision system's Line Processing -->
-    <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
+    <include file="$(find line_processing)/launch/line_processing.launch" />
     
     <!-- Start Housekeeping -->
     <include file="$(find housekeeping)/launch/housekeeping.launch" />
