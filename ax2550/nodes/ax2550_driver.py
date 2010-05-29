@@ -53,7 +53,7 @@ class AX2550(object):
         
         # Try to open and configure the serial port
         self.serial = Serial(self.serial_port)
-        self.serial.timeout = 0.4
+        self.serial.timeout = 0.05
         self.serial.baud = "9600"
         self.serial.bytesize = 7
         self.serial.parity = "E"
@@ -62,7 +62,7 @@ class AX2550(object):
         self.serial.open()
         self.keep_alive_timer = None
         self.encoder_timer = None
-        self.encoder_rate = 0.05
+        self.encoder_rate = 1.0/20.0
         self.encoder_count = 0
         
         # Setup the lock to synchronize the setting of motor speeds
