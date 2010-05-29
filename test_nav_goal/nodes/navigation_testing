@@ -45,13 +45,11 @@ def main():
     
     client.wait_for_result()
     
-    return
-    
     # Second move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 10.0
-    destination.target_pose.pose.position.y = 10.0
+    destination.target_pose.pose.position.x = 5.0
+    destination.target_pose.pose.position.y = 5.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(180))
     destination.target_pose.pose.orientation.z = quat[2]
     destination.target_pose.pose.orientation.w = quat[3]
@@ -64,7 +62,7 @@ def main():
     destination.target_pose.header.stamp = rospy.Time.now()
     
     destination.target_pose.pose.position.x = 0.0
-    destination.target_pose.pose.position.y = 10.0
+    destination.target_pose.pose.position.y = 5.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(270))
     destination.target_pose.pose.orientation.z = quat[2]
     destination.target_pose.pose.orientation.w = quat[3]
