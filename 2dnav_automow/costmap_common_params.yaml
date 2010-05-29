@@ -8,4 +8,4 @@ observation_sources: laser_scan_sensor image_point_cloud
 
 laser_scan_sensor: {sensor_frame: base_laser, data_type: LaserScan, topic: /scan, marking: true, clearing: true}
 
-image_point_cloud: {sensor_frame: camera_frame, data_type: PointCloud, topic: /image_point_cloud, marking: true, clearing: false}
+image_point_cloud: {sensor_frame: camera_frame, data_type: PointCloud, topic: /image_point_cloud, marking: true, clearing: true}
