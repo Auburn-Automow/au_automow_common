@@ -11,12 +11,13 @@ from dg14.msg import AutomowGPSInfo
 
 from time import sleep
 import math
+import os
 
 def handleHousekeeping(msg):
-  top_c = open('/tmp/lcd/top_temp_c','w')
-  bot_c = open('/tmp/lcd/bot_temp_c','w')
-  top_f = open('/tmp/lcd/top_temp_f','w')
-  bot_f = open('/tmp/lcd/bot_temp_f','w')
+  top_c = open('/tmp/lcd/top_temp_c','w+')
+  bot_c = open('/tmp/lcd/bot_temp_c','w+')
+  top_f = open('/tmp/lcd/top_temp_f','w+')
+  bot_f = open('/tmp/lcd/bot_temp_f','w+')
 	
   top_c.write(str(msg.TopTemperature))
   bot_c.write(str(msg.BottomTemperature))
@@ -28,8 +29,8 @@ def handleHousekeeping(msg):
   bot_c.close()
 
 def handleGPS(msg):
-  gps_sats = open('/tmp/lcd/gps_sats','w')
-  gps_lock = open('/tmp/lcd/gps_lock','w')
+  gps_sats = open('/tmp/lcd/gps_sats','w+')
+  gps_lock = open('/tmp/lcd/gps_lock','w+')
 
   gps_sats.write(str(msg.satellites))
   if msg.status == 0:
@@ -43,6 +44,9 @@ def handleGPS(msg):
 
 def main():
   rospy.init_node("lcd_report")
+  # Ensure /tmp/lcd folder exists, else create it
+  if not os.path.exists('/tmp/lcd/'):
+      os.mkdir('/tmp/lcd')
   housekeeping_sub = rospy.Subscriber("housekeeping",Housekeeping, handleHousekeeping)
   gps_sub = rospy.Subscriber("gps_data",AutomowGPSInfo, handleGPS)
   rospy.spin()  
