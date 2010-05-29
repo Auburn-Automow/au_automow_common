@@ -22,8 +22,8 @@ from joy.msg import Joy
 def move(speed, direction):
     """Calls the move srv on ax2550_driver.py"""
     try:
-	speed /= 2
-	direction /= 6
+        # speed /= 2
+        direction /= 4
         move = rospy.ServiceProxy('move', Move)
         resp1 = move(speed, -1*direction)
         return resp1.result

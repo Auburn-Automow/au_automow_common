@@ -41,6 +41,7 @@ from logerror import logError
 WHEEL_BASE_LENGTH   = 0.6477 # meters
 WHEEL_RADIUS        = 0.3175 # meters
 MAX_WHEEL_VELOCITY  = 1.75 # m/s
+MOTOR_RANGE         = 30 # Relative motor speed
 
 ###  Classes  ###
 class AX2550(object):
@@ -293,11 +294,11 @@ class AX2550(object):
             self.speed_lock.release()
             # Convert the encoder data to ints
             if encoder_1 != None:
-                encoder_1 = self.decodeEncoderValue(encoder_1)
+                encoder_1 = self.decodeEncoderValue(encoder_1) * -1
             else:
                 encoder_1 = 0
             if encoder_2 != None:
-                encoder_2 = self.decodeEncoderValue(encoder_2)
+                encoder_2 = self.decodeEncoderValue(encoder_2) * -1
             else:
                 encoder_2 = 0
             # Publish the encoder data
@@ -385,7 +386,7 @@ class AX2550(object):
             left_command += "A"
         else:
             left_command += "a"
-        left = int(abs(left)*127)
+        left = int(abs(left)*MOTOR_RANGE)
         left_command += "%02X" % left
         #Right command
         right_command = "!"
@@ -393,7 +394,7 @@ class AX2550(object):
             right_command += "B"
         else:
             right_command += "b"
-        right = int(abs(right)*127)
+        right = int(abs(right)*MOTOR_RANGE)
         right_command += "%02X" % right
         # Lock the serial lock
         self.serial_lock.acquire()
