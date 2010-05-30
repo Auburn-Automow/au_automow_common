@@ -1,6 +1,6 @@
-image: empty_map.png
+image: field_map.png
 resolution: 0.1
-origin: [-5.0, -5.0, 0.0]
+origin: [-5.0, 12.0, -1.57]
 occupied_thresh: 0.65
 free_thresh: 0.196
 negate: 0

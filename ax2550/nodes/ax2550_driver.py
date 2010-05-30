@@ -74,6 +74,7 @@ class AX2550(object):
         self.right_speed = 0
         self.running = True
         self.sync()
+        self.move(0,0)
         
         # Setup a Serial Listener
         self.serial_listener = SerialListener(self.serial)
