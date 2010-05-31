@@ -11,23 +11,23 @@
     <include file="$(find ax2550)/launch/motor_control.launch" />
     
     <!-- Start the IMU for orientation odometry -->
-    <!-- <include file="$(find atomic_imu)/launch/atomic_imu.launch" /> -->
+    <include file="$(find atomic_imu)/launch/atomic_imu.launch" />
     
     <!-- Start the GPS for position odometry -->
     <!-- <include file="$(find dg14)/launch/dg14_gps.launch" /> -->
     
     <!-- Start the Hokuyo Laser Range Finder -->
-    <!-- <include file="$(find automow_launch)/launch/hokuyo_lrf.launch" /> -->
+    <include file="$(find automow_launch)/launch/hokuyo_lrf.launch" />
     
     <!-- Start the Vision system's Line Processing -->
     <include file="$(find line_processing)/launch/line_processing.launch" />
     
     <!-- Start Housekeeping -->
-    <include file="$(find housekeeping)/launch/housekeeping.launch" />
+    <!-- <include file="$(find housekeeping)/launch/housekeeping.launch" /> -->
     
     <!-- Start the Navigation Subsystem -->
     <include file="$(find 2dnav_automow)/launch/automow_navigation.launch" />
     
     <!-- LCD Panel -->
-    <node name="lcd_report" pkg="lcd4linux" type="lcd_report"/>
+    <!-- <node name="lcd_report" pkg="lcd4linux" type="lcd_report"/> -->
 </launch>
