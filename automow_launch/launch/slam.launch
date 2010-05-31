@@ -3,6 +3,6 @@
 		<param name="scan" value="scan" />
 		<param name="base_frame" value="base_footprint" />
 		<param name="odom_frame" value="odom_combined" />
-		<param name="maxUrange" value="0.5" />
+		<param name="maxUrange" value="1.5" />
 	</node>
 </launch>

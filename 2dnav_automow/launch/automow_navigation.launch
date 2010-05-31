@@ -14,5 +14,6 @@
         <rosparam file="$(find 2dnav_automow)/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find 2dnav_automow)/global_costmap_params.yaml" command="load" />
         <rosparam file="$(find 2dnav_automow)/base_local_planner_params.yaml" command="load" />
+        <param name="controller_frequency" value="10" />
     </node>
 </launch>
