@@ -23,11 +23,11 @@
     <include file="$(find line_processing)/launch/line_processing.launch" />
     
     <!-- Start Housekeeping -->
-    <include file="$(find housekeeping)/launch/housekeeping.launch" />
+    <!-- <include file="$(find housekeeping)/launch/housekeeping.launch" /> -->
     
     <!-- Start the Navigation Subsystem -->
     <include file="$(find 2dnav_automow)/launch/automow_navigation.launch" />
     
     <!-- LCD Panel -->
-    <node name="lcd_report" pkg="lcd4linux" type="lcd_report"/>
+    <!-- <node name="lcd_report" pkg="lcd4linux" type="lcd_report"/> -->
 </launch>

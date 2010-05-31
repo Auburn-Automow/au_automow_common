@@ -79,7 +79,7 @@ def encoderDataReceived(data):
 				0, 0, MAX_DBL, 0, 0, 0,
 				0, 0, 0, MAX_DBL, 0, 0,
 				0, 0, 0, 0, MAX_DBL, 0,
-				0, 0, 0, 0, 0, 1e-1]
+				0, 0, 0, 0, 0, 1e-3]
     odom_msg.twist.twist.linear.x = r_dot
     odom_msg.twist.twist.linear.y = l_dot
     odom_msg.twist.twist.angular.x = theta_dot

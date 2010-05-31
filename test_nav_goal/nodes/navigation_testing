@@ -35,7 +35,7 @@ def main():
     destination.target_pose.header.frame_id = "odom_combined"
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 7.0
+    destination.target_pose.pose.position.x = 13.0
     destination.target_pose.pose.position.y = 0.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
     destination.target_pose.pose.orientation.z = quat[2]
@@ -44,6 +44,8 @@ def main():
     client.send_goal(destination)
     
     client.wait_for_result()
+    
+    return
     
     # Second move
     destination.target_pose.header.stamp = rospy.Time.now()
