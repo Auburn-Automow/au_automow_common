@@ -4,7 +4,7 @@
 ###  Imports  ###
 
 # ROS imports
-import roslib; roslib.load_manifest('test_nav_goal')
+import roslib; roslib.load_manifest('automow_actionlib')
 import rospy
 import actionlib
 from time import sleep
@@ -13,6 +13,7 @@ import tf
 
 # ROS msg and srv imports
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from housekeeping.srv import CutterControl
 
 # Python Libraries
 import sys
@@ -25,10 +26,17 @@ destination = None
 ###  Functions  ###
 
 def main():
+    sleep(10)
     global destination
-    rospy.init_node("nav_test_node")
+    rospy.init_node("qualification_navigation")
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
     client.wait_for_server()
+    
+    try:
+        cutterControl = rospy.ServiceProxy('cutterControl', CutterControl)
+        cutterControl(True, True)
+    except:
+        rospy.logerr("Failed to start cutters")
     
     # First move
     destination = MoveBaseGoal()
@@ -86,4 +94,10 @@ def main():
 
 ###  If Main  ###
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as err:
+        rospy.logerr("Unhandled Exception in Qualification Node: \n"+str(err))
+    finally:
+        cutterControl = rospy.ServiceProxy('cutterControl', CutterControl)
+        cutterControl(False, False)

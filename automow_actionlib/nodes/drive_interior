@@ -16,6 +16,7 @@ from tf import LookupException
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from nav_msgs.msg import GridCells
 from geometry_msgs.msg import PointStamped
+from line_processing.srv import LineProcessingControl
 
 # Python Libraries
 import sys
@@ -64,6 +65,33 @@ def main():
     
     # obstacle_subscriber = rospy.Subscriber("/move_base/local_costmap/obstacles", GridCells, handleObstaclesMsg)
     # obstacle_subscriber = rospy.Subscriber("/move_base/local_costmap/inflated_obstacles", GridCells, handleObstaclesMsg)
+    
+    lineProcessingControl = rospy.ServiceProxy('lineProcessingControl', LineProcessingControl)
+    lineProcessingControl(False)
+    
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 5
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result(rospy.Duration(10))
+    
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 0
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    lineProcessingControl(True)
     
     while not rospy.is_shutdown():
         destination.target_pose.header.stamp = rospy.Time.now()
