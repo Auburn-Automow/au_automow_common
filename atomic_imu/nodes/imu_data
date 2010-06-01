@@ -25,9 +25,7 @@ def main():
   imu_pose_topic = rospy.Publisher("imu_pose", PoseStamped)
   imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
-  orientation_covariance = [1e-3,0.,0.,
-                            0.,1e-3,0.,
-                            0.,0.,1e-3]
+  orientation_covariance_constant = 1e-3
   ang_covar = [ 2.08508876e-06, 0, 0,
                 0, 3.81202560e-07, 0,
                 0, 0, 8.58619000e-07]
@@ -65,7 +63,14 @@ def main():
       imu_msg.orientation.y = orientation[1]
       imu_msg.orientation.z = orientation[2]
       imu_msg.orientation.w = orientation[3]
-      imu_msg.orientation_covariance = orientation_covariance
+      if yaw==0:
+          imu_msg.orientation_covariance = [1e-1,0.,0.,
+                                            0.,1e-1,0.,
+                                            0.,0.,1e-1]
+      else:
+          imu_msg.orientation_covariance = [orientation_covariance_constant*(1/abs(yaw)),0.,0.,
+                                            0.,orientation_covariance_constant*(1/abs(yaw)),0.,
+                                            0.,0.,orientation_covariance_constant*(1/abs(yaw))]
       imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
       imu_msg.angular_velocity.x = float(msg.group('roll'))
