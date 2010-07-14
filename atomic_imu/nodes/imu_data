@@ -25,9 +25,7 @@ def main():
   imu_pose_topic = rospy.Publisher("imu_pose", PoseStamped)
   imu = AtomicImuDriver(logger = rospy)
   imu.setMode('p')
-  orientation_covariance = [1e-5,0.,0.,
-                            0.,1e-5,0.,
-                            0.,0.,1e-5]
+  orientation_covariance_constant = 1e-3
   ang_covar = [ 2.08508876e-06, 0, 0,
                 0, 3.81202560e-07, 0,
                 0, 0, 8.58619000e-07]
@@ -38,6 +36,7 @@ def main():
   abs_roll = 0
   abs_pitch = 0
   abs_yaw = 0
+  prev_yaw = (0,0,0)
   while not rospy.is_shutdown():
     try: 
       msg = imu.getMsg()
@@ -50,7 +49,9 @@ def main():
       #abs_roll  += float(msg.group('roll')) * time_diff 
       #abs_pitch += float(msg.group('pitch')) * time_diff 
       if msg.group('yaw') != "-0.0681":
-        abs_yaw   += float(msg.group('yaw')) * time_diff 
+	yaw = float(msg.group('yaw')) + (1/6) * (prev_yaw[2] + 2*prev_yaw[1] + 2*prev_yaw[0] + float(msg.group('yaw')))
+        abs_yaw   += yaw * time_diff
+	prev_yaw = (float(msg.group('yaw')),prev_yaw[0],prev_yaw[1]) 
      
       # if msg.group('yaw') != "+0.0000":
       #   rospy.loginfo("Diff: %s %s %s" % (msg.group('roll'), msg.group('pitch'), msg.group('yaw')))
@@ -62,9 +63,22 @@ def main():
       imu_msg.orientation.y = orientation[1]
       imu_msg.orientation.z = orientation[2]
       imu_msg.orientation.w = orientation[3]
-      imu_msg.orientation_covariance = orientation_covariance
+      if yaw==0:
+          imu_msg.orientation_covariance = [1e-1,0.,0.,
+                                            0.,1e-1,0.,
+                                            0.,0.,1e-1]
+      else:
+          imu_msg.orientation_covariance = [orientation_covariance_constant*(1/abs(yaw)),0.,0.,
+                                            0.,orientation_covariance_constant*(1/abs(yaw)),0.,
+                                            0.,0.,orientation_covariance_constant*(1/abs(yaw))]
       imu_msg.header.frame_id = "base_imu"
       imu_msg.header.stamp = rospy.Time.now()
+      imu_msg.angular_velocity.x = float(msg.group('roll'))
+      imu_msg.angular_velocity.y = float(msg.group('pitch'))
+      imu_msg.angular_velocity.z = float(msg.group('yaw'))
+      imu_msg.linear_acceleration.x = float(msg.group('x'))
+      imu_msg.linear_acceleration.y = float(msg.group('y'))
+      imu_msg.linear_acceleration.z = float(msg.group('z'))
       imu_data_topic.publish(imu_msg)
       
       pose_msg = PoseStamped()

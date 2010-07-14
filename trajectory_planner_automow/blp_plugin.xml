@@ -1,0 +1,7 @@
+<library path="lib/libautomow_local_planner">
+  <class name="TrajectoryPlannerAutomow" type="base_local_planner::TrajectoryPlannerAutowmow" base_class_type="nav_core::BaseLocalPlanner">
+    <description>
+      This extends the built in ROS Trajectory planner, but also takes into account our weighted line finding system to prevent the robot from crossing lines.
+    </description>
+  </class>
+</library>

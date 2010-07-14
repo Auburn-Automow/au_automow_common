@@ -74,12 +74,12 @@ def encoderDataReceived(data):
     odom_msg.pose.pose.orientation.z = quat[2]
     odom_msg.pose.pose.orientation.w = quat[3]
 
-    odom_msg.pose.covariance = [0.004, 0, 0, 0, 0, 0,
-			        0, 0.004, 0, 0, 0, 0,
+    odom_msg.pose.covariance = [1e-5, 0, 0, 0, 0, 0,
+			        0, 1e-5, 0, 0, 0, 0,
 				0, 0, MAX_DBL, 0, 0, 0,
 				0, 0, 0, MAX_DBL, 0, 0,
 				0, 0, 0, 0, MAX_DBL, 0,
-				0, 0, 0, 0, 0, 0.000289]
+				0, 0, 0, 0, 0, 1e-3]
     odom_msg.twist.twist.linear.x = r_dot
     odom_msg.twist.twist.linear.y = l_dot
     odom_msg.twist.twist.angular.x = theta_dot

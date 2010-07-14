@@ -27,7 +27,7 @@ CMD_TERMINATOR      = "\r"
 CMD_RESET           = "R"
 
 CMD_LEFT_CUTTER     = "S1 "
-CMD_RIGHT_CUTTER     = "S2 "
+CMD_RIGHT_CUTTER    = "S2 "
 
 CMD_GET_ALL         = "G0"
 
@@ -42,7 +42,7 @@ class HousekeepingBoard(object):
         # Create and setup the serial port
         self.serial = Serial()
         self.serial.port = self.serial_port
-        self.serial.baudrate = 9600
+        self.serial.baudrate = 115200
         self.serial.timeout = 0.25
         self.serial.open()
         
@@ -56,9 +56,6 @@ class HousekeepingBoard(object):
         
         self.onHousekeepingData = None
         self.hk_timer = None
-        
-        # Start the polling of the sensors
-        self.pollHousekeeping()
     
     def logerr(self, msg):
         """Prints the error msg to the stderr"""

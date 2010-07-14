@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+__author__ = "Michael Carroll"
+
+import roslib; roslib.load_manifest('lcd4linux')
+import rospy
+
+from housekeeping.msg import Housekeeping
+from dg14.msg import AutomowGPSInfo
+
+from time import sleep
+import math
+import os
+
+def handleHousekeeping(msg):
+  top_c = open('/tmp/lcd/top_temp_c','w+')
+  bot_c = open('/tmp/lcd/bot_temp_c','w+')
+  top_f = open('/tmp/lcd/top_temp_f','w+')
+  bot_f = open('/tmp/lcd/bot_temp_f','w+')
+	
+  top_c.write(str(msg.TopTemperature))
+  bot_c.write(str(msg.BottomTemperature))
+  top_f.write(str((1.8*msg.TopTemperature) + 32))
+  bot_f.write(str((1.8*msg.BottomTemperature) + 32))
+  top_f.close()
+  bot_f.close()
+  top_c.close()
+  bot_c.close()
+
+def handleGPS(msg):
+  gps_sats = open('/tmp/lcd/gps_sats','w+')
+  gps_lock = open('/tmp/lcd/gps_lock','w+')
+
+  gps_sats.write(str(msg.satellites))
+  if msg.status == 0:
+	gps_lock.write('No Lock')
+  elif msg.status == 1:
+	gps_lock.write('Single Lock')
+  elif msg.status == 3:
+	gps_lock.write('Differential')
+  gps_sats.close()
+  gps_lock.close()
+
+def main():
+  rospy.init_node("lcd_report")
+  # Ensure /tmp/lcd folder exists, else create it
+  if not os.path.exists('/tmp/lcd/'):
+      os.mkdir('/tmp/lcd')
+  housekeeping_sub = rospy.Subscriber("housekeeping",Housekeeping, handleHousekeeping)
+  gps_sub = rospy.Subscriber("gps_data",AutomowGPSInfo, handleGPS)
+  rospy.spin()  
+
+
+if __name__ == '__main__':
+  main()
+
+# vim: set ft=python expandtab softtabstop=2 shiftwidth=2 tabstop=2

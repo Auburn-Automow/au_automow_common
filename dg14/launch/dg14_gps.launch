@@ -1,4 +1,6 @@
 <launch>
     <node name="dg14_gps_driver" pkg="dg14" type="driver" output="screen" />
+    <param name="magnetic_heading" value="171" />
+    <param name="magnetic_declination" value="-3.5" />
     <node name="dg14_gps2odom" pkg="dg14" type="gps2odom" output="screen" />
 </launch>

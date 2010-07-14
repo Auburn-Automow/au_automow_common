@@ -24,6 +24,7 @@ import sys
 # Peer Libraries
 import housekeeping.interface
 from housekeeping.interface import HousekeepingBoard
+from logerror import logError
 
 ###  Variables  ###
 hkb = None
@@ -63,6 +64,8 @@ def main():
     # Setup Services and Topics
     housekeeping_publisher = rospy.Publisher("housekeeping", Housekeeping)
     rospy.Service("cutterControl", CutterControl, handleCuttersCmd)
+    # Start the housekeeping polling
+    hkb.pollHousekeeping()
     # Handle Service Requests until shutdown
     rospy.spin()
     # Tell Proteus to stop cleanly
@@ -70,4 +73,7 @@ def main():
 
 ###  If Main  ###
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        logError(sys.exc_info(), rospy.logerr, "Unhandled Exception in the Housekeeping Driver:")

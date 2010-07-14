@@ -6,5 +6,6 @@
         <param name="frame_id" type="str" value="/base_laser" />
         <param name="time_offset" type="double" value="0.0" />
         <param name="allow_unsafe_settings" type="bool" value="False" />
+        <param name="inverted" type="bool" value="True" />
     </node>
 </launch>

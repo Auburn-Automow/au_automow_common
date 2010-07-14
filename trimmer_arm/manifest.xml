@@ -1,0 +1,15 @@
+<package>
+  <description brief="trimmer_arm">
+
+     trimmer_arm
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/trimmer_arm</url>
+  <depend package="rospy"/>
+
+</package>
+
+
