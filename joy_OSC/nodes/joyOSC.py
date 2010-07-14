@@ -32,7 +32,7 @@ class joyOSC:
                 self.th_oscServ.start()
 
         def xyHandler(self, addr=None, tags=None, data=None, source=None):
-                if not self.driveEnable:
+                if not self.driveEnable or self.accToggle:
                         return
 
                 x = (data[0] * 2.0) - 1
@@ -47,26 +47,30 @@ class joyOSC:
                 if data[0] == 1.0:
                         self.driveEnable = True
                 else:
-                        self.xyHandler(data=[0.5,0.5])
                         self.driveEnable = False
+                if not self.accToggle:
+                        self.zeroJoy()
 
         def toggleHandler(self, addr, tags, data, source):
                 if data[0] == 1.0:
                         self.accToggle = True
                 else:
                         self.accToggle = False
-                        self.driveEnable = True
-                        self.xyHandler(data = [0.5,0.5])
-                        self.driveEnable = False
+                        self.accEnable = False
+                        self.zeroJoy()
 
         def deadmanHandler(self, addr, tags, data, source):
                 if data[0] == 1.0 and self.accToggle:
                         self.accEnable = True
                 else:
                         self.accEnable = False
-                        self.driveEnable=True
-                        self.xyHandler(data = [0.5,0.5])
-                        self.driveEnable = False
+                        self.zeroJoy()
+
+        def zeroJoy(self):
+                msg = Joy()
+                msg.axes.append(0.0)
+                msg.axes.append(0.0)
+                self.pub.publish(msg)
 
         def accHandler(self, addr=None, tags=None, data=None, source=None):
                 if not self.accEnable:
