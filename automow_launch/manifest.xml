@@ -15,6 +15,6 @@
     <depend package="magellan_dg14" />
     <depend package="hokuyo_node" />
     <depend package="automow_image_processing" />
-    <depend package="automow_2dnav" />
+    <depend package="automow_navigation" />
 
 </package>

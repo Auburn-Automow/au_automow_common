@@ -24,5 +24,5 @@
     </node>
     
     <!-- Start the move_base Node -->
-    <include file="$(find automow_2dnav)/launch/move_base.xml" />
+    <include file="$(find automow_navigation)/launch/move_base.xml" />
 </launch>
