@@ -1,3 +1,0 @@
-<launch>
-        <include file="$(find ax2550)/launch/motor_control.launch" />
-</launch>

@@ -1,0 +1,23 @@
+<package>
+    <description brief="automow_image_processing">
+
+        Contains nodes related to processing information out of camera images.
+
+    </description>
+    <author>Maintained by William Woodall</author>
+    <license>BSD</license>
+    <review status="unreviewed" notes="" />
+    <url>http://ros.org/wiki/automow_image_processing</url>
+    <depend package="sensor_msgs" />
+    <depend package="opencv2" />
+    <depend package="cv_bridge" />
+    <depend package="roscpp" />
+    <depend package="std_msgs" />
+    <depend package="image_transport" />
+    <depend package="rospy" />
+    <depend package="roslib" />
+    <depend package="dynamic_reconfigure" />
+    <depend package="driver_base" />
+    <depend package="gencam_cu" />
+    
+</package>

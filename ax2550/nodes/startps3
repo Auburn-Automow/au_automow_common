@@ -1,3 +1,0 @@
-#! /bin/bash
-
-sudo python $(rospack find ps3joy)/ps3joy.py 

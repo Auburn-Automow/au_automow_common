@@ -1,0 +1,5 @@
+<launch>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find automow_maps)/config/map_server.yaml">
+        <param name="frame_id" type="str" value="/odom_combined" />
+    </node>
+</launch>

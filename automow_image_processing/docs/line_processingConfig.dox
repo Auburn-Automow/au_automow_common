@@ -1,0 +1,14 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~stock_image_enabled" : \b [bool] Enables or disables use of a stock image. min: False, default: False, max: True
+- \b "~stock_image" : \b [str] Location of the stock image. min: , default: /tmp/stock1.jpg, max: 
+- \b "~brightness_threshold" : \b [int] Any pixels with a value less than this is zero'ed min: 0, default: 245, max: 255
+- \b "~histogram_enabled" : \b [bool] Enables of disables the use of the Histogram min: False, default: True, max: True
+- \b "~hough1_min_points" : \b [int] The minimum number of colinear points needed to be considered a line. min: 0, default: 10, max: 200
+- \b "~hough1_max_spacing" : \b [int] The maximum pixels between lines before splitting them. min: 0, default: 10, max: 100
+- \b "~hough2_enabled" : \b [bool] Enables of disables the use of the Secondary Hough Transform min: False, default: True, max: True
+- \b "~hough2_min_points" : \b [int] The minimum number of colinear points needed to be considered a line. min: 0, default: 105, max: 200
+- \b "~hough2_max_spacing" : \b [int] The maximum pixels between lines before splitting them. min: 0, default: 10, max: 100
+

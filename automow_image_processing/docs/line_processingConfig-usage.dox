@@ -1,0 +1,15 @@
+\subsubsection usage Usage
+\verbatim
+<node name="dynamic_reconfigure_node" pkg="line_processing" type="dynamic_reconfigure_node">
+  <param name="stock_image_enabled" type="bool" value="False" />
+  <param name="stock_image" type="str" value="/tmp/stock1.jpg" />
+  <param name="brightness_threshold" type="int" value="245" />
+  <param name="histogram_enabled" type="bool" value="True" />
+  <param name="hough1_min_points" type="int" value="10" />
+  <param name="hough1_max_spacing" type="int" value="10" />
+  <param name="hough2_enabled" type="bool" value="True" />
+  <param name="hough2_min_points" type="int" value="105" />
+  <param name="hough2_max_spacing" type="int" value="10" />
+</node>
+\endverbatim
+

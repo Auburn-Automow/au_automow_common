@@ -1,0 +1,15 @@
+<package>
+    <description brief="automow_robot_model">
+
+        Contains configurations and state publishers for the Autonomous Lawnmower's robot model.
+
+    </description>
+    <author>Maintained by William Woodall</author>
+    <license>BSD</license>
+    <review status="unreviewed" notes="" />
+    <url>http://ros.org/wiki/automow_robot_model</url>
+    <depend package="urdf" />
+    <depend package="sensor_msgs" />
+    <depend package="tf" />
+
+</package>

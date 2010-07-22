@@ -1,5 +1,0 @@
-<launch>
-    <param name="robot_description" command="cat $(find automow_urdf)/automow.xml" />
-    <node pkg="robot_state_publisher" type="state_publisher" name="automow" />
-    <node pkg="automow_urdf" type="state_publisher" name="joint_state_pub" />
-</launch>

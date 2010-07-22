@@ -1,9 +1,12 @@
 <stack>
-  <description brief="au-automow">au_automow_common</description>
+  <description brief="Auburn University Autonomous Lawnmower - Common Components Stack">
+      ROS Packages common to the Autonomous Lawnmower system, separate from drivers and simulation.
+  </description>
   <author>Maintained by William Woodall</author>
-  <license>BSD</license>  
-  <review status="unreviewed" notes=""/>
-  <url>http://redmine.ausparc.com/wiki/automow-2010/Au_automow_common</url>
+  <license>BSD</license>
+  <review status="experimental" notes="" />
+  <url>http://www.ros.org/wiki/au-automow-common</url>
   <depend stack="ros" />
+  <depend stack="au_automow_drivers" />
 
 </stack>

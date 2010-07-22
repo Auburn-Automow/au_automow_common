@@ -1,8 +1,0 @@
-<launch>
-	<node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-		<param name="scan" value="scan" />
-		<param name="base_frame" value="base_footprint" />
-		<param name="odom_frame" value="odom_combined" />
-		<param name="maxUrange" value="1.5" />
-	</node>
-</launch>

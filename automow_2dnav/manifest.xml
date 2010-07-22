@@ -1,0 +1,18 @@
+<package>
+  <description brief="automow_2dnav">
+
+     Contains all elements related to 2D navigation, including: move_base configurations, AMCL launch scripts, and SLAM launch scripts.
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow_2dnav</url>
+  <depend package="move_base"/>
+  <depand package="automow_maps" />
+  <depend package="amcl" />
+  <depand package="gmapping" />
+  
+</package>
+
+

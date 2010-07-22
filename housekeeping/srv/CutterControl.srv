@@ -1,4 +1,0 @@
-bool    LeftControl # True for on, False for off
-bool    RightControl # True for on, False for off
----
-bool    Result # True if the operations were performed, False otherwiser.

@@ -1,20 +1,20 @@
 <package>
-  <description brief="automow_launch">
+    <description brief="automow_launch">
 
-    A wrapper package for all of the Auburn Automow 2010 competition robot. 
+    Contains launch files for various components and run modes for the Auburn University Autonomous Lawnmower.
 
-  </description>
-  <author>Michael Carroll</author>
-  <license>BSD</license>
-  <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/automow_launch</url>
+    </description>
+    <author>Maintained by William Woodall</author>
+    <license>BSD</license>
+    <review status="unreviewed" notes="" />
+    <url>http://ros.org/wiki/automow_launch</url>
+    <depend package="automow_robot_model" />
+    <depend package="robot_pose_ekf" />
+    <depend package="ax2550" />
+    <depend package="atomic_imu" />
+    <depend package="magellan_dg14" />
+    <depend package="hokuyo_node" />
+    <depend package="automow_image_processing" />
+    <depend package="automow_2dnav" />
 
-  <depend package="atomic_imu"/>
-  <depend package="automow_urdf"/>
-  <depend package="ax2550"/>
-  <depend package="dg14"/>
-  <depend package="housekeeping"/>
-  <depend package="2dnav_automow"/>
 </package>
-
-
