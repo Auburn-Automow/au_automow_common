@@ -1,0 +1,16 @@
+<package>
+  <description brief="tests">
+
+     tests
+
+  </description>
+  <author>Mowbot</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/tests</url>
+  <depend package="roscpp"/>
+  <depend package="geometry_msgs"/>
+
+</package>
+
+
