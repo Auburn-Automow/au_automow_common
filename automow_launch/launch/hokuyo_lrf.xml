@@ -1,11 +1,6 @@
 <launch>
     <node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node">
-        <param name="intensity" type="bool" value="False" />
         <param name="port" type="str" value="/dev/ttyACM0" />
-        <param name="calibrate_time" type="bool" value="True" />
-        <param name="frame_id" type="str" value="/base_laser" />
-        <param name="time_offset" type="double" value="0.0" />
-        <param name="allow_unsafe_settings" type="bool" value="False" />
-        <param name="inverted" type="bool" value="True" />
+        <param name="frame_id" type="str" value="/laser_link" />
     </node>
 </launch>

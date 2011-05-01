@@ -1,0 +1,10 @@
+<launch>
+    <node pkg="microstrain_3dm_gx3" type="imu_node" name="microstrain_3dm_gx3_node" output="screen">
+        <param name="time_offset" value="0" />
+        <param name="port"  type="string" value="/dev/ttyACM1" />
+        <param name="autostart" type="bool" value="true" />
+        <param name="frame_id"  type="string" value="imu_link" />
+        <param name="autocalibrate" type="bool" value="false" />
+        <param name="angular_velocity_stdev" type="double" value="0.00017" />
+    </node>
+</launch>

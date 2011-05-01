@@ -1,4 +1,13 @@
 <launch>
+    <!-- Start static transforms -->
+    <include file="$(find automow_launch)/launch/transforms.xml" />
+    
+    <!-- Start the motor controller -->
+    <include file="$(find automow_launch)/launch/motor_control.xml" />
+    
+    <!-- Start the IMU -->
+    <include file="$(find automow_launch)/launch/imu.xml" />
+    
     <!-- Start the State publisher responsible for publishing tf's for the mower -->
     <!-- <include file="$(find automow_urdf)/launch/state_publisher.launch" /> -->
     
@@ -21,5 +30,12 @@
     <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
     
     <!-- Start the Navigation Subsystem -->
-    <include file="$(find automow_navigation)/launch/navigation_amcl.launch" />
+    <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->
+    
+    <!-- Start SLAM -->
+    <!-- <include file="$(find automow_launch)/launch/slam.xml" /> -->
+    
+    <!-- Start joystick -->
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen"/>
+    <node pkg="joy2twist" type="joy2twist.py" name="joy2twist" output="screen"/>
 </launch>
