@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="magellan_dg14" type="dg14_driver" name="dg14_driver" output="screen">
+    </node>
+</launch>

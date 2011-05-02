@@ -8,6 +8,9 @@
     <!-- Start the IMU -->
     <include file="$(find automow_launch)/launch/imu.xml" />
     
+    <!-- Start the GPS -->
+    <include file="$(find automow_launch)/launch/gps.xml" />
+    
     <!-- Start the State publisher responsible for publishing tf's for the mower -->
     <!-- <include file="$(find automow_urdf)/launch/state_publisher.launch" /> -->
     
