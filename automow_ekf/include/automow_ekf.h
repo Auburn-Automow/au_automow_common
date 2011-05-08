@@ -55,10 +55,7 @@ const int ny_ahrs = 1;
 const int nu = 2;
 
 Matrix<float, ny_gps, nx> gps_measurement_model = 
-    (MatrixXf(ny_gps, nx) << MatrixXf::Identity(ny_gps,ny_gps),
-                             MatrixXf::Zero(ny_gps, nx-2*ny_gps-1),
-                             MatrixXf::Identity(ny_gps,ny_gps),
-                             MatrixXf::Zero(ny_gps, 1)
+    (MatrixXf(ny_gps, nx) << 0,1,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,1,0
     ).finished();
 
 Matrix<float, ny_ahrs, nx> ahrs_measurement_model = 

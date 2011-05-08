@@ -47,8 +47,8 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
 }
 
 void Automow_EKF::measurementUpdateGPS(double northing, double easting, double northing_covariance, double easting_covariance) {
-    Vector2f measurement(northing, easting);
-    Vector2f covariance(northing_covariance, easting_covariance);
+    Vector2f measurement(easting, northing);
+    Vector2f covariance(easting_covariance, northing_covariance);
     Vector2f innovation = measurement - (gps_measurement_model * state_estimates);
     Matrix<float, nx, 2> kalman_gain;
     Matrix<float, 2, 2> S;
@@ -95,7 +95,7 @@ void Automow_EKF::updateModel(Vector2f input, double delta_time) {
     input_model(1,3) = 0.5 * delta_time * input(0) * sin(state_estimates(2));
     input_model(1,4) = 0.5 * delta_time * input(1) * sin(state_estimates(2));
     input_model(2,3) = -1 * delta_time * (input(0)/state_estimates(5));
-    input_model(2,4) = delta_time * (input(0)/state_estimates(5));
+    input_model(2,4) = delta_time * (input(1)/state_estimates(5));
     input_model(2,5) = delta_time
                        * ((state_estimates(3)*input(0) - state_estimates(4)*input(1))
                           / pow(state_estimates(5),2));

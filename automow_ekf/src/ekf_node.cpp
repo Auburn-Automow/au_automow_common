@@ -6,6 +6,7 @@
 #include "ax2550/StampedEncoders.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
+#include "magellan_dg14/UTMFix.h"
 #include "tf/tf.h"
 
 automow_ekf::Automow_EKF ekf;
@@ -22,7 +23,16 @@ void encoderCallback(const ax2550::StampedEncoders::ConstPtr& msg) {
 
 void ahrsCallback(const sensor_msgs::Imu::ConstPtr& msg) {
     try {
-        ekf.measurementUpdateAHRS(tf::getYaw(msg->orientation), msg->orientation_covariance[8]);
+        // Must add pi/2 to the yaw, inorder to rotate it into the body fixed frame
+        ekf.measurementUpdateAHRS(-1*(tf::getYaw(msg->orientation)-M_PI/2.0), msg->orientation_covariance[8]);
+    } catch(std::exception &e) {
+        ROS_ERROR("Error with ahrs update: %s", e.what());
+    }
+}
+
+void gpsCallback(const magellan_dg14::UTMFix::ConstPtr& msg) {
+    try {
+        ekf.measurementUpdateGPS(msg->northing, msg->easting, msg->position_covariance[0], msg->position_covariance[3]);
     } catch(std::exception &e) {
         ROS_ERROR("Error with ahrs update: %s", e.what());
     }

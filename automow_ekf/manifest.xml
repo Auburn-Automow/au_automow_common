@@ -15,6 +15,7 @@
   <depend package="tf"/>
   <depend package="eigen"/>
   <depend package="ax2550"/>
+  <depend package="magellan_dg14"/>
 
 </package>
 
