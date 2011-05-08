@@ -1,4 +1,5 @@
 <launch>
+    <param name="/use_sim_time" value="true" />
     <node pkg="ax2550" type="stamp_encoders.py" name="stamp_encoders"/>
     <node pkg="microstrain_3dm_gx3" type="decimate_imu.py" name="decimate_imu"/>
 </launch>
