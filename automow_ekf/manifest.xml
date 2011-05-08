@@ -14,6 +14,7 @@
   <depend package="nav_msgs"/>
   <depend package="tf"/>
   <depend package="eigen"/>
+  <depend package="ax2550"/>
 
 </package>
 

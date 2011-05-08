@@ -29,19 +29,19 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
     this->updateModel(input, delta_time);
     
     // Calculate linear velocity
-    double v = (state_estimates(5)/2.0) * input(2);
-    v += (state_estimates(4)/2.0) * input(1);
+    double v = (state_estimates(4)/2.0) * input(1);
+    v += (state_estimates(3)/2.0) * input(0);
     // Calculate angular velocity
-    double w = (state_estimates(5)/state_estimates(6))*input(2);
-    w -= (state_estimates(4)/state_estimates(6))*input(1);
+    double w = (state_estimates(4)/state_estimates(5))*input(1);
+    w -= (state_estimates(3)/state_estimates(5))*input(0);
     
     // Update the states based on model and input
-    state_estimates(1) += delta_time * v
-                          * cos(state_estimates(3) + delta_time * (w/2.0));
+    state_estimates(0) += delta_time * v
+                          * cos(state_estimates(2) + delta_time * (w/2.0));
     
-    state_estimates(2) += delta_time * v
-                          * sin(state_estimates(3) + delta_time * (w/2.0));
-    state_estimates(3) += delta_time * w;
+    state_estimates(1) += delta_time * v
+                          * sin(state_estimates(2) + delta_time * (w/2.0));
+    state_estimates(2) += delta_time * w;
     estimation_uncertainty = input_model * estimation_uncertainty * input_model.transpose()
                              + process_noise;
 }
@@ -70,44 +70,56 @@ void Automow_EKF::measurementUpdateAHRS(float measurement, float covariance) {
     estimation_uncertainty *= (MatrixXf::Identity(nx,nx) - kalman_gain*ahrs_measurement_model);
 }
 
+double Automow_EKF::getNorthing() {
+    return this->state_estimates(0);
+}
+
+double Automow_EKF::getEasting() {
+    return this->state_estimates(1);
+}
+
+double Automow_EKF::getYaw() {
+    return this->state_estimates(2);
+}
+
 void Automow_EKF::updateModel(Vector2f input, double delta_time) {
     // Construct the discrete input model (F) from state equations
-    input_model(1,3) = -0.5 * delta_time
-                       * (state_estimates(4)*input(1) + state_estimates(5)*input(2))
-                       * sin(state_estimates(3));
-    input_model(1,4) = 0.5 * delta_time * input(1) * cos(state_estimates(3));
-    input_model(1,5) = 0.5 * delta_time * input(2) * cos(state_estimates(3));
-    input_model(2,3) = 0.5 * delta_time
-                       * (state_estimates(4)*input(1) + state_estimates(5)*input(2))
-                       * cos(state_estimates(3));
-    input_model(2,4) = 0.5 * delta_time * input(1) * sin(state_estimates(3));
-    input_model(2,5) = 0.5 * delta_time * input(2) * sin(state_estimates(3));
-    input_model(3,4) = -1 * delta_time * (input(1)/state_estimates(6));
-    input_model(3,5) = delta_time * (input(1)/state_estimates(6));
-    input_model(3,6) = delta_time
-                       * ((state_estimates(4)*input(1) - state_estimates(5)*input(2))
-                          / pow(state_estimates(6),2));
+    input_model(0,2) = -0.5 * delta_time
+                       * (state_estimates(3)*input(0) + state_estimates(4)*input(1))
+                       * sin(state_estimates(2));
+    input_model(0,3) = 0.5 * delta_time * input(0) * cos(state_estimates(2));
+    input_model(0,4) = 0.5 * delta_time * input(1) * cos(state_estimates(2));
+    input_model(1,2) = 0.5 * delta_time
+                       * (state_estimates(3)*input(0) + state_estimates(4)*input(1))
+                       * cos(state_estimates(2));
+    input_model(1,3) = 0.5 * delta_time * input(0) * sin(state_estimates(2));
+    input_model(1,4) = 0.5 * delta_time * input(1) * sin(state_estimates(2));
+    input_model(2,3) = -1 * delta_time * (input(0)/state_estimates(5));
+    input_model(2,4) = delta_time * (input(0)/state_estimates(5));
+    input_model(2,5) = delta_time
+                       * ((state_estimates(3)*input(0) - state_estimates(4)*input(1))
+                          / pow(state_estimates(5),2));
     
     // Construct the noise model (G) from state equations
-    noise_model(1,1) = 0.5 * delta_time * state_estimates(4) * cos(state_estimates(3));
-    noise_model(1,2) = 0.5 * delta_time * state_estimates(5) * cos(state_estimates(3));
-    noise_model(1,4) = 0.5 * delta_time * input(1) * cos(state_estimates(3));
-    noise_model(1,5) = 0.5 * delta_time * input(2) * cos(state_estimates(3));
-    noise_model(2,1) = 0.5 * delta_time * state_estimates(4) * sin(state_estimates(3));
-    noise_model(2,2) = 0.5 * delta_time * state_estimates(5) * sin(state_estimates(3));
-    noise_model(2,4) = 0.5 * delta_time * input(1) * cos(state_estimates(3));
-    noise_model(2,5) = 0.5 * delta_time * input(2) * cos(state_estimates(3));
-    noise_model(3,1) = -1*delta_time * state_estimates(4)/state_estimates(6);
-    noise_model(3,2) = delta_time * state_estimates(5)/state_estimates(6);
+    noise_model(0,0) = 0.5 * delta_time * state_estimates(3) * cos(state_estimates(2));
+    noise_model(0,1) = 0.5 * delta_time * state_estimates(4) * cos(state_estimates(2));
+    noise_model(0,3) = 0.5 * delta_time * input(0) * cos(state_estimates(2));
+    noise_model(0,4) = 0.5 * delta_time * input(1) * cos(state_estimates(2));
+    noise_model(1,0) = 0.5 * delta_time * state_estimates(3) * sin(state_estimates(2));
+    noise_model(1,1) = 0.5 * delta_time * state_estimates(4) * sin(state_estimates(2));
+    noise_model(1,3) = 0.5 * delta_time * input(0) * cos(state_estimates(2));
+    noise_model(1,4) = 0.5 * delta_time * input(1) * cos(state_estimates(2));
+    noise_model(2,0) = -1*delta_time * state_estimates(3)/state_estimates(5);
+    noise_model(2,1) = delta_time * state_estimates(4)/state_estimates(5);
+    noise_model(2,2) = delta_time;
+    noise_model(2,3) = -1*delta_time * state_estimates(3)/state_estimates(5);
+    noise_model(2,4) = delta_time * state_estimates(4)/state_estimates(5);
     noise_model(3,3) = delta_time;
-    noise_model(3,4) = -1*delta_time * state_estimates(4)/state_estimates(6);
-    noise_model(3,5) = delta_time * state_estimates(5)/state_estimates(6);
     noise_model(4,4) = delta_time;
     noise_model(5,5) = delta_time;
     noise_model(6,6) = delta_time;
     noise_model(7,7) = delta_time;
     noise_model(8,8) = delta_time;
-    noise_model(9,9) = delta_time;
     
     // Store the input
     this->previous_input = input;

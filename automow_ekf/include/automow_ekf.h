@@ -78,6 +78,12 @@ public:
     
     void measurementUpdateAHRS(float measurement, float covariance);
     
+    double getNorthing();
+    
+    double getEasting();
+    
+    double getYaw();
+    
 private:
     void updateModel(Vector2f input, double delta_time);
     
