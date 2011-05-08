@@ -46,6 +46,7 @@ using Eigen::Matrix;
 using Eigen::MatrixXf;
 using Eigen::Vector2f;
 using Eigen::Vector3f;
+using Eigen::VectorXf;
 
 namespace automow_ekf {
 
@@ -55,7 +56,7 @@ const int ny_ahrs = 1;
 const int nu = 2;
 
 Matrix<float, ny_gps, nx> gps_measurement_model = 
-    (MatrixXf(ny_gps, nx) << 0,1,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,1,0
+    (MatrixXf(ny_gps, nx) << 1,0,0,0,0,0,0,1,0, 0,1,0,0,0,0,0,0,1
     ).finished();
 
 Matrix<float, ny_ahrs, nx> ahrs_measurement_model = 
@@ -83,13 +84,13 @@ public:
     
 private:
     void updateModel(Vector2f input, double delta_time);
+    float wrapToPi(float angle);
     
     Matrix<float, nx, 1> state_estimates; // x_hat
     Matrix<float, nx, nx> estimation_uncertainty; // P
     Matrix<float, nx, nx> process_noise; // Q
     Matrix<float, ny_gps, ny_gps> gps_measurement_noise; // R_gps
     Matrix<float, ny_ahrs, ny_ahrs> ahrs_measurement_noise; // R_imu
-    Matrix<float, nu, 1> previous_input; // prev_u
     double previous_time; // prev_time
     Matrix<float, nx, nx> input_model; // F
     Matrix<float, nx, nx> noise_model; // G
