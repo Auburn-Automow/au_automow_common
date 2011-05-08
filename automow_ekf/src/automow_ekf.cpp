@@ -50,7 +50,9 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
     state_estimates(1) += delta_time * v
                           * sin(state_estimates(2) + delta_time * (w/2.0));
     state_estimates(2) += delta_time * w;
+    std::cout << state_estimates(2) << ",";
     state_estimates(2) = this->wrapToPi(state_estimates(2));
+    std::cout << state_estimates(2) << "," << std::endl;
     estimation_uncertainty = input_model * estimation_uncertainty * input_model.transpose()
                              + noise_model * process_noise * noise_model.transpose();
 }
@@ -133,16 +135,17 @@ void Automow_EKF::updateModel(Vector2f input, double delta_time) {
     noise_model(6,6) = delta_time;
     noise_model(7,7) = delta_time;
     noise_model(8,8) = delta_time;
+    
+    // std::cout << "F: " << input_model << std::endl;
+    // std::cout << "G: " << noise_model << std::endl;
 }
 
 float Automow_EKF::wrapToPi(float angle) {
-    if(angle >= -1*M_PI && angle <= M_PI)
-        return angle;
     angle += M_PI;
-    bool is_pos = angle > 0;
-    angle = fmod(angle, 2.0*M_PI);
-    if(angle == 0 && is_pos) {
-        angle = 2.0*M_PI;
+    bool is_neg = (angle < 0);
+    angle = fmod(angle, (2.0*M_PI));
+    if (is_neg) {
+        angle += (2.0*M_PI);
     }
     angle -= M_PI;
     return angle;

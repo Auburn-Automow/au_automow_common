@@ -55,6 +55,8 @@ void odom_pubCallback(const ros::TimerEvent& e) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "automow_ekf");
     
+    std::cout << "easting,northing,yaw // No IMU" << std::endl;
+    
     ros::NodeHandle n;
     
     odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
