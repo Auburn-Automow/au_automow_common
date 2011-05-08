@@ -41,26 +41,28 @@
 #include <sstream>
 #include <string>
 
-#include <Eigen/Dense>
-using Eigen::MatrixXd;
+#include <Eigen/Eigen>
+using Eigen::Matrix;
+using Eigen::MatrixXf;
+using Eigen::Vector2f;
+using Eigen::Vector3f;
 
 namespace automow_ekf {
 
-static int nx = 9;
-static int ny_gps = 2;
-static int ny_ahrs = 1;
-static int nu = 2;
+const int nx = 9;
+const int ny_gps = 2;
+const int ny_ahrs = 1;
+const int nu = 2;
 
-static Matrix<float, nx, ny_gps> 
-gps_measurement_model = 
-    (MatrixXf(nx, ny_gps) << MatrixXf::Identity(ny_gps,ny_gps),
-                             MatrixXf::Zero(nx-ny_gps, ny_gps),
-                             MatrixXf::Identity(ny_gps,ny_gps)
+Matrix<float, ny_gps, nx> gps_measurement_model = 
+    (MatrixXf(ny_gps, nx) << MatrixXf::Identity(ny_gps,ny_gps),
+                             MatrixXf::Zero(ny_gps, nx-2*ny_gps-1),
+                             MatrixXf::Identity(ny_gps,ny_gps),
+                             MatrixXf::Zero(ny_gps, 1)
     ).finished();
 
-static Matrix<float, nx, ny_ahrs> 
-ahrs_measurement_noise = 
-    (MatrixXf(nx, ny_ahrs) << 0,0,1,0,0,0,1,0,0).finished();
+Matrix<float, ny_ahrs, nx> ahrs_measurement_model = 
+    (MatrixXf(ny_ahrs, nx) << 0,0,1,0,0,0,0,0,1).finished();
 
 class Automow_EKF {
 public:
@@ -70,25 +72,24 @@ public:
     /** Destructor */
     ~Automow_EKF();
     
-    void updateModel(Vector2f input, double delta_time);
+    void timeUpdate(double left_wheel, double right_wheel, double current_time);
     
-    void timeUpdate(Vector2f input, double delta_time);
+    void measurementUpdateGPS(double northing, double easting, double northing_covariance, double easting_covariance);
     
-    void measurementUpdateGPS();
-    
-    void measurementUpdateAHRS();
+    void measurementUpdateAHRS(float measurement, float covariance);
     
 private:
-    Vector<float, nx> state_estimates; // x_hat
+    void updateModel(Vector2f input, double delta_time);
+    
+    Matrix<float, nx, 1> state_estimates; // x_hat
     Matrix<float, nx, nx> estimation_uncertainty; // P
     Matrix<float, nx, nx> process_noise; // Q
     Matrix<float, ny_gps, ny_gps> gps_measurement_noise; // R_gps
-    Matrix<float, ny_ahrs, my_ahrs> ahrs_measurement_noise; // R_imu
-    vector<float, nu> previouse_input; // prev_u
+    Matrix<float, ny_ahrs, ny_ahrs> ahrs_measurement_noise; // R_imu
+    Matrix<float, nu, 1> previous_input; // prev_u
     double previous_time; // prev_time
     Matrix<float, nx, nx> input_model; // F
     Matrix<float, nx, nx> noise_model; // G
-    Matrix
 };
 
 // class SerialPortAlreadyOpenException : public std::exception {
