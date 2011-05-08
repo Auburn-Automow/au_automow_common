@@ -1,3 +1,10 @@
+# udevadm info --attribute-walk -n /dev/ttyUSB?
 SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="81e7", ATTRS{serial}=="19107", SYMLINK+="gps_modem"
-SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTE3Q0OR", SYMLINK+="motor_controller"
 SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTT37XK9", SYMLINK+="gps"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTE3Q38X", SYMLINK+="motor_controller"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTTFRD5Z", SYMLINK+="power_control"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTELSHTM", SYMLINK+="imu"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="FTE4FR3N", SYMLINK+="gps_base"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="199b", ATTRS{idProduct}=="3065", ATTRS{serial}=="6223.04500______", SYMLINK+="ahrs"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="15d1", ATTRS{idProduct}=="0000", ATTRS{product}=="URG-Series USB Driver", SYMLINK+="laser"
+
