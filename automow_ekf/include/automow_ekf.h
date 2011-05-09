@@ -39,6 +39,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <string>
 
 #include <Eigen/Eigen>
@@ -95,6 +96,11 @@ private:
     Matrix<double, nx, nx> input_model; // F
     Matrix<double, nx, nx> noise_model; // G
     bool model_initialized;
+    std::ofstream states_file;
+    std::ofstream models_file;
+    std::ofstream ahrs_file;
+    std::ofstream gps_file;
+    std::ofstream inputs_file;
 };
 
 // class SerialPortAlreadyOpenException : public std::exception {
