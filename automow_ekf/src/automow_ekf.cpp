@@ -6,18 +6,19 @@ using namespace automow_ekf;
 
 Automow_EKF::Automow_EKF() {
     // Variable Initialization
-    state_estimates << Vector3f::Zero(3), 0.159, 0.159, 0.5461, Vector3f::Zero(3);
-    VectorXf temp(9);
+    state_estimates << Vector3d::Zero(3), 0.159, 0.159, 0.5461, Vector3d::Zero(3);
+    VectorXd temp(9);
     temp << 1,1,1,0.001,0.001,0.001,1,1,1;
     estimation_uncertainty = temp.asDiagonal();
-    temp = VectorXf(9);
+    temp = VectorXd(9);
     temp << 0.2,0.2,0,0,0,0,0.001,0.001,0.001;
     process_noise = temp.asDiagonal();
-    gps_measurement_noise << MatrixXf::Identity(ny_gps,ny_gps);
-    ahrs_measurement_noise << MatrixXf::Identity(ny_ahrs,ny_ahrs);
-    input_model << MatrixXf::Identity(nx,nx);
-    noise_model << MatrixXf::Zero(nx,nx);
+    gps_measurement_noise << MatrixXd::Identity(ny_gps,ny_gps);
+    ahrs_measurement_noise << MatrixXd::Identity(ny_ahrs,ny_ahrs);
+    input_model << MatrixXd::Identity(nx,nx);
+    noise_model << MatrixXd::Zero(nx,nx);
     previous_time = -1;
+    model_initialized = false;
 }
 
 Automow_EKF::~Automow_EKF() {
@@ -32,7 +33,7 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
     double delta_time = current_time - this->previous_time;
     this->previous_time = current_time;
     
-    Vector2f input(left_wheel, right_wheel);
+    Vector2d input(left_wheel, right_wheel);
     
     this->updateModel(input, delta_time);
     
@@ -50,42 +51,73 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
     state_estimates(1) += delta_time * v
                           * sin(state_estimates(2) + delta_time * (w/2.0));
     state_estimates(2) += delta_time * w;
-    std::cout << state_estimates(2) << ",";
+    // std::cout << state_estimates(2) << ",";
     state_estimates(2) = this->wrapToPi(state_estimates(2));
-    std::cout << state_estimates(2) << "," << std::endl;
+    // std::cout << state_estimates(2) << "," << std::endl;
     estimation_uncertainty = input_model * estimation_uncertainty * input_model.transpose()
                              + noise_model * process_noise * noise_model.transpose();
 }
 
 void Automow_EKF::measurementUpdateGPS(double northing, double easting, double northing_covariance, double easting_covariance) {
-    Vector2f measurement(easting, northing);
-    Vector2f covariance(easting_covariance, northing_covariance);
-    Vector2f innovation = measurement - (gps_measurement_model * state_estimates);
-    Matrix<float, nx, 2> kalman_gain;
-    Matrix<float, 2, 2> S;
+    Vector2d measurement(easting, northing);
+    Vector2d covariance(easting_covariance, northing_covariance);
+    Vector2d innovation = measurement - (gps_measurement_model * state_estimates);
+    Matrix<double, nx, 2> kalman_gain;
+    Matrix<double, 2, 2> S;
     S = gps_measurement_model * estimation_uncertainty * gps_measurement_model.transpose();
     S += covariance.asDiagonal();
     kalman_gain = estimation_uncertainty * gps_measurement_model.transpose() * S.inverse();
     state_estimates += kalman_gain * innovation;
     state_estimates(2) = this->wrapToPi(state_estimates(2));
-    estimation_uncertainty *= (MatrixXf::Identity(nx,nx) - kalman_gain*gps_measurement_model);
+    estimation_uncertainty *= (MatrixXd::Identity(nx,nx) - kalman_gain*gps_measurement_model);
 }
 
-void Automow_EKF::measurementUpdateAHRS(float measurement, float covariance) {
+inline bool my_isnan(double x)
+ {
+   return x != x;
+ }
+ 
+inline void print_states(Matrix<double, 9, 1> x) {
+    std::cout << x(0) << ",";
+    std::cout << x(1) << ",";
+    std::cout << x(2) << ",";
+    std::cout << x(3) << ",";
+    std::cout << x(4) << ",";
+    std::cout << x(5) << ",";
+    std::cout << x(6) << ",";
+    std::cout << x(7) << ",";
+    std::cout << x(8) << std::endl;
+}
+
+void Automow_EKF::measurementUpdateAHRS(double measurement, double covariance) {
+    if(!model_initialized)
+        return;
+    // std::cout << measurement << ",";
     measurement = this->wrapToPi(measurement);
-    Matrix<float, 1, 1> innovation = Matrix<float, 1, 1>::Constant(measurement) - (ahrs_measurement_model * state_estimates);
-    innovation(0) = this->wrapToPi(innovation(0));
-    Matrix<float, nx, 1> kalman_gain;
-    Matrix<float, 1, 1> S;
+    // std::cout << measurement << ",";
+    double innovation = measurement - (ahrs_measurement_model * state_estimates)(0);
+    if(my_isnan(innovation)) {
+        std::cerr << "Innovation is NaN, something is wrong..." << std::endl << ahrs_measurement_model << std::endl << state_estimates << std::endl;
+        std::cout << "F: " << input_model << std::endl;
+        std::cout << "G: " << noise_model << std::endl;
+        exit(-1);
+    }
+    // std::cout << (ahrs_measurement_model * state_estimates)(0) << ",";
+    // std::cout << innovation << ",";
+    innovation = this->wrapToPi(innovation);
+    // std::cout << innovation << std::endl;
+    Matrix<double, nx, 1> kalman_gain;
+    Matrix<double, 1, 1> S;
     S = ahrs_measurement_model * estimation_uncertainty * ahrs_measurement_model.transpose();
-    S += Matrix<float, 1, 1>::Constant(covariance);
+    S += Matrix<double, 1, 1>::Constant(covariance);
     kalman_gain = (estimation_uncertainty * ahrs_measurement_model.transpose()) * S.inverse();
     state_estimates += kalman_gain * innovation;
     state_estimates(2) = this->wrapToPi(state_estimates(2));
-    estimation_uncertainty *= (MatrixXf::Identity(nx,nx) - kalman_gain*ahrs_measurement_model);
+    estimation_uncertainty *= (MatrixXd::Identity(nx,nx) - kalman_gain*ahrs_measurement_model);
 }
 
 double Automow_EKF::getNorthing() {
+    print_states(this->state_estimates);
     return this->state_estimates(1);
 }
 
@@ -97,7 +129,7 @@ double Automow_EKF::getYaw() {
     return this->state_estimates(2);
 }
 
-void Automow_EKF::updateModel(Vector2f input, double delta_time) {
+void Automow_EKF::updateModel(Vector2d input, double delta_time) {
     // Construct the discrete input model (F) from state equations
     input_model(0,2) = -0.5 * delta_time
                        * (state_estimates(3)*input(0) + state_estimates(4)*input(1))
@@ -136,11 +168,12 @@ void Automow_EKF::updateModel(Vector2f input, double delta_time) {
     noise_model(7,7) = delta_time;
     noise_model(8,8) = delta_time;
     
-    // std::cout << "F: " << input_model << std::endl;
-    // std::cout << "G: " << noise_model << std::endl;
+    std::cerr << "F: " << input_model << std::endl;
+    std::cerr << "G: " << noise_model << std::endl;
+    model_initialized = true;
 }
 
-float Automow_EKF::wrapToPi(float angle) {
+double Automow_EKF::wrapToPi(double angle) {
     angle += M_PI;
     bool is_neg = (angle < 0);
     angle = fmod(angle, (2.0*M_PI));
