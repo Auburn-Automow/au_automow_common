@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="automow_ekf" type="ekf_node" name="ekf_node" launch-prefix="ddd --args "/>
+</launch>
