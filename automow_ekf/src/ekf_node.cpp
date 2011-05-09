@@ -47,7 +47,7 @@ void odom_pubCallback(const ros::TimerEvent& e) {
     msg.pose.pose.position.x = ekf.getEasting();
     double yaw = ekf.getYaw();
     msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
-    std::cout << msg.pose.pose.position.y << "," << msg.pose.pose.position.x << "," << yaw << std::endl;
+    // std::cout << msg.pose.pose.position.y << "," << msg.pose.pose.position.x << "," << yaw << std::endl;
     
     odom_pub.publish(msg);
 }
@@ -55,7 +55,10 @@ void odom_pubCallback(const ros::TimerEvent& e) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "automow_ekf");
     
-    std::cout << "easting,northing,yaw // No IMU" << std::endl;
+    // std::cout << "easting,northing,yaw" << std::endl;
+    // std::cout << "easting,northing,yaw // No IMU" << std::endl;
+    // std::cout << "imu_measurement,imu_measurement_wrapped,imu_prediction,imu_innovation, imu_innovation_wrapped" << std::endl;
+    std::cout << "states e,n,t,rl,rr,wb,E,N,T" << std::endl;
     
     ros::NodeHandle n;
     
