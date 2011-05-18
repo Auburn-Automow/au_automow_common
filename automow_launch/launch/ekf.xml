@@ -5,7 +5,13 @@
         <param name="publish_tf" value="true"/>
         <param name="odom_used" value="true"/>
         <param name="imu_used" value="true"/>
-        <param name="vo_used" value="false"/>
+        <param name="vo_used" value="true"/>
         <remap from="imu_data" to="imu/data"/>
+    </node>
+    <node name="gps_conv" pkg="gps_common" type="utm_odometry_node">
+        <remap from="odom" to="vo" />
+        <remap from="fix" to="/gps/fix" />
+        <param name="rot_covariance" value="99999" />
+        <param name="frame_id" value="base_footprint" />
     </node>
 </launch>
