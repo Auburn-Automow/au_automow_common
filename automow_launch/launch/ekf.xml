@@ -9,6 +9,6 @@
         <remap from="imu_data" to="/imu/remapped"/>
         <remap from="vo" to="/gps/odometry"/>
         <param name="debug" value="true"/>
-        <param name="self_diagnose" value="false"/>
+        <param name="self_diagnose" value="true"/>
     </node>
 </launch>
