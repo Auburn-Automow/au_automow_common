@@ -23,8 +23,8 @@ import sys
 import traceback
 
 ###  Variables  ###
-LINEAR_SPEED = 0.5
-ANGULAR_SPEED = 2.75
+LINEAR_SPEED = 1.2/6
+ANGULAR_SPEED = 0.4
 
 ###  Classes  ###
 
@@ -43,14 +43,14 @@ class Joy2Twist(object):
         # Spin
         rospy.spin()
     
+    
     def handleJoyMessage(self, data):
         """Handles incoming Joy messages"""
         msg = Twist()
-        msg.linear.x = data.axes[1] * LINEAR_SPEED
-        msg.angular.z = data.axes[0] * ANGULAR_SPEED
+        msg.linear.x = data.axes[1] * LINEAR_SPEED * (1 + data.axes[8]*-6)
+        msg.angular.z = data.axes[0] * ANGULAR_SPEED * (1 + data.axes[8]*-4)
         self.twist_publisher.publish(msg)
-    
-
+ 
 ###  If Main  ###
 if __name__ == '__main__':
     try:
