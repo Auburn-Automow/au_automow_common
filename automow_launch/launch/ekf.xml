@@ -7,7 +7,7 @@
         <param name="imu_used" value="true"/>
         <param name="vo_used" value="true"/>
         <remap from="imu_data" to="imu/data"/>
-        <remap from="vo" to="/gps/odom"/>
+        <remap from="vo" to="/gps/odometry"/>
         <param name="debug" value="true"/>
         <param name="self_diagnose" value="false"/>
     </node>
