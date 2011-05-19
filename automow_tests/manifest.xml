@@ -10,7 +10,8 @@
   <url>http://ros.org/wiki/tests</url>
   <depend package="roscpp"/>
   <depend package="geometry_msgs"/>
-
+  <depend package="rospy"/>
+  <depend package="std_msgs"/>
+  <depend package="tf"/>
+  <depend package="sensor_msgs"/>
 </package>
-
-
