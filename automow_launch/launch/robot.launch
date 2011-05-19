@@ -10,6 +10,9 @@
     
     <!-- Start the GPS -->
     <include file="$(find automow_launch)/launch/gps.xml" />
+
+    <!-- Start the Power Control Board -->
+    <include file="$(find power_control_board)/launch/power_control_board.launch" />
     
     <!-- Start the State publisher responsible for publishing tf's for the mower -->
     <!-- <include file="$(find automow_urdf)/launch/state_publisher.launch" /> -->
