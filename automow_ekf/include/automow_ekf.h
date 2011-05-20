@@ -51,17 +51,17 @@ using Eigen::VectorXd;
 
 namespace automow_ekf {
 
-const int nx = 9;
+const int nx = 7;
 const int ny_gps = 2;
 const int ny_ahrs = 1;
 const int nu = 2;
 
 Matrix<double, ny_gps, nx> gps_measurement_model = 
-    (MatrixXd(ny_gps, nx) << 1,0,0,0,0,0,1,0,0, 0,1,0,0,0,0,0,1,0
+    (MatrixXd(ny_gps, nx) << 1,0,0,0,0,0,0, 0,1,0,0,0,0,0
     ).finished();
 
 Matrix<double, ny_ahrs, nx> ahrs_measurement_model = 
-    (MatrixXd(ny_ahrs, nx) << 0,0,1,0,0,0,0,0,0).finished();
+    (MatrixXd(ny_ahrs, nx) << 0,0,1,0,0,0,0).finished();
 
 class Automow_EKF {
 public:
@@ -96,24 +96,13 @@ private:
     Matrix<double, nx, nx> input_model; // F
     Matrix<double, nx, nx> noise_model; // G
     bool model_initialized;
+    bool heading_initialized;
     std::ofstream states_file;
     std::ofstream models_file;
     std::ofstream ahrs_file;
     std::ofstream gps_file;
     std::ofstream inputs_file;
 };
-
-// class SerialPortAlreadyOpenException : public std::exception {
-//     const char * port;
-// public:
-//     SerialPortAlreadyOpenException(const char * port) {this->port = port;}
-//     
-//     virtual const char* what() const throw() {
-//         std::stringstream ss;
-//         ss << "Serial Port already open: " << this->port;
-//         return ss.str().c_str();
-//     }
-// };
 
 } // namespace automow_ekf
 
