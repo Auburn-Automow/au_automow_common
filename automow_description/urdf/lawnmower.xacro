@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 
 <robot 
-    xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" name="macroed">
+    xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+    name="automow">
+
     <material name="Green">
         <color rgba="0.0 0.8 0.0 1.0"/>
     </material>
@@ -14,8 +16,14 @@
     <material name="Blue">
         <color rgba="0.0 0.0 0.8 1.0"/>
     </material>
+    <material name="Black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+    </material>
+    <material name="Grey">
+        <color rgba="0.7 0.7 0.7 0.7"/>
+    </material>
 
-    <property name="M_PI" value="3.14159"/>
+    <xacro:property name="M_PI" value="3.14159"/>
 
     <xacro:macro name="default_inertial" params="mass">
         <inertial>
@@ -56,39 +64,104 @@
     <!-- base_link is the origin for all of the coordinates on the robot.
       For our case, this will be centered under the wheels of the
       robot. -->
+    <xacro:property name="clearance" value="0.065" />
+    <xacro:property name="c_width" value="0.51" />
+    <xacro:property name="c_length" value="0.73" />
+    <xacro:property name="c_height" value="0.54" />
+
     <link name="base_link">
         <xacro:default_inertial mass="100"/>
         <visual>
-            <origin xyz="0 0 0.0308" rpy="0 0 0" />
+            <origin xyz="${c_length/2} ${c_width/2} ${c_height/2}" rpy="0 0 0" />
+            <geometry>
+                <box size="${c_length} ${c_width} ${c_height}" />
+            </geometry>
+            <material name="Grey" />
         </visual>
+    
+        <collision>
+            <origin xyz="${c_length/2} ${c_width/2} ${c_height/2}" rpy="0 0 0" />
+            <geometry>
+                <box size="${c_length} ${c_width} ${c_height}" />
+            </geometry>
+        </collision>
     </link>
 
-    <link name="left_wheel_link"/>
-    <link name="right_wheel_link"/>
-    <link name="laser" />
-    <link name="ahrs" />
-
-
     <joint name="base_footprint_joint" type="fixed">
+        <origin xyz="0 0 ${clearance}" rpy="0 0 0"/>
         <parent link="base_footprint"/>
         <child link="base_link"/>
     </joint>
 
-    <joint name="left_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="left_wheel_link"/>
-    </joint>
 
-    <joint name="right_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="right_wheel_link"/>
-    </joint>
+    <xacro:property name="wheeldiam" value="30"/>
+    <xacro:macro name="wheel" params="prefix reflect">
+        <link name="${prefix}_wheel_link">
+            <visual>
+                <geometry>
+                    <cylinder radius="${wheeldiam/2}" length="0.1"/>
+                </geometry>
+                <material name="Black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder radius="${wheeldiam/2}" length="0.1"/>
+                </geometry>
+            </collision>
+            <xacro:default_inertial mass="1"/>
+        </link>
+        <joint name="${prefix}_wheel_joint">
+            <axis xyz="0 0 1"/>
+            <parent link="base_link"/>
+            <child link="${prefix}_wheel_link"/>
+            <origin xyz="0 ${c_width*reflect/2 + 1} ${wheeldiam/2 + clearance}"
+                rpy="0 0 0"/>
+        </joint>
+    </xacro:macro>
+
+    <link name="laser">
+        <visual>
+            <origin xyz="0 0 -0.07" />
+            <geometry>
+                <cylinder radius="0.06" length="0.08"/>
+            </geometry>
+            <material name="Red"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 -0.07" />
+            <geometry>
+                <cylinder radius="0.06" length="0.08"/>
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="0.5"/>
+    </link>
+
+            
+
+    <link name="ahrs">
+        <visual>
+            <geometry>
+                <box size="0.02 0.02 0.02"/>
+            </geometry>
+            <material name="Black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.02 0.02 0.02"/>
+            </geometry>
+        </collision>
+        <xacro:default_inertial mass="0.001"/>
+    </link>
+
 
     <joint name="laser_joint" type="fixed">
+        <origin xyz="81.5 0 21.5" rpy="0 0 0"/>
         <parent link="base_link" />
         <child link="laser" />
     </joint>
+
     <joint name="ahrs_joint" type="fixed">
+        <origin xyz="22 0 ${c_height - 2}" rpy="${M_PI/2} 0 0"/>
         <parent link="base_link" />
         <child link="ahrs" />
     </joint>
@@ -128,17 +201,21 @@
 
 
     <joint name="base_kinect_joint" type="fixed">
+        <origin xyz="0.49  0.005 ${c_height + 0.05}" rpy="0 ${M_PI/12} 0"/>
+        <parent link="base_link"/>
+        <child link="kinect_link"/>
     </joint>
 
     <joint name="kinect_depth_joint" type="fixed">
-      <parent link="kinect_link" />
-      <child link="kinect_depth_frame" />
+        <origin xyz="0 0.018 0" rpy="0 0 0" />
+        <parent link="kinect_link" />
+        <child link="kinect_depth_frame" />
     </joint>
 
     <joint name="kinect_depth_optical_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${M_PI/2}"/>
-      <parent link="kinect_depth_frame" />
-      <child link="kinect_depth_optical_frame" />
+        <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${M_PI/2}"/>
+        <parent link="kinect_depth_frame" />
+        <child link="kinect_depth_optical_frame" />
     </joint>
 
     <joint name="kinect_rgb_joint" type="fixed">
