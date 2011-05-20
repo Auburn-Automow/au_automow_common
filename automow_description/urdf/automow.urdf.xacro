@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-
 <robot 
-    xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" 
+    xmlns:xacro="http://www.ros.org/wiki/xacro"
     name="automow">
 
     <material name="Green">
@@ -69,20 +68,43 @@
     <xacro:property name="c_length" value="0.73" />
     <xacro:property name="c_height" value="0.54" />
 
+    <xacro:property name="c1_length" value="0.515" />
+    <xacro:property name="c1_height" value="0.27" />
+
+    <xacro:property name="c2_length" value="0.515" />
+    <xacro:property name="c2_height" value="0.27"/>
+
+
     <link name="base_link">
         <xacro:default_inertial mass="100"/>
         <visual>
-            <origin xyz="${c_length/2 - 0.215} 0 ${c_height/2}" rpy="0 0 0" />
+            <origin xyz="${c1_length/2 - 0.215} 0 ${c1_height/2}" rpy="0 0 0" />
             <geometry>
-                <box size="${c_length} ${c_width} ${c_height}" />
+                <box size="${c1_length} ${c_width} ${c1_height}" />
             </geometry>
             <material name="Grey" />
         </visual>
     
         <collision>
-            <origin xyz="${c_length/2 - 0.215} 0 ${c_height/2}" rpy="0 0 0" />
+            <origin xyz="${c1_length/2 - 0.215} 0 ${c1_height/2}" rpy="0 0 0" />
             <geometry>
-                <box size="${c_length} ${c_width} ${c_height}" />
+                <box size="${c1_length} ${c_width} ${c1_height}" />
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="base_top">
+        <visual>
+            <origin xyz="${c2_length/2} 0 -${c2_height/2}" rpy="0 0 0" />
+            <geometry>
+                <box size="${c2_length} ${c_width} ${c2_height}" />
+            </geometry>
+            <material name="Grey" />
+        </visual>
+        <collision>
+            <origin xyz="${c2_length/2} 0 -${c2_height/2}" rpy="0 0 0" />
+            <geometry>
+                <box size="${c2_length} ${c_width} ${c2_height}" />
             </geometry>
         </collision>
     </link>
@@ -93,6 +115,11 @@
         <child link="base_link"/>
     </joint>
 
+    <joint name="base_top_joint" type="fixed">
+        <origin xyz="0 0 ${c_height}" />
+        <parent link="base_link"/>
+        <child link="base_top"/>
+    </joint>
 
     <xacro:property name="wheeldiam" value="0.27"/>
 
@@ -114,7 +141,7 @@
         <joint name="${prefix}_wheel_joint" type="fixed">
             <parent link="base_link"/>
             <child link="${prefix}_wheel_link"/>
-            <origin xyz="0 ${c_width/2*reflect} ${wheeldiam/2 - clearance}"
+            <origin xyz="0 ${(c_width/2 + 0.05)*reflect} ${wheeldiam/2 - clearance}"
                 rpy="${M_PI/2} 0 0"/>
         </joint>
     </xacro:macro>
@@ -122,16 +149,87 @@
     <xacro:wheel prefix="left" reflect="1"/>
     <xacro:wheel prefix="right" reflect="-1"/>
 
+    <xacro:property name="d_width" value=".775"/>
+    <xacro:property name="d_length" value=".385"/>
+    <xacro:property name="d_height" value=".085"/>
+
+    <link name="deck_link">
+        <visual>
+            <origin xyz="0 0 -${d_height/2}"/>
+            <geometry>
+                <box size="${d_length} ${d_width} ${d_height}"/>
+            </geometry>
+            <material name="Blue"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <box size="${d_length} ${d_width} ${d_height}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="deck_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="deck_link"/>
+        <origin xyz="${(.73 - .215 + .06)} 0 ${d_height}"/>
+    </joint>
+
+    <xacro:property name="blade_diameter" value="0.356"/>
+    <xacro:macro name="cutter" params="prefix reflect">
+        <link name="${prefix}_cutter">
+            <visual>
+                <origin xyz="0 0 -0.01"/>
+                <geometry>
+                    <cylinder radius="${blade_diameter/2}" length="0.02"/>
+                </geometry>
+                <material name="Green"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 -0.01"/>
+                <geometry>
+                    <cylinder radius="${blade_diameter/2}" length="0.02"/>
+                </geometry>
+            </collision>
+            <xacro:default_inertial mass="1"/>
+        </link>
+        <joint name="${prefix}_cutter_joint" type="fixed">
+            <parent link="deck_link"/>
+            <child link="${prefix}_cutter"/>
+            <origin xyz="0 ${blade_diameter/2 * reflect} -0.08"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:cutter prefix="left" reflect="1"/>
+    <xacro:cutter prefix="right" reflect="-1"/>
+
+
+    <link name="gps">
+        <visual>
+            <origin xyz="0 0 -0.01"/>
+            <geometry>
+                <cylinder radius="0.09" length="0.02"/>
+            </geometry>
+            <material name="White"/>
+        </visual>
+    </link>
+
+    <joint name="gps_joint" type="fixed">
+        <parent link="base_top"/>
+        <child link="gps"/>
+        <origin xyz="0 0 0.165"/>
+    </joint>
+
     <link name="laser">
         <visual>
-            <origin xyz="0 0 -0.07" />
+            <origin xyz="0 0 -0.02" />
             <geometry>
                 <cylinder radius="0.06" length="0.08"/>
             </geometry>
             <material name="Red"/>
         </visual>
         <collision>
-            <origin xyz="0 0 -0.07" />
+            <origin xyz="0 0 -0.02" />
             <geometry>
                 <cylinder radius="0.06" length="0.08"/>
             </geometry>
@@ -153,7 +251,6 @@
         </collision>
         <xacro:default_inertial mass="0.001"/>
     </link>
-
 
     <joint name="laser_joint" type="fixed">
         <origin xyz="0.815 0 0.215" rpy="0 0 0"/>
