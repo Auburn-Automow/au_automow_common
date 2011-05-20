@@ -3,8 +3,12 @@
     <include file="$(find automow_launch)/launch/hardware.launch" />
     
     <!-- Start the Navigation Subsystem -->
-    <include file="$(find automow_launch)/launch/navigation.xml" />
+    <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->
     
     <!-- Start SLAM -->
     <!-- <include file="$(find automow_launch)/launch/slam.xml" /> -->
+    
+    <!-- Start joystick -->
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen"/>
+    <node pkg="joy2twist" type="joy2twist.py" name="joy2twist" output="screen"/>
 </launch>

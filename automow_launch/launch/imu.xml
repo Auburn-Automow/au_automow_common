@@ -7,4 +7,7 @@
         <param name="autocalibrate" type="bool" value="false" />
         <param name="angular_velocity_stdev" type="double" value="0.00017" />
     </node>
+    <node pkg="microstrain_3dm_gx3" type="imu_remapper" name="imu_remapper"
+        output="screen" />
+
 </launch>

@@ -1,0 +1,17 @@
+<package>
+  <description brief="joy2twist">
+
+     joy2twist
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/joy2twist</url>
+  <depend package="rospy"/>
+  <depend package="joy"/>
+  <depend package="geometry_msgs"/>
+
+</package>
+
+
