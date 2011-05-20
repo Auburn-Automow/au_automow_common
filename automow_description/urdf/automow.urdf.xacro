@@ -72,7 +72,7 @@
     <link name="base_link">
         <xacro:default_inertial mass="100"/>
         <visual>
-            <origin xyz="${c_length/2} ${c_width/2} ${c_height/2}" rpy="0 0 0" />
+            <origin xyz="${c_length/2 - 0.215} 0 ${c_height/2}" rpy="0 0 0" />
             <geometry>
                 <box size="${c_length} ${c_width} ${c_height}" />
             </geometry>
@@ -80,7 +80,7 @@
         </visual>
     
         <collision>
-            <origin xyz="${c_length/2} ${c_width/2} ${c_height/2}" rpy="0 0 0" />
+            <origin xyz="${c_length/2 - 0.215} 0 ${c_height/2}" rpy="0 0 0" />
             <geometry>
                 <box size="${c_length} ${c_width} ${c_height}" />
             </geometry>
@@ -94,7 +94,8 @@
     </joint>
 
 
-    <xacro:property name="wheeldiam" value="30"/>
+    <xacro:property name="wheeldiam" value="0.27"/>
+
     <xacro:macro name="wheel" params="prefix reflect">
         <link name="${prefix}_wheel_link">
             <visual>
@@ -110,14 +111,16 @@
             </collision>
             <xacro:default_inertial mass="1"/>
         </link>
-        <joint name="${prefix}_wheel_joint">
-            <axis xyz="0 0 1"/>
+        <joint name="${prefix}_wheel_joint" type="fixed">
             <parent link="base_link"/>
             <child link="${prefix}_wheel_link"/>
-            <origin xyz="0 ${c_width*reflect/2 + 1} ${wheeldiam/2 + clearance}"
-                rpy="0 0 0"/>
+            <origin xyz="0 ${c_width/2*reflect} ${wheeldiam/2 - clearance}"
+                rpy="${M_PI/2} 0 0"/>
         </joint>
     </xacro:macro>
+
+    <xacro:wheel prefix="left" reflect="1"/>
+    <xacro:wheel prefix="right" reflect="-1"/>
 
     <link name="laser">
         <visual>
@@ -135,9 +138,7 @@
         </collision>
         <xacro:default_inertial mass="0.5"/>
     </link>
-
-            
-
+    
     <link name="ahrs">
         <visual>
             <geometry>
@@ -155,13 +156,13 @@
 
 
     <joint name="laser_joint" type="fixed">
-        <origin xyz="81.5 0 21.5" rpy="0 0 0"/>
+        <origin xyz="0.815 0 0.215" rpy="0 0 0"/>
         <parent link="base_link" />
         <child link="laser" />
     </joint>
 
     <joint name="ahrs_joint" type="fixed">
-        <origin xyz="22 0 ${c_height - 2}" rpy="${M_PI/2} 0 0"/>
+        <origin xyz="0.22 0 ${c_height - 0.02}" rpy="${M_PI} 0 0"/>
         <parent link="base_link" />
         <child link="ahrs" />
     </joint>
