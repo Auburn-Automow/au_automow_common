@@ -1,6 +1,6 @@
 <launch>
     <node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node">
         <param name="port" type="str" value="/dev/ttyACM0" />
-        <param name="frame_id" type="str" value="/laser_link" />
+        <param name="frame_id" type="str" value="/laser" />
     </node>
 </launch>
