@@ -114,12 +114,16 @@ class AutomowEKF:
         return innovation, S, K
 
     def measurementUpdateAHRS(self,y):
-        innovation = y - self.C_imu * self.x_hat
-        S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.conj().T))
-        K = np.dot(self.P,np.dot(self.C_imu.conj().T,np.linalg.inv(S)))
-        self.x_hat = self.x_hat + np.dot(K,innovation)
-        self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_imu)),self.P)
-        return
+        if y.dtype is not np.double:
+            y = y.astype(np.double)
+        innovation = y - np.dot(self.C_imu, self.x_hat)
+        S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.T))
+        S += self.R_imu[0,0]
+        K = np.dot(self.P,self.C_imu.T/S)
+        self.x_hat += K * innovation[0]
+        self.P = np.dot((np.eye(self.__nx) - \
+                np.dot(K.reshape((6,1)),self.C_imu.reshape((1,6)))),self.P)
+        return innovation, S, K
 
     def getYaw(self):
         return self.x_hat[2]

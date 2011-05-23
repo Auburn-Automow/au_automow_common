@@ -74,12 +74,33 @@ class TestAutomowEKF():
             assert_array_almost_equal(test_filter.P,data['P'][x], \
                     err_msg = "P, on iteration: " + str(x+1))
 
- 
-
-
     def test_measurementUpdateAHRS(self):
         """ Test the AHRS measurement update against MATLAB data """
+        filename = "./test_data/measurementUpdateAHRSTest.mat"
+        data = sio.loadmat(filename,struct_as_record=True)
+        test_filter = ekf(
+            np.squeeze(data['x_hat_i']),
+            data['P_i'],
+            data['Q'],
+            data['R_gps'],
+            data['R_imu'])
 
+        test_filter.timeUpdate(np.squeeze(data['u']), np.squeeze(data['time']))
+
+        for x in range(data['numCases']):
+            inp = data['y_imu'][x]
+            (inv, S, K) = test_filter.measurementUpdateAHRS(inp)
+            
+            assert_array_almost_equal(inv,np.squeeze(data['innovation'][x]),
+                    err_msg = "innvation, on iteration: " + str(x+1))
+            assert_array_almost_equal(S,data['S'][x], \
+                    err_msg = "error covariance, on iteration: " + str(x+1))
+            assert_array_almost_equal(K,data['K'][x], \
+                    err_msg = "Kalman Gain, on iteration: " + str(x+1))
+            assert_array_almost_equal(test_filter.x_hat,data['x_hat'][x], \
+                    err_msg = "x_hat, on iteration: " + str(x+1))
+            assert_array_almost_equal(test_filter.P,data['P'][x], \
+                    err_msg = "P, on iteration: " + str(x+1))
 
     def test_WrapToPi(self):
         """ Testcase for WrapToPi against MATLAB's function """
