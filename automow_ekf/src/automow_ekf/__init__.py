@@ -38,14 +38,14 @@ class AutomowEKF:
 
     @classmethod
     def fromDefault(cls):
-        x_hat_i = np.array([0,0,0,1,1,1],dtype=self.__dt)
-        P_i = np.diag(np.array([1,1,1,1,1,1],dtype=self.__dt))
-        Q = np.diag(np.array([1,1,0,0,0,0],dtype=self.__dt))
-        R_gps = np.eye(2,dtype=self.__dt)
-        R_imu = np.eye(1,dtype=self.__dt)
+        x_hat_i = np.array([0,0,0,0.159,0.159,0.5461],dtype=cls.__dt)
+        P_i = np.diag(np.array([100,100,100,1e-3,1e-3,1e-3],dtype=cls.__dt))
+        Q = np.diag(np.array([0.2,0.2,0,0,0,0],dtype=cls.__dt))
+        R_gps = np.eye(2,dtype=cls.__dt) * 0.1
+        R_imu = np.eye(1,dtype=cls.__dt) * 0.012
         return cls(x_hat_i,P_i,Q,R_gps,R_imu)
 
-    def UpdateModel(self,u,dt):
+    def updateModel(self,u,dt):
         self.F = np.eye(self.__nx,dtype=self.__dt)
         self.F[0,2] = -0.5 * dt \
                 * (self.x_hat[3] * u[0] + self.x_hat[4] * u[1]) \
@@ -83,10 +83,10 @@ class AutomowEKF:
 
         return
 
-    def TimeUpdate(self,u,time):
+    def timeUpdate(self,u,time):
         dt = time - self.__prev_time
         self.__prev_time = time
-        self.UpdateModel(u,dt)
+        self.updateModel(u,dt)
 
         v = self.x_hat[4]/2.0 * u[1] + self.x_hat[5]/2.0 * u[0]
         w = self.x_hat[4]/self.x_hat[5] * u[1] - \
@@ -100,7 +100,7 @@ class AutomowEKF:
                 + np.dot(self.G,np.dot(self.Q,self.G.conj().T))
         return
 
-    def MeasurementUpdateGPS(self,y,R):
+    def measurementUpdateGPS(self,y,R):
         innovation = y - self.C_gps * self.x_hat
         S = np.dot(self.C_gps,np.dot(self.P,self.C_gps.conj().T))
         K = np.dot(self.P,np.dot(self.C_gps.conj().T,np.linalg.inv(S)))
@@ -108,13 +108,12 @@ class AutomowEKF:
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_gps)),self.P)
         return 
 
-    def MeasurementUpdateIMU(self,y):
+    def measurementUpdateAHRS(self,y):
         innovation = y - self.C_imu * self.x_hat
         S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.conj().T))
         K = np.dot(self.P,np.dot(self.C_imu.conj().T,np.linalg.inv(S)))
         self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_imu)),self.P)
-
         return
 
     def getYaw(self):

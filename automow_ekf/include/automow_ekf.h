@@ -92,11 +92,12 @@ private:
     Matrix<double, nx, nx> process_noise; // Q
     Matrix<double, ny_gps, ny_gps> gps_measurement_noise; // R_gps
     Matrix<double, ny_ahrs, ny_ahrs> ahrs_measurement_noise; // R_imu
-    double previous_time; // prev_time
     Matrix<double, nx, nx> input_model; // F
     Matrix<double, nx, nx> noise_model; // G
-    bool model_initialized;
-    bool heading_initialized;
+    
+    double previous_time; // prev_time
+    Matrix<double, nu, 1> previous_input;
+    
     std::ofstream states_file;
     std::ofstream models_file;
     std::ofstream ahrs_file;
