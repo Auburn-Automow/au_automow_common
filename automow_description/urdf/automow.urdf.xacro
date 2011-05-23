@@ -253,6 +253,8 @@
     </link>
 
     <joint name="laser_joint" type="fixed">
+        <!-- <origin xyz="0.815 0 0.215" rpy="0 0 -0.0523598776"/> -->
+        <!-- <origin xyz="0.815 0 0.215" rpy="0 0 -0.034906585"/> -->
         <origin xyz="0.815 0 0.215" rpy="0 0 0"/>
         <parent link="base_link" />
         <child link="laser" />
@@ -299,7 +301,7 @@
 
 
     <joint name="base_kinect_joint" type="fixed">
-        <origin xyz="0.49  0.005 ${c_height + 0.05}" rpy="0 ${M_PI/12} 0"/>
+        <origin xyz="0.49  0.005 ${c_height + 0.05}" rpy="0 ${M_PI/12} 0.034906585"/>
         <parent link="base_link"/>
         <child link="kinect_link"/>
     </joint>

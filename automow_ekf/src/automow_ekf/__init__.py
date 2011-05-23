@@ -116,7 +116,7 @@ class AutomowEKF:
     def measurementUpdateAHRS(self,y):
         innovation = y - self.C_imu * self.x_hat
         S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.conj().T))
-        K = np.dot(self.P,np.dot(self.C_imu.conj().T,np.linalg.inv(S)))
+        K = np.dot(self.P,np.dot(self.C_imu.conj().T,(1.0/S)))
         self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_imu)),self.P)
         return

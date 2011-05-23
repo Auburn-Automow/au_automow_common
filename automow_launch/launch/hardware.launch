@@ -33,7 +33,7 @@
     <include file="$(find automow_launch)/launch/hokuyo_lrf.xml" />
 
     <!-- Start the Kinect -->
-    <include file="$(find automow_launch)/launch/kinect.xml" />
+    <!-- <include file="$(find automow_launch)/launch/kinect.xml" /> -->
     
     <!-- Start the Vision system's Line Processing -->
     <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
