@@ -2,28 +2,23 @@
 
 #include "math.h"
 
-inline bool my_isnan(double x)
- {
-   return x != x;
- }
+inline bool my_isnan(double x) {
+    return x != x;
+}
  
-inline void write_states(Matrix<double, 9, 1> x, std::ofstream &f) {
+inline void write_states(Matrix<double, 7, 1> x, std::ofstream &f) {
     f << x(0) << ",";
     f << x(1) << ",";
     f << x(2) << ",";
     f << x(3) << ",";
     f << x(4) << ",";
     f << x(5) << ",";
-    f << x(6) << ",";
-    f << x(7) << ",";
-    f << x(8);
+    f << x(6);
 }
 
-inline void write_model(Matrix<double, 9, 9> x, std::ofstream &f) {
-    for(size_t i = 0; i < 9; ++i)
-    {
-        for(size_t j = 0; j < 9; ++j)
-        {
+inline void write_model(Matrix<double, 7, 7> x, std::ofstream &f) {
+    for(size_t i = 0; i < 7; ++i) {
+        for(size_t j = 0; j < 7; ++j) {
             if(i == 0 && j == 0)
                 f << x(i,j);
             else
@@ -32,33 +27,41 @@ inline void write_model(Matrix<double, 9, 9> x, std::ofstream &f) {
     }
 }
 
+
 using namespace automow_ekf;
 
 Automow_EKF::Automow_EKF() {
     // Variable Initialization
-    state_estimates << Vector3d::Zero(3), 0.159, 0.159, 0.5461, Vector3d::Zero(3);
-    VectorXd temp(9);
-    // temp << 1,1,1,0.001,0.001,0.001,1,1,1;
-    temp << 100,100,100,0.001,0.001,0.001,1,1,1;
+    state_estimates << Vector3d::Zero(3), 0.159, 0.159, 0.5461, 0.0;
+    VectorXd temp(nx);
+    temp << 100,100,100,0.001,0.001,0.001,100;
     estimation_uncertainty = temp.asDiagonal();
-    temp = VectorXd(9);
-    temp << 0.2,0.2,0,0,0,0,0.001,0.001,0.001;
+    temp = VectorXd(nx);
+    temp << 0.2,0.2,0,0,0,0,0.001;
     process_noise = temp.asDiagonal();
     gps_measurement_noise << MatrixXd::Identity(ny_gps,ny_gps);
+    gps_measurement_noise *= 0.1
     ahrs_measurement_noise << MatrixXd::Identity(ny_ahrs,ny_ahrs);
+    ahrs_measurement_noise *= 0.012;
     input_model << MatrixXd::Identity(nx,nx);
     noise_model << MatrixXd::Zero(nx,nx);
     previous_time = -1;
     model_initialized = false;
+    heading_initialized = false;
     
     states_file.open("/Users/william/data/states.csv");
-    states_file << "e,n,t,rl,rr,wb,E,N,T,P00,P01,...,P88" << std::endl;
+    states_file.setf(std::ios_base::showpoint, std::ios_base::fixed);
+    states_file << "e,n,t,rl,rr,wb,E,N,T,P00,P01,...,P66,time" << std::endl;
     models_file.open("/Users/william/data/models.csv");
-    models_file << "F00,F01,...,F88,G00,G01,...,G88" << std::endl;
+    models_file.setf(std::ios_base::showpoint, std::ios_base::fixed);
+    models_file << "F00,F01,...,F66,G00,G01,...,G66,time" << std::endl;
     ahrs_file.open("/Users/william/data/ahrs.csv");
-    ahrs_file << "measurement,measurement_wrapped,prediction,innovation,innovation_wrapped,S,Sinv,K1,K2,K3,K4,K5,K6,K7,K8,K9" << std::endl;
+    ahrs_file.setf(std::ios_base::showpoint, std::ios_base::fixed);
+    ahrs_file << "measurement,measurement_wrapped,prediction,innovation,innovation_wrapped,S,Sinv,K1,K2,K3,K4,K5,K6,K7,time" << std::endl;
     gps_file.open("/Users/william/data/gps.csv");
+    gps_file.setf(std::ios_base::showpoint, std::ios_base::fixed);
     inputs_file.open("/Users/william/data/inputs.csv");
+    inputs_file.setf(std::ios_base::showpoint, std::ios_base::fixed);
     inputs_file << "left_input,right_input,time,delta_time" << std::endl;
 }
 
@@ -76,17 +79,18 @@ Automow_EKF::~Automow_EKF() {
 }
 
 void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double current_time) {
+    if(!heading_initialized) return;
     if(previous_time == -1) {
-        previous_time = current_time;
+        this->previous_time = current_time;
         return;
     }
     double delta_time = current_time - this->previous_time;
     
+    this->previous_time = current_time;
+    
     // For later..
     inputs_file << left_wheel << "," << right_wheel << ",";
-    inputs_file << current_time << "," << delta_time << std::endl;
-    
-    this->previous_time = current_time;
+    inputs_file << std::fixed << current_time << "," << delta_time << std::endl;
     
     Vector2d input(left_wheel, right_wheel);
     
@@ -100,26 +104,31 @@ void Automow_EKF::timeUpdate(double left_wheel, double right_wheel, double curre
     w -= (state_estimates(3)/state_estimates(5))*input(0);
     
     // Update the states based on model and input
+    state_estimates(2) += delta_time * w;
+    state_estimates(2) = this->wrapToPi(state_estimates(2));
     state_estimates(0) += delta_time * v
                           * cos(state_estimates(2) + delta_time * (w/2.0));
     
     state_estimates(1) += delta_time * v
                           * sin(state_estimates(2) + delta_time * (w/2.0));
-    state_estimates(2) += delta_time * w;
-    state_estimates(2) = this->wrapToPi(state_estimates(2));
     Matrix<double, nx, nx> temp;
-    temp = input_model * estimation_uncertainty * input_model.transpose()
-           + noise_model * process_noise * noise_model.transpose();
+    Matrix<double, nx, nx> input_model_transpose;
+    input_model_transpose = input_model.transpose();
+    temp = input_model * estimation_uncertainty * input_model.transpose();
+           // + noise_model * process_noise * noise_model.transpose();
     estimation_uncertainty = temp;
     
     // Write the states out to file for later
     write_states(this->state_estimates, this->states_file);
     states_file << ",";
     write_model(this->estimation_uncertainty, this->states_file);
+    states_file << "," << std::fixed << this->previous_time;
     states_file << std::endl;
 }
 
 void Automow_EKF::measurementUpdateGPS(double northing, double easting, double northing_covariance, double easting_covariance) {
+    if(!model_initialized) return;
+    
     Vector2d measurement(easting, northing);
     Vector2d covariance(easting_covariance, northing_covariance);
     Vector2d innovation = measurement - (gps_measurement_model * state_estimates);
@@ -136,13 +145,19 @@ void Automow_EKF::measurementUpdateGPS(double northing, double easting, double n
     write_states(this->state_estimates, this->states_file);
     states_file << ",";
     write_model(this->estimation_uncertainty, this->states_file);
+    states_file << "," << std::fixed << this->previous_time;
     states_file << std::endl;
 }
 
 void Automow_EKF::measurementUpdateAHRS(double measurement, double covariance) {
-    covariance = 0.1;
-    if(!model_initialized)
-        return;
+    // covariance = 0.1;
+    if(!heading_initialized) {
+        state_estimates(2) = this->wrapToPi(measurement);
+        heading_initialized = true;
+    }
+    
+    if(!model_initialized) return;
+    
     ahrs_file << measurement << ",";
     measurement = this->wrapToPi(measurement);
     ahrs_file << measurement << ",";
@@ -182,17 +197,21 @@ void Automow_EKF::measurementUpdateAHRS(double measurement, double covariance) {
     temp2 = state_estimates + (kalman_gain * innovation);
     state_estimates = temp2;
     state_estimates(2) = this->wrapToPi(state_estimates(2));
+    ahrs_file << ",";
+    write_model(estimation_uncertainty, ahrs_file);
     Matrix<double, nx, nx> temp;
     temp = estimation_uncertainty * (MatrixXd::Identity(nx,nx) - kalman_gain*ahrs_measurement_model);
     estimation_uncertainty = temp;
     ahrs_file << ",";
     write_model(estimation_uncertainty, ahrs_file);
+    states_file << "," << this->previous_time;
     ahrs_file << std::endl;
     
     // Write the states out to file for later
     write_states(this->state_estimates, this->states_file);
     states_file << ",";
     write_model(this->estimation_uncertainty, this->states_file);
+    states_file << "," << std::fixed << this->previous_time;
     states_file << std::endl;
 }
 
@@ -244,14 +263,13 @@ void Automow_EKF::updateModel(Vector2d input, double delta_time) {
     noise_model(4,4) = delta_time;
     noise_model(5,5) = delta_time;
     noise_model(6,6) = delta_time;
-    noise_model(7,7) = delta_time;
-    noise_model(8,8) = delta_time;
     
     write_model(input_model, models_file);
     models_file << ",";
     write_model(noise_model, models_file);
+    states_file << "," << std::fixed << this->previous_time;
     models_file << std::endl;
-    model_initialized = true;
+    if(!model_initialized) model_initialized = true;
 }
 
 double Automow_EKF::wrapToPi(double angle) {
