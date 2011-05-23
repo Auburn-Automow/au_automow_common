@@ -17,8 +17,8 @@
     <!-- Start the State publisher responsible for publishing tf's for the mower -->
     <!-- <include file="$(find automow_urdf)/launch/state_publisher.launch" /> -->
     
-    <!-- Start the Extended Kalman Filter -->
-    <include file="$(find automow_launch)/launch/ekf.xml" />
+    <!-- Start the Extended Kalman Filter
+    <include file="$(find automow_launch)/launch/ekf.xml" /> -->
    
     <!-- Start the motor controller and teleoperation nodes -->
     <!-- <include file="$(find ax2550)/launch/motor_control.launch" /> -->
@@ -31,6 +31,9 @@
     
     <!-- Start the Hokuyo Laser Range Finder -->
     <include file="$(find automow_launch)/launch/hokuyo_lrf.xml" />
+
+    <!-- Start the Kinect -->
+    <include file="$(find automow_launch)/launch/kinect.xml" />
     
     <!-- Start the Vision system's Line Processing -->
     <!-- <include file="$(find line_processing)/launch/line_processing.launch" /> -->
