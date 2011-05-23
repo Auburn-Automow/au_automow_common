@@ -88,30 +88,35 @@ class AutomowEKF:
         self.__prev_time = time
         self.updateModel(u,dt)
 
-        v = self.x_hat[4]/2.0 * u[1] + self.x_hat[5]/2.0 * u[0]
+        v = self.x_hat[4]/2.0 * u[1] + self.x_hat[3]/2.0 * u[0]
         w = self.x_hat[4]/self.x_hat[5] * u[1] - \
-                self.x_hat[5]/self.x_hat[5] * u[0]
+                self.x_hat[3]/self.x_hat[5] * u[0]
 
         self.x_hat[0] += dt * v * np.cos(self.x_hat[2] + dt * w/2.0)
         self.x_hat[1] += dt * v * np.sin(self.x_hat[2] + dt * w/2.0)
         self.x_hat[2] += dt * w
         self.x_hat[2] = self.wrapToPi(self.x_hat[2])
-        self.P = np.dot(self.F,np.dot(self.P,self.F.conj().T)) \
-                + np.dot(self.G,np.dot(self.Q,self.G.conj().T))
-        return
+        self.P = np.dot(self.F,np.dot(self.P,self.F.T)) \
+                + np.dot(self.G,np.dot(self.Q,self.G.T))
+        return v,w
 
     def measurementUpdateGPS(self,y,R):
-        innovation = y - self.C_gps * self.x_hat
-        S = np.dot(self.C_gps,np.dot(self.P,self.C_gps.conj().T))
+        if y.shape is (2,):
+            y = y.reshape((1,2))
+        if y.dtype is not np.double:
+            y = y.astype(np.double)
+        innovation = y - np.dot(self.C_gps,self.x_hat)
+        S = np.dot(self.C_gps,np.dot(self.P,self.C_gps.T)) 
+        S += R
         K = np.dot(self.P,np.dot(self.C_gps.conj().T,np.linalg.inv(S)))
         self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_gps)),self.P)
-        return 
+        return innovation, S, K
 
     def measurementUpdateAHRS(self,y):
         innovation = y - self.C_imu * self.x_hat
         S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.conj().T))
-        K = np.dot(self.P,np.dot(self.C_imu.conj().T,(1.0/S)))
+        K = np.dot(self.P,np.dot(self.C_imu.conj().T,np.linalg.inv(S)))
         self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_imu)),self.P)
         return
