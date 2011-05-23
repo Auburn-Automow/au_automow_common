@@ -11,6 +11,8 @@ import tf
 
 from automow_ekf import AutomowEKF
 
+import matplotlib
+
 import numpy as np
 
 ekf = None
@@ -24,6 +26,7 @@ def imuCallback(data):
     global ekf
     (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])
     ekf.measurementUpdateAHRS(yaw)#, data.orientation_covariance[8])
+    print ekf.getEasting(), ekf.getNorthing(), ekf.getYaw()
 
 def ekf_node():
     global ekf
