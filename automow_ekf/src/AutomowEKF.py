@@ -106,10 +106,4 @@ class AutomowEKF:
 
     @classmethod
     def wrapToPi(angle):
-        angle += np.pi
-        is_neg = (angle < 0)
-        angle = np.fmod(angle,2*np.pi)
-        if is_neg:
-            angle += 2*np.pi
-        angle -= np.pi
-        return angle
+        return np.mod(x+np.pi,2*np.pi)-np.pi
