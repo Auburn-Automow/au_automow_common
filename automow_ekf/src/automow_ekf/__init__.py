@@ -69,9 +69,9 @@ class AutomowEKF:
         self.G[0,3] = 0.5 * dt * u[0] * np.cos(self.x_hat[2])
         self.G[0,4] = 0.5 * dt * u[1] * np.cos(self.x_hat[2])
         self.G[1,0] = 0.5 * dt * self.x_hat[3] * np.sin(self.x_hat[2])
-        self.G[1,1] = 0.5 * dt * self.x_hat[3] * np.sin(self.x_hat[2])
+        self.G[1,1] = 0.5 * dt * self.x_hat[4] * np.sin(self.x_hat[2])
         self.G[1,3] = 0.5 * dt * u[0] * np.cos(self.x_hat[2])
-        self.G[1,4] = 0.5 * dt * u[0] * np.cos(self.x_hat[2])
+        self.G[1,4] = 0.5 * dt * u[1] * np.cos(self.x_hat[2])
         self.G[2,0] = -1.0 * dt * self.x_hat[3]/self.x_hat[5]
         self.G[2,1] = dt * self.x_hat[4]/self.x_hat[5]
         self.G[2,2] = dt 
