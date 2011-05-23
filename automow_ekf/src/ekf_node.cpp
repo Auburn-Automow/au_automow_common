@@ -13,8 +13,11 @@ automow_ekf::Automow_EKF ekf;
 
 ros::Publisher odom_pub;
 
+bool first_run;
+
 void encoderCallback(const ax2550::StampedEncoders::ConstPtr& msg) {
     try {
+        if(first_run) first_run = false;
         ekf.timeUpdate(msg->encoders.left_wheel, msg->encoders.right_wheel, msg->header.stamp.toSec());
     } catch(std::exception &e) {
         ROS_ERROR("Error with time update: %s", e.what());
@@ -24,7 +27,8 @@ void encoderCallback(const ax2550::StampedEncoders::ConstPtr& msg) {
 void ahrsCallback(const sensor_msgs::Imu::ConstPtr& msg) {
     try {
         // Must subtract pi/2 to the yaw, inorder to rotate it into the body fixed frame
-        ekf.measurementUpdateAHRS(tf::getYaw(msg->orientation)-M_PI/2.0, msg->orientation_covariance[8]);
+        if(!first_run)
+            ekf.measurementUpdateAHRS(tf::getYaw(msg->orientation)-(M_PI/2.0), 0.012);//, msg->orientation_covariance[8]);
     } catch(std::exception &e) {
         ROS_ERROR("Error with ahrs update: %s", e.what());
     }
@@ -55,6 +59,8 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "automow_ekf");
     
     ros::NodeHandle n;
+    
+    first_run = true;
     
     odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     
