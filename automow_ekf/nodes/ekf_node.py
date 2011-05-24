@@ -5,6 +5,7 @@ import rospy
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from ax2550.msg import StampedEncoders
+from magellan_dg14.msg import UTMFix
 
 from tf.transformations import euler_from_quaternion
 import tf
@@ -25,8 +26,14 @@ def encodersCallback(data):
 def imuCallback(data):
     global ekf
     (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])
-    ekf.measurementUpdateAHRS(yaw)#, data.orientation_covariance[8])
+    ekf.measurementUpdateAHRS(yaw-np.pi/2.0)#, data.orientation_covariance[8])
     print ekf.getEasting(), ekf.getNorthing(), ekf.getYaw()
+
+def gpsCallback(data):
+    global ekf
+    y = np.array([data.easting, data.northing], dtype=np.double)
+    covar = np.diag(np.array([data.position_covariance[0], data.position_covariance[4]]))
+    ekf.measurementUpdateGPS(y, covar)
 
 def ekf_node():
     global ekf
@@ -36,6 +43,7 @@ def ekf_node():
     
     rospy.Subscriber("encoders", StampedEncoders, encodersCallback)
     rospy.Subscriber("imu/data", Imu, imuCallback)
+    rospy.Subscriber("utm_fix", UTMFix, gpsCallback)
     
     rospy.spin()
 
