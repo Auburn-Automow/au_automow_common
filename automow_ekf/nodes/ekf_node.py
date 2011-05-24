@@ -5,7 +5,6 @@ import rospy
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from ax2550.msg import StampedEncoders
-from magellan_dg14.msg import UTMFix
 
 from tf.transformations import euler_from_quaternion
 import tf
@@ -17,6 +16,7 @@ import matplotlib
 import numpy as np
 
 ekf = None
+odom_pub = None
 
 def encodersCallback(data):
     global ekf
@@ -24,26 +24,57 @@ def encodersCallback(data):
     ekf.timeUpdate(u, data.header.stamp.to_sec())
 
 def imuCallback(data):
-    global ekf
+    global ekf, odom_pub
     (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])
     ekf.measurementUpdateAHRS(yaw-np.pi/2.0)#, data.orientation_covariance[8])
-    print ekf.getEasting(), ekf.getNorthing(), ekf.getYaw()
+    # print ekf.getEasting(), ekf.getNorthing(), ekf.getYaw()
+    # return
+    
+    br = tf.TransformBroadcaster()
+    br.sendTransform((ekf.getEasting(), ekf.getNorthing(), 0),
+                     tf.transformations.quaternion_from_euler(0, 0, ekf.getYaw()),
+                     rospy.Time.now(),
+                     "base_footprint",
+                     "odom_combined")
+    
+    msg = Odometry()
+    
+    msg.header.stamp = rospy.Time.now()
+    msg.header.frame_id = "odom_combined"
+    msg.pose.pose.position.x = ekf.getEasting()
+    msg.pose.pose.position.y = ekf.getNorthing()
+    msg.pose.pose.position.z = 0.0
+    quat = tf.transformations.quaternion_from_euler(0,0,ekf.getYaw())
+    msg.pose.pose.orientation.x = quat[0]
+    msg.pose.pose.orientation.y = quat[1]
+    msg.pose.pose.orientation.z = quat[2]
+    msg.pose.pose.orientation.w = quat[3]
+    
+    odom_pub.publish(msg)
 
 def gpsCallback(data):
     global ekf
-    y = np.array([data.easting, data.northing], dtype=np.double)
-    covar = np.diag(np.array([data.position_covariance[0], data.position_covariance[4]]))
+    y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], dtype=np.double)
+    e_covar = data.pose.covariance[0]
+    if e_covar < 0.004:
+        e_covar = 0.004
+    n_covar = data.pose.covariance[4]
+    if n_covar < 0.004:
+        n_covar = 0.004
+    covar = np.diag(np.array([e_covar, n_covar]))
     ekf.measurementUpdateGPS(y, covar)
 
 def ekf_node():
-    global ekf
+    global ekf, odom_pub
     rospy.init_node('ekf_node', anonymous=True)
     
     ekf = AutomowEKF.fromDefault()
     
     rospy.Subscriber("encoders", StampedEncoders, encodersCallback)
     rospy.Subscriber("imu/data", Imu, imuCallback)
-    rospy.Subscriber("utm_fix", UTMFix, gpsCallback)
+    rospy.Subscriber("gps/odometry", Odometry, gpsCallback)
+    
+    odom_pub = rospy.Publisher("ekf/odom", Odometry)
     
     rospy.spin()
 
