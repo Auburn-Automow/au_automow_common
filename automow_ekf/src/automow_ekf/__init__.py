@@ -1,5 +1,8 @@
 import numpy as np
 
+def wrapToPi(angle):
+    return np.mod(angle+np.pi,2.0*np.pi)-np.pi
+
 class AutomowEKF:
     __nx = 6                    # Number of States in the Kalman Filter        
     __ny_gps = 2                # Number of measurements from the GPS
@@ -95,11 +98,11 @@ class AutomowEKF:
         self.x_hat[0] += dt * v * np.cos(self.x_hat[2] + dt * w/2.0)
         self.x_hat[1] += dt * v * np.sin(self.x_hat[2] + dt * w/2.0)
         self.x_hat[2] += dt * w
-        self.x_hat[2] = self.wrapToPi(self.x_hat[2])
+        self.x_hat[2] = wrapToPi(self.x_hat[2])
         self.P = np.dot(self.F,np.dot(self.P,self.F.T)) \
                 + np.dot(self.G,np.dot(self.Q,self.G.T))
         return v,w
-
+    
     def measurementUpdateGPS(self,y,R):
         if y.shape is (2,):
             y = y.reshape((1,2))
@@ -112,28 +115,29 @@ class AutomowEKF:
         self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_gps)),self.P)
         return innovation, S, K
-
+    
     def measurementUpdateAHRS(self,y):
-        if y.dtype is not np.double:
-            y = y.astype(np.double)
+        y = wrapToPi(y)
+        # if y.dtype is not np.double:
+        #     y = y.astype(np.double)
         innovation = y - np.dot(self.C_imu, self.x_hat)
+        innovation = wrapToPi(innovation)
         S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.T))
         S += self.R_imu[0,0]
         K = np.dot(self.P,self.C_imu.T/S)
-        self.x_hat += K * innovation[0]
+        self.x_hat += K * innovation
+        self.x_hat[2] = wrapToPi(self.x_hat[2])
         self.P = np.dot((np.eye(self.__nx) - \
                 np.dot(K.reshape((6,1)),self.C_imu.reshape((1,6)))),self.P)
         return innovation, S, K
-
+    
     def getYaw(self):
         return self.x_hat[2]
-
+    
     def getNorthing(self):
         return self.x_hat[1]
-
+    
     def getEasting(self):
         return self.x_hat[0]
+    
 
-    @classmethod
-    def wrapToPi(self,angle):
-        return np.mod(angle+np.pi,2.0*np.pi)-np.pi
