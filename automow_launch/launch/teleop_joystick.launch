@@ -1,6 +1,6 @@
 <launch>
     <!-- Include the hardware components -->
-    <include file="$(find automow_launch)/launch/hardware.launch" />
+    <!-- <include file="$(find automow_launch)/launch/hardware.launch" /> -->
     
     <!-- Start the Navigation Subsystem -->
     <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->

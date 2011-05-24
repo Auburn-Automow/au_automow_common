@@ -20,14 +20,14 @@ v = None
 w = None
 
 def encodersCallback(data):
-    global ekf
+    global ekf, v, w
     u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
             dtype=np.double)
 
     (v,w) = ekf.timeUpdate(u, data.header.stamp.to_sec())
 
 def imuCallback(data):
-    global ekf, odom_pub
+    global ekf, odom_pub, v, w
     (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, \
             data.orientation.z, data.orientation.w])
     ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
@@ -72,7 +72,7 @@ def gpsCallback(data):
     if n_covar < 0.004:
         n_covar = 0.004
     covar = np.diag(np.array([e_covar, n_covar]))
-    ekf.measurementUpdateGPS(y, covar)
+    # ekf.measurementUpdateGPS(y, covar)
 
 def ekf_node():
     global ekf, odom_pub

@@ -1,0 +1,8 @@
+<launch>
+    <!-- Start automow ekf -->
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py" output="screen" />
+
+    <!-- Start the motor controller -->
+    <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->
+    <include file="$(find automow_navigation)/launch/navigation_slam.launch" />
+</launch>
