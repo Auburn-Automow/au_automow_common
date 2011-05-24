@@ -4,6 +4,7 @@ import rospy
 
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Vector3, Quaternion
 from ax2550.msg import StampedEncoders
 
 from tf.transformations import euler_from_quaternion
@@ -11,24 +12,25 @@ import tf
 
 from automow_ekf import AutomowEKF
 
-import matplotlib
-
 import numpy as np
 
 ekf = None
 odom_pub = None
+v = None
+w = None
 
 def encodersCallback(data):
     global ekf
-    u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], dtype=np.double)
-    ekf.timeUpdate(u, data.header.stamp.to_sec())
+    u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
+            dtype=np.double)
+
+    (v,w) = ekf.timeUpdate(u, data.header.stamp.to_sec())
 
 def imuCallback(data):
     global ekf, odom_pub
-    (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w])
-    ekf.measurementUpdateAHRS(yaw-np.pi/2.0)#, data.orientation_covariance[8])
-    # print ekf.getEasting(), ekf.getNorthing(), ekf.getYaw()
-    # return
+    (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, \
+            data.orientation.z, data.orientation.w])
+    ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
     
     br = tf.TransformBroadcaster()
     br.sendTransform((ekf.getEasting(), ekf.getNorthing(), 0),
@@ -38,23 +40,29 @@ def imuCallback(data):
                      "odom_combined")
     
     msg = Odometry()
-    
+    # Header
     msg.header.stamp = rospy.Time.now()
     msg.header.frame_id = "odom_combined"
-    msg.pose.pose.position.x = ekf.getEasting()
-    msg.pose.pose.position.y = ekf.getNorthing()
-    msg.pose.pose.position.z = 0.0
+    # Position
+    msg.pose.pose.position = Vector3(ekf.getEasting(),ekf.getNorthing(),0)
     quat = tf.transformations.quaternion_from_euler(0,0,ekf.getYaw())
     msg.pose.pose.orientation.x = quat[0]
     msg.pose.pose.orientation.y = quat[1]
     msg.pose.pose.orientation.z = quat[2]
     msg.pose.pose.orientation.w = quat[3]
-    
+    # TODO: Add covariance to the odometry message
+    # Velocity
+    msg.twist.twist.linear = Vector3(v,0,0)
+    msg.twist.twist.angular = Vector3(0,0,w)
     odom_pub.publish(msg)
 
 def gpsCallback(data):
     global ekf
-    y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], dtype=np.double)
+    y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], \
+            dtype=np.double)
+    # The Kalman Filter expects a time-varying measurement noise matrix.  The GPS 
+    # also has a nasty tendency to over-estimate the accuracy of the position, so
+    # we create a floor of 2cm variance to prevent it from getting "too accurate"
     e_covar = data.pose.covariance[0]
     if e_covar < 0.004:
         e_covar = 0.004
