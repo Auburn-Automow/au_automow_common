@@ -4,7 +4,7 @@ import rospy
 
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Vector3, Quaternion
+from geometry_msgs.msg import Vector3
 from ax2550.msg import StampedEncoders
 
 from tf.transformations import euler_from_quaternion
