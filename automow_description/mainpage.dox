@@ -2,7 +2,7 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b automow-urdf is ... 
+\b automow_description provides a 3D model of the Auburn Autonomous Lawnmower for visualization
 
 <!-- 
 Provide an overview of your package.
