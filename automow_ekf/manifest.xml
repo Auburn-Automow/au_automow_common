@@ -1,21 +1,20 @@
 <package>
   <description brief="automow_ekf">
 
-     automow_ekf
+    Extended Kalman Filter to estimate the position of the Autonomous lawnmower
+    based on the wheel encoders, GPS position, and AHRS.
 
   </description>
-  <author>William Woodall</author>
+  <author>Michael Carroll and William Woodall</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_ekf</url>
-  <depend package="roscpp"/>
+  <depend package="rospy"/>
   <depend package="roslib"/>
   <depend package="geometry_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="tf"/>
-  <depend package="eigen"/>
   <depend package="ax2550"/>
-  <depend package="magellan_dg14"/>
 
 </package>
 

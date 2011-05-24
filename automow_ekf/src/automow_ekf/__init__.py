@@ -1,6 +1,14 @@
 import numpy as np
 
 def wrapToPi(angle):
+    """
+    Wrap a given angle in radians to the range -pi to pi.
+
+    @param angle : The angle to be wrapped
+    @param type angle : float
+    @return : Wrapped angle
+    @rtype : float
+    """
     return np.mod(angle+np.pi,2.0*np.pi)-np.pi
 
 class AutomowEKF:
@@ -21,14 +29,19 @@ class AutomowEKF:
             Q,
             R_gps,
             R_imu):
-        """Initialize the Kalman Filter with a set of input arguments
+        """
+        Initialize the Kalman Filter with a set of input arguments
 
-        Keyword arguments:
-        x_hat_i -- The initial state of the Kalman Estimator
-        P_i -- The initial covariance matrix of the Kalman Estimator
-        Q -- The process noise covariance of the Kalman Estimator
-        R_gps -- The measurement noise covariance of the GPS input
-        R_imu -- The measurement noise covariance of the IMU input
+        @param x_hat_i : The initial state of the Kalman Estimator
+        @param type x_hat_i : (6,) numpy.array, dtype=np.double
+        @param P_i : The initial covariance matrix of the Kalman Estimator
+        @param type P_i : (6,6) numpy.array, dtype=np.double
+        @param Q : The process noise covariance of the system
+        @param type Q : (6,6) numpy.array, dtype=np.double
+        @param R_gps : The GPS measurement noise covariance 
+        @param type R_gps : (2,2) numpy.array, dtype=np.double 
+        @param R_imu : The AHRS measurement noise covariance
+        @param type R_imu : (1,1) numpy.array, dtype=np.double
         """
         self.x_hat = x_hat_i
         self.P = P_i
@@ -41,14 +54,25 @@ class AutomowEKF:
 
     @classmethod
     def fromDefault(cls):
-        x_hat_i = np.array([0,0,0,0.159,0.159,0.5461],dtype=cls.__dt)
-        P_i = np.diag(np.array([100,100,100,1e-3,1e-3,1e-3],dtype=cls.__dt))
+        """
+        Initialize the Kalman Filter with a set of default arguments
+        """
+        x_hat_i = np.array([1,0,0,0.159,0.159,0.5461],dtype=cls.__dt)
+        P_i = np.diag(np.array([101,100,100,1e-3,1e-3,1e-3],dtype=cls.__dt))
         Q = np.diag(np.array([0.2,0.2,0,0,0,0],dtype=cls.__dt))
         R_gps = np.eye(2,dtype=cls.__dt) * 0.1
         R_imu = np.eye(1,dtype=cls.__dt) * 0.012
         return cls(x_hat_i,P_i,Q,R_gps,R_imu)
 
     def updateModel(self,u,dt):
+        """
+        Update the process and process noise matricies of the model
+        
+        @param u : The current i
+        @param type u : (2,) numpy.array, dtype=np.double
+        @param dt : The time delta from the previous time update
+        @param type dt : np.float
+        """
         self.F = np.eye(self.__nx,dtype=self.__dt)
         self.F[0,2] = -0.5 * dt \
                 * (self.x_hat[3] * u[0] + self.x_hat[4] * u[1]) \
@@ -139,5 +163,5 @@ class AutomowEKF:
     
     def getEasting(self):
         return self.x_hat[0]
-    
+
 
