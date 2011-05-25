@@ -24,10 +24,10 @@ resolution = 0.05
 def meters_to_cells(meters):
     return int(resolution / meters)
 
-NOT_ACCESSABLE = 1 << 0
-CUT = 1 << 1
-UNCUT = 1 << 2
-DONT_CUT = 1 << 3
+NOT_ACCESSABLE = -1
+CUT = -2
+UNCUT = -3
+DONT_CUT = -4
 
 def calc_distance(x, y, u, v):
     "Returns the euclidean(sp?) distance between two points as an int"
@@ -47,6 +47,7 @@ class Map(object):
     def set_point(self, x, y, value):
         ""
         self._point_list[x][y] = value
+        self._cost_map[x][y] = value
     
     def get_point(self, x, y):
         "Gets a point and its cost"
@@ -68,7 +69,7 @@ class Map(object):
         print "\n    Occupancy Grid"
         val = self._point_list.T
         for i in range(val.shape[0]-1, -1, -1):
-            print '%3d' % i,
+            print '{0:3d}:'.format(i),
             for j in range(val.shape[1]):
                 if val[i][j] == NOT_ACCESSABLE:
                     print '   .',
@@ -81,9 +82,12 @@ class Map(object):
             print
         print '   ',
         for j in range(val.shape[1]):
-            print '%4d' % j,
+            print '   _',
         print
-            
+        print '   ',
+        for j in range(val.shape[1]):
+            print '{0:4d}'.format(j),
+        print
 
     def visualize(self, filename=None):
         if filename:
@@ -127,16 +131,21 @@ class Map(object):
         val = self._cost_map.T
         print "\n    Costmap"
         for i in range(val.shape[0]-1, -1, -1):
-            print '%3d' % i,
+            print '{0:3d}:'.format(i),
             for j in range(val.shape[1]):
-                if val[i][j] == -2:
+                if val[i][j] == 0:
                     print '   .',
+                elif val[i][j] == NOT_ACCESSABLE:
+                    print '   @',
                 else:
-                    print "%4d" % val[i][j],
+                    print "{0:4d}".format(int(val[i][j])),
             print
-        print '   ',
+        print '    ',
         for j in range(val.shape[1]):
-            print '%4d' % j,
+            print '   _',
+        print '\n    ',
+        for j in range(val.shape[1]):
+            print '{0:4d}'.format(j),
         print "\n\n"
 
     def _calc_distances(self, i, j, x1, y1, x2, y2):
@@ -146,22 +155,22 @@ class Map(object):
             for y in range(y1, y2+1):
                 if x == i and y == j:
                     continue
-                if self._cost_map[x][y] == -1:
+                if self._cost_map[x][y] == NOT_ACCESSABLE:
                     continue
                 dist = calc_distance(i, j, x, y)
-                print 'dist', dist, i, j, x, y
-                self._cost_map[x][y] = min(self._cost_map[x][y], dist)
-                if self._cost_map[x][y]  == -2 or self._cost_map[x][y] == 255:
-                    print x,y, "not = 1"
+                self._cost_map[i][j] = min(dist, self._cost_map[i][j])
 
     def update_costmap(self, x1, y1, x2, y2):
         """
         Generates a costmap for a given dataset
         """
-        # self._cost_map = np.array([[0.0 for y in range(self.y)] for x in range(self.x)])
+        self._cost_map = np.array([[0.0 for y in range(self.y)] for x in range(self.x)])
         for i in range(x1, x2+1):
             for j in range(y1, y2+1):
-                self._cost_map[i][j] = 255
+                if self._point_list[i][j] == NOT_ACCESSABLE:
+                    self._cost_map[i][j] = NOT_ACCESSABLE
+                else:
+                    self._cost_map[i][j] = self.x * self.y
                 self._calc_distances(i, j, x1, y1, x2, y2)
     
     def find_nearest(self, start, value):
@@ -236,17 +245,17 @@ def main():
     og.set_point(12, 7, NOT_ACCESSABLE)
     og.set_point(13, 7, NOT_ACCESSABLE)
     
-    og.update_costmap(1,1,3,2)
+    og.update_costmap(0, 0, x-1, y-1)
     
     # print og.get_point(2, 4), og.get_point(0, 1) 
     og.print_occupancy()
     print
     og.print_costmap()
-    print "print along the x:"
-    print repr(og.generate_sub_regions(range_max=x, length_max=y, axis=('x','y')))
-    print "\n", "printing along the y:"
-    print repr(og.generate_sub_regions(range_max=y, length_max=x, axis=('y','x')))
-    print 'test complete'
+    # print "print along the x:"
+    # print repr(og.generate_sub_regions(range_max=x, length_max=y, axis=('x','y')))
+    # print "\n", "printing along the y:"
+    # print repr(og.generate_sub_regions(range_max=y, length_max=x, axis=('y','x')))
+    # print 'test complete'
     
 if __name__ == '__main__':
     main()
