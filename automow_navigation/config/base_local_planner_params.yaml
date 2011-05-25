@@ -4,19 +4,19 @@ TrajectoryPlannerROS:
   max_rotational_vel: 0.2
   min_in_place_rotational_vel: 0.3
   
-  acc_lim_th: 3.2
-  acc_lim_x: 3
-  acc_lim_y: 3
+  acc_lim_th: 1.0
+  acc_lim_x: 0.5
+  acc_lim_y: 0.0
   
   yaw_goal_tolerance: 0.1
   xy_goal_tolerance: 0.15
   latch_xy_goal_tolerance: false
   
-  sim_time: 1.0
+  sim_time: 2.0
   sim_granularity: 0.025
-  vx_samples: 8 # Default 3, 8-15 for high speed comupters
+  vx_samples: 3 # Default 3, 8-15 for high speed comupters
   vtheta_samples: 20
-  controller_frequency: 20
+  controller_frequency: 10
   
   meter_scoring: false
   path_distance_bias: 0.6
@@ -25,6 +25,6 @@ TrajectoryPlannerROS:
   
   publish_cost_grid: true
   
-  dwa: false
+  dwa: true
   
   holonomic_robot: false

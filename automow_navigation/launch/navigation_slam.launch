@@ -21,6 +21,7 @@
         <param name="llsamplestep" value ="0.05" /> <!-- Translational sampling range for the likelihood -->
         <param name="lasamplerange" value ="0.05" /> <!-- Angular sampling range for the likelihood -->
         <param name="lasamplestep" value ="0.05" /> <!-- Angular sampling range for the likelihood -->
+        <param name="odom_frame" value="odom_combined" />
     </node>
     
     <!-- Start the move_base Node -->
