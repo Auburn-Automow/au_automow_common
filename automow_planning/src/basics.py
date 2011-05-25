@@ -40,9 +40,8 @@ class Map(object):
         self.x = x
         self.y = y
         self._default_value = default_value
-
-        self._point_list = np.array([[UNCUT for y in range(self.y)] for x in range(self.x)])
-        self._cost_map = np.array([[-2 for y in range(self.y)] for x in range(self.x)])
+        self._point_list = np.array([[default_value for y in range(self.y)] for x in range(self.x)])
+        self._cost_map = np.array([[0.0 for y in range(self.y)] for x in range(self.x)])
 
     def set_point(self, x, y, value):
         ""
@@ -133,7 +132,7 @@ class Map(object):
         for i in range(val.shape[0]-1, -1, -1):
             print '{0:3d}:'.format(i),
             for j in range(val.shape[1]):
-                if val[i][j] == 0:
+                if val[i][j] == UNCUT:
                     print '   .',
                 elif val[i][j] == NOT_ACCESSABLE:
                     print '   @',
@@ -152,26 +151,29 @@ class Map(object):
         "Calculateds all of the distances for the map"
         # TODO: Needs to shortcut if its calculating stuff it doesnt need
         for x in range(x1, x2+1):
+            going_up = True
+            last = 0
             for y in range(y1, y2+1):
                 if x == i and y == j:
                     continue
                 if self._cost_map[x][y] == NOT_ACCESSABLE:
                     continue
                 dist = calc_distance(i, j, x, y)
-                self._cost_map[i][j] = min(dist, self._cost_map[i][j])
+                # if last > dist
+                
+                last = dist
+                self._cost_map[x][y] = min(dist, self._cost_map[x][y])
 
     def update_costmap(self, x1, y1, x2, y2):
         """
         Generates a costmap for a given dataset
         """
-        self._cost_map = np.array([[0.0 for y in range(self.y)] for x in range(self.x)])
+        self._cost_map = np.array([[self.x*self.y for y in range(self.y)] for x in range(self.x)])
         for i in range(x1, x2+1):
             for j in range(y1, y2+1):
                 if self._point_list[i][j] == NOT_ACCESSABLE:
                     self._cost_map[i][j] = NOT_ACCESSABLE
-                else:
-                    self._cost_map[i][j] = self.x * self.y
-                self._calc_distances(i, j, x1, y1, x2, y2)
+                    self._calc_distances(i, j, x1, y1, x2, y2)
     
     def find_nearest(self, start, value):
         "A helper function for finding a nearest point of a given type"
