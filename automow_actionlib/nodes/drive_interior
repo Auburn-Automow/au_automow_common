@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+###  Imports  ###
+
+# ROS imports
+import roslib; roslib.load_manifest('automow_actionlib')
+import rospy
+import actionlib
+from time import sleep
+import math
+import tf
+from tf import LookupException
+
+# ROS msg and srv imports
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from nav_msgs.msg import GridCells
+from geometry_msgs.msg import PointStamped
+from line_processing.srv import LineProcessingControl
+
+# Python Libraries
+import sys
+
+# Peer Libraries
+
+###  Variables  ###
+destination = None
+transformer_ros = None
+
+###  Functions  ###
+
+def handleObstaclesMsg(msg):
+    """Updates our map with obstacles and their inflations"""
+    global transformer_ros
+    if msg.cells == None:
+        return
+    temp_point = PointStamped()
+    transformed_point = PointStamped()
+    temp_point.header = msg.header
+    translation = None
+    rotation = None
+    try:
+        translation, rotation = transformer_ros.lookupTransform("base_footprint", msg.header.frame_id, msg.header.stamp)
+    except (LookupException, tf.Exception) as err:
+        rospy.logwarn(str(err))
+    for cell in msg.cells:
+        rospy.loginfo("%s%s" % (str(translation), str(rotation)))
+        temp_point.point.x = cell.x
+        temp_point.point.y = cell.y
+        temp_point.point.z = cell.z
+        # rospy.loginfo("Initial Point: %s, Transformed Point: %s" % (str(temp_point),str(transformed_point)))
+        break
+
+def main():
+    global destination, transformer_ros
+    
+    rospy.init_node("drive_interior")
+    client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+    client.wait_for_server()
+    
+    # transformer_ros = tf.TransformListener()
+    
+    destination = MoveBaseGoal()
+    destination.target_pose.header.frame_id = "base_footprint"
+    
+    # obstacle_subscriber = rospy.Subscriber("/move_base/local_costmap/obstacles", GridCells, handleObstaclesMsg)
+    # obstacle_subscriber = rospy.Subscriber("/move_base/local_costmap/inflated_obstacles", GridCells, handleObstaclesMsg)
+    
+    lineProcessingControl = rospy.ServiceProxy('lineProcessingControl', LineProcessingControl)
+    lineProcessingControl(False)
+    
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 5
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    client.wait_for_result(rospy.Duration(10))
+    
+    destination.target_pose.header.stamp = rospy.Time.now()
+    
+    destination.target_pose.pose.position.x = 0
+    destination.target_pose.pose.position.y = 0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    client.send_goal(destination)
+    
+    lineProcessingControl(True)
+    
+    while not rospy.is_shutdown():
+        destination.target_pose.header.stamp = rospy.Time.now()
+        
+        destination.target_pose.pose.position.x = 5
+        destination.target_pose.pose.position.y = 0.0
+        quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
+        destination.target_pose.pose.orientation.z = quat[2]
+        destination.target_pose.pose.orientation.w = quat[3]
+        
+        client.send_goal(destination)
+        
+        count = 0
+        while not rospy.is_shutdown() and count != 5:
+            if client.wait_for_result(rospy.Duration(1.0)):
+                break
+            else:
+                count += 1
+
+###  If Main  ###
+if __name__ == '__main__':
+    main()
