@@ -5,5 +5,5 @@
     <!-- Start the motor controller -->
     <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->
     <!-- <include file="$(find automow_navigation)/launch/navigation_slam.launch" /> -->
-    <include file="$(find automow_navigation)/launch/move_base.xml" />
+    <include file="$(find automow_navigation)/launch/navigation_no_localization.launch" />
 </launch>

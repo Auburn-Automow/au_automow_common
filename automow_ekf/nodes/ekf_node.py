@@ -50,9 +50,6 @@ def imuCallback(data):
     msg.pose.pose.orientation.y = quat[1]
     msg.pose.pose.orientation.z = quat[2]
     msg.pose.pose.orientation.w = quat[3]
-    # Pose Covariance
-    cov = np.diag(ekf.P)
-    msg.pose.pose.covariance = np.diag(np.array((cov[0], cov[1], 0, 0, 0, cov[2])))
     # Velocity
     msg.twist.twist.linear = Vector3(v,0,0)
     msg.twist.twist.angular = Vector3(0,0,w)

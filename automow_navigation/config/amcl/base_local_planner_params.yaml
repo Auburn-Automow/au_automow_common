@@ -1,11 +1,11 @@
 TrajectoryPlannerROS:
-  max_vel_x: 0.5
-  min_vel_x: 0.2
-  max_rotational_vel: 0.2
-  min_in_place_rotational_vel: 0.3
+  max_vel_x: 0.8
+  min_vel_x: 0.3
+  max_rotational_vel: 0.4
+  min_in_place_rotational_vel: 0.15
   
-  acc_lim_th: 1.0
-  acc_lim_x: 0.5
+  acc_lim_th: 5.0
+  acc_lim_x: 4.0
   acc_lim_y: 0.0
   
   yaw_goal_tolerance: 0.1
@@ -25,6 +25,6 @@ TrajectoryPlannerROS:
   
   publish_cost_grid: true
   
-  dwa: true
+  dwa: false
   
   holonomic_robot: false
