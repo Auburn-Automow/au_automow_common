@@ -109,7 +109,7 @@ class AutomowController:
         msg.angular.z = speed
         self.pub_cmdvel.publish(msg)
 
-    def within_dist_of_goal(dist):
+    def within_dist_of_goal(self,dist):
         """ Returns True if the robot is less than dist of the goal """
         x_dist = self.global_goal_pose.x - self.robot_pose.x
         y_dist = self.global_goal_pose.y - self.robot_pose.y
@@ -122,7 +122,7 @@ def main():
     controller = AutomowController()
     
     if controller.system_state == 1:
-        turn_toward_location(controller.global_goal_pose,0.1)
+        controller.turn_toward_location(controller.global_goal_pose,0.1)
 
     rospy.spin()
 
