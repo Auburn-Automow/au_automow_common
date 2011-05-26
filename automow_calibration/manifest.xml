@@ -1,7 +1,7 @@
 <package>
   <description brief="automow_calibration">
 
-     automow_calibration
+    A set of scripts for calibration of different systems of the lawnmower. 
 
   </description>
   <author>Michael Carroll</author>
@@ -14,5 +14,3 @@
   <depend package="nav_msgs"/>   
   <depend package="ax2550"/>
 </package>
-
-
