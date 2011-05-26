@@ -1,0 +1,14 @@
+<package>
+  <description brief="automow_planning">
+
+     automow_planning
+
+  </description>
+  <author>John Harrison</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow_planning</url>
+  <depend package="roscpp" />
+  <depend package="dynamicvoronoi" />
+  <depend package="nav_msgs" />
+</package>
