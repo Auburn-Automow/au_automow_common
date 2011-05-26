@@ -14,12 +14,6 @@
     <!-- Start the Power Control Board -->
     <include file="$(find power_control_board)/launch/power_control_board.launch" />
     
-    <!-- Start the State publisher responsible for publishing tf's for the mower -->
-    <!-- <include file="$(find automow_urdf)/launch/state_publisher.launch" /> -->
-    
-    <!-- Start the Extended Kalman Filter
-    <include file="$(find automow_launch)/launch/ekf.xml" /> -->
-   
     <!-- Start the motor controller and teleoperation nodes -->
     <!-- <include file="$(find ax2550)/launch/motor_control.launch" /> -->
     

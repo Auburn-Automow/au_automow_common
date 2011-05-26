@@ -1,14 +1,8 @@
 <launch>
-    <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
-        <param name="freq" value="25.0"/>
-        <param name="sensor_timeout" value="1.2"/>
-        <param name="publish_tf" value="true"/>
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py" output="screen">
         <param name="odom_used" value="true"/>
         <param name="imu_used" value="true"/>
-        <param name="vo_used" value="true"/>
-        <remap from="imu_data" to="/imu/remapped"/>
-        <remap from="vo" to="/gps/odometry"/>
-        <param name="debug" value="true"/>
-        <param name="self_diagnose" value="true"/>
+        <param name="gps_used" value="true"/>
+        <param name="output_frame" value="odom_combined"/>
     </node>
 </launch>
