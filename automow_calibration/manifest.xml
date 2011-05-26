@@ -1,0 +1,16 @@
+<package>
+  <description brief="automow_calibration">
+
+    A set of scripts for calibration of different systems of the lawnmower. 
+
+  </description>
+  <author>Michael Carroll</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow_calibration</url>
+  <depend package="rospy"/>
+  <depend package="roslib"/>
+  <depend package="geometry_msgs"/>
+  <depend package="nav_msgs"/>   
+  <depend package="ax2550"/>
+</package>

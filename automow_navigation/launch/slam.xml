@@ -1,32 +1,26 @@
 <launch>
-    <!-- Start the ACML Node -->
-    <!-- <include file="$(find automow_navigation)/launch/amcl_diff.xml" /> -->
-    
-    <!-- Start the move_base Node -->
-    <include file="$(find automow_navigation)/launch/move_base.xml" />
-
     <!-- Start the GMapping SLAM Node -->
     <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
         <param name="maxUrange" value="10.0" /> <!-- The maximum usable range of the laser. A beam is cropped to this value. (meters) -->
         <param name="particles" value="30" /> <!-- Number of particles in the filter -->
         <param name="delta" value="0.10" /> <!-- Processing parameters (resolution of the map) -->
-        <param name="xmin" value="-30.0" /> <!-- Initial map size -->
-        <param name="xmax" value="30.0" /> <!-- Initial map size -->
-        <param name="ymin" value="-30.0" /> <!-- Initial map size -->
-        <param name="ymax" value="30.0" /> <!-- Initial map size -->
+        <param name="xmin" value="-15.0" /> <!-- Initial map size -->
+        <param name="xmax" value="15.0" /> <!-- Initial map size -->
+        <param name="ymin" value="-15.0" /> <!-- Initial map size -->
+        <param name="ymax" value="15.0" /> <!-- Initial map size -->
         <param name="angularUpdate" value="0.5" /> <!-- Process a scan each time the robot rotates this far (radians) -->
         <param name="linearUpdate" value="1.0" /> <!-- Process a scan each time the robot translates this far (meters) -->
         <param name="map_update_interval" value="1.0" />
         <!-- 
-             How long (in seconds) between updates to the map.
-             Lowering this number updates the occupancy grid more often,
-             at the expense of greater computational load.
+        How long (in seconds) between updates to the map.
+        Lowering this number updates the occupancy grid more often,
+        at the expense of greater computational load.
         -->
         <param name="resampleThreshold" value="0.3" /> <!-- The neff based resampling threshold (?) -->
         <param name="llsamplerange" value ="0.05" /> <!-- Translational sampling range for the likelihood -->
         <param name="llsamplestep" value ="0.05" /> <!-- Translational sampling range for the likelihood -->
         <param name="lasamplerange" value ="0.05" /> <!-- Angular sampling range for the likelihood -->
         <param name="lasamplestep" value ="0.05" /> <!-- Angular sampling range for the likelihood -->
-        <param name="odom_frame" value="/odom_combined" />
-   </node>
+        <param name="odom_frame" value="odom_combined" />
+    </node>
 </launch>
