@@ -13,7 +13,7 @@ import tf
 from automow_ekf import AutomowEKF
 
 import numpy as np
-
+import threading
 
 class AutomowEKF_Node:
     def __init__(self):
@@ -21,45 +21,36 @@ class AutomowEKF_Node:
         self.odom_used = rospy.get_param("~odom_used",True)
         self.imu_used = rospy.get_param("~imu_used",True)
         self.gps_used = rospy.get_param("~gps_used",True)
+        self.decimate_ahrs = rospy.get_param("~decimate_ahrs_by_factor",0)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
-
+        
+        self.location_initilized = False
+        self.heading_initilized = False
+        self.ahrs_count = 0
+        
+        # Class Variables
+        self.ekf = AutomowEKF.fromDefault()
+        self.v = 0
+        self.w = 0
+        
         # Subscribers
         if self.odom_used:
             rospy.loginfo("Adding Encoders to the EKF")
             self.enc_sub = rospy.Subscriber("encoders",StampedEncoders,self.encoders_cb)
         else: rospy.loginfo("You aren't using the wheel encoders, expect bad results")
-        if self.imu_used:
-            rospy.loginfo("Adding IMU to the EKF")
-            self.imu_sub = rospy.Subscriber("imu/data",Imu,self.imu_cb)
-        if self.gps_used:
-            rospy.loginfo("Adding GPS to the EKF")
-            self.gps_sub = rospy.Subscriber("gps/odometry",Odometry,self.gps_cb)
+        rospy.loginfo("Adding IMU to the EKF")
+        self.imu_sub = rospy.Subscriber("imu/data",Imu,self.imu_cb)
+        rospy.loginfo("Adding GPS to the EKF")
+        self.gps_sub = rospy.Subscriber("gps/odometry",Odometry,self.gps_cb)
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
-        # Class Variables
-
-        self.ekf = AutomowEKF.fromDefault()
-        self.v = 0
-        self.w = 0
-
-    def encoders_cb(self,data):
-        u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
-                dtype=np.double)
-        (self.v,self.w) = self.ekf.timeUpdate(u, data.header.stamp.to_sec())
-        return
-
-    def imu_cb(self,data):
-        (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, \
-                data.orientation.z, data.orientation.w])
-        # This is supposed to correct for the coordinate differences
-        self.ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
         
-        br = tf.TransformBroadcaster()
-        br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
-                         tf.transformations.quaternion_from_euler(0, 0, self.ekf.getYaw()),
-                         rospy.Time.now(),
-                         "base_footprint",
-                         self.output_frame)
+        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
+        self.odometry_timer.start()
+    
+    def odometry_cb(self):
+        if not self.location_initilized or not self.heading_initilized:
+            return
         
         msg = Odometry()
         # Header
@@ -77,9 +68,47 @@ class AutomowEKF_Node:
         msg.twist.twist.linear = Vector3(self.v,0,0)
         msg.twist.twist.angular = Vector3(0,0,self.w)
         self.odom_pub.publish(msg)
+        
+        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
+        self.odometry_timer.start()
+    
+    def encoders_cb(self,data):
+        u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
+                dtype=np.double)
+        (self.v,self.w) = self.ekf.timeUpdate(u, data.header.stamp.to_sec())
+        
+        br = tf.TransformBroadcaster()
+        br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
+                         tf.transformations.quaternion_from_euler(0, 0, self.ekf.getYaw()),
+                         rospy.Time.now(),
+                         "base_footprint",
+                         self.output_frame)
+        return
+
+    def imu_cb(self,data):
+        if self.decimate_ahrs not in [0,1]:
+            if self.ahrs_count % self.decimate_ahrs == 0:
+                self.ahrs_count = 1
+            else:
+                self.ahrs_count += 1
+                return
+        if not self.imu_used:
+            if self.heading_initilized:
+                return
+        if not self.heading_initilized:
+            self.heading_initilized = True
+        (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, \
+                data.orientation.z, data.orientation.w])
+        # This is supposed to correct for the coordinate differences
+        self.ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
         return
 
     def gps_cb(self,data):
+        if not self.gps_used:
+            if self.location_initilized:
+                return
+        if not self.location_initilized:
+            self.location_initilized = True
         y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], \
                 dtype=np.double)
         # The Kalman Filter expects a time-varying measurement noise matrix.  The GPS 
