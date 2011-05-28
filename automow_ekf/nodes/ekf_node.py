@@ -21,13 +21,14 @@ class AutomowEKF_Node:
         self.odom_used = rospy.get_param("~odom_used",True)
         self.imu_used = rospy.get_param("~imu_used",True)
         self.gps_used = rospy.get_param("~gps_used",True)
+        self.cutters_used = rospy.get_param("~cutters_used",False)
         self.decimate_ahrs = rospy.get_param("~decimate_ahrs_by_factor",0)
         self.publish_rate = 1.0/rospy.get_param("~output_publish_rate", 25)
         self.time_delay = rospy.get_param("~time_delay",0.0)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         self.output_states = rospy.get_param("~output_states",False)
         self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
-        if self.output_states is True:
+        if self.output_states:
             import time
             self.output_states_file = self.output_states_dir + "ekf_states-" + \
                     time.strftime('%F-%H-%M')
@@ -40,6 +41,7 @@ class AutomowEKF_Node:
         self.ekf = AutomowEKF.fromDefault()
         self.v = 0
         self.w = 0
+        self.filter_time = rospy.Time.now()
         
         # Subscribers
         if self.odom_used:
@@ -66,7 +68,7 @@ class AutomowEKF_Node:
         
         msg = Odometry()
         # Header
-        msg.header.stamp = rospy.Time.now() - rospy.Duration(self.time_delay)
+        msg.header.stamp = self.filter_time  
         msg.header.frame_id = self.output_frame
         # Position
         msg.pose.pose.position = Vector3(self.ekf.getEasting(),self.ekf.getNorthing(),0)
@@ -80,18 +82,22 @@ class AutomowEKF_Node:
         msg.twist.twist.linear = Vector3(self.v,0,0)
         msg.twist.twist.angular = Vector3(0,0,self.w)
         self.odom_pub.publish(msg)
+ 
+        br = tf.TransformBroadcaster()
+        br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
+                         tf.transformations.quaternion_from_euler(0, 0, self.ekf.getYaw()),
+                         self.filter_time,
+                         "base_footprint",
+                         self.output_frame)
+        if self.output_states:
+            self.output_file.write(str(self.filter_time) + \
+                                self.ekf.getStateString + "\n")
     
     def encoders_cb(self,data):
         u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
                 dtype=np.double)
         (self.v,self.w) = self.ekf.timeUpdate(u, data.header.stamp.to_sec())
-        
-        br = tf.TransformBroadcaster()
-        br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
-                         tf.transformations.quaternion_from_euler(0, 0, self.ekf.getYaw()),
-                         rospy.Time.now(),
-                         "base_footprint",
-                         self.output_frame)
+        self.filter_time = data.header.stamp
         return
 
     def imu_cb(self,data):
@@ -110,6 +116,7 @@ class AutomowEKF_Node:
                 data.orientation.z, data.orientation.w])
         # This is supposed to correct for the coordinate differences
         self.ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
+        self.filter_time = data.header.stamp
         return
 
     def gps_cb(self,data):
@@ -131,8 +138,8 @@ class AutomowEKF_Node:
             n_covar = 0.004
         covar = np.diag(np.array([e_covar, n_covar]))
         self.ekf.measurementUpdateGPS(y, covar)
+        self.filter_time = data.header.stamp
         return
-
 
 def main():
     rospy.init_node('ekf_node')
