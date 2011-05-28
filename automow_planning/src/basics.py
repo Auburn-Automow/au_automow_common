@@ -202,6 +202,7 @@ class Map(object):
         """
         def check_point(x,y):
             try:
+                # if self._point_list[x][y] != UNCUT and UNCUT in self._point_list[x-1:y-1,x+1:y+1]:
                 if self._point_list[x][y] != UNCUT and (\
                        self._point_list[x-1][y+1] == UNCUT or \
                        self._point_list[x][y+1] == UNCUT or \
