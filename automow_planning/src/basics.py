@@ -52,7 +52,7 @@ def _calc_distances(pl_x_y_i_j):
         for y in range(max_y):
             if x == i and y == j:
                 continue
-            if point_list[x][y] == NOT_ACCESSABLE:
+            if point_list[x][y] != UNCUT:
                 results[x][y] = -1
                 continue
             results[x][y] = calc_distance(i, j, x, y)
@@ -64,7 +64,7 @@ class Map(object):
         "params x, y are the sizes and the default value is the occupancy default value"
         self.x = x
         self.y = y
-        self._pool = mp.Pool(processes=2)
+        self._pool = mp.Pool(processes=8)
         self._default_value = default_value
         self._point_list = np.array([[default_value for y in range(self.y)] for x in range(self.x)])
         self._cost_map = np.array([[0.0 for y in range(self.y)] for x in range(self.x)])
@@ -74,6 +74,12 @@ class Map(object):
         self._point_list[x][y] = value
         self._cost_map[x][y] = value
     
+    def set_points(self, x_range, y_range, value):
+        ""
+        for x in x_range:
+            for y in y_range:
+                self.set_point(x, y, value)
+
     def get_point(self, x, y):
         "Gets a point and its cost"
         try:
@@ -94,7 +100,7 @@ class Map(object):
         print "\n    Occupancy Grid"
         val = self._point_list.T
         for i in range(val.shape[0]-1, -1, -1):
-            print '{0:3d}:'.format(i),
+            print '{0:3d}|'.format(i),
             for j in range(val.shape[1]):
                 if val[i][j] == NOT_ACCESSABLE:
                     print '   .',
@@ -102,12 +108,14 @@ class Map(object):
                     print '   @',
                 elif val[i][j] == UNCUT:
                     print '   #',
+                elif val[i][j] == DONT_CUT:
+                    print '   $',
                 else:
                     print '{0:4d}'.format(val[i][j]),
             print
         print '   ',
         for j in range(val.shape[1]):
-            print '   _',
+            print ' ___',
         print
         print '   ',
         for j in range(val.shape[1]):
@@ -118,7 +126,7 @@ class Map(object):
         val = self._cost_map.T
         print "\n    Costmap"
         for i in range(val.shape[0]-1, -1, -1):
-            print '{0:3d}:'.format(i),
+            print '{0:3d}|'.format(i),
             for j in range(val.shape[1]):
                 if val[i][j] == UNCUT:
                     print '   .',
@@ -129,7 +137,7 @@ class Map(object):
             print
         print '    ',
         for j in range(val.shape[1]):
-            print '   _',
+            print ' ___',
         print '\n    ',
         for j in range(val.shape[1]):
             print '{0:4d}'.format(j),
@@ -162,9 +170,9 @@ class Map(object):
                 else:
                     f = 80 + (self.data[x][y].dist * 5)
                     if f > 255:
-                        f=255
+                        f = 255
                     if f < 0:
-                        f=0
+                        f = 0
                     f.write(chr(f))
                     f.write(chr(f))
                     f.write(chr(f))
@@ -173,12 +181,43 @@ class Map(object):
         else:
             return f.getvalue()
         
-    def update_costmap(self, x1, y1, x2, y2):
+    def update_costmap(self):
         """
         Generates a costmap for a given dataset
+
+        1 2 3
+        4 5 6
+        7 8 9
+
+1 = -1, +1
+2 = 0, +1
+3 = +1, +1
+4 = -1, 0
+5 = NA
+6 = +1, 0
+7 = -1, -1
+8 = 0, -1
+9 = +1, -1
+
         """
+        def check_point(x,y):
+            try:
+                if self._point_list[x][y] != UNCUT and (\
+                       self._point_list[x-1][y+1] == UNCUT or \
+                       self._point_list[x][y+1] == UNCUT or \
+                       self._point_list[x+1][y+1] == UNCUT or \
+                       self._point_list[x-1][y] == UNCUT or \
+                       self._point_list[x+1][y] == UNCUT or \
+                       self._point_list[x-1][y-1] == UNCUT or \
+                       self._point_list[x][y-1] == UNCUT or \
+                       self._point_list[x+1][y-1] == UNCUT):
+                    return True
+            except IndexError:
+                pass
+            return False
+
         self._cost_map = np.array([[self.x*self.y for y in range(self.y)] for x in range(self.x)])
-        r = self._pool.map(_calc_distances, [(self._point_list, self.x, self.y, x, y) for y in range(self.y) for x in range(self.x) if self._point_list[x][y] == NOT_ACCESSABLE])
+        r = self._pool.map(_calc_distances, [(self._point_list, self.x, self.y, x, y) for y in range(self.y) for x in range(self.x) if check_point(x,y)])
         self._cost_map = minimizer(r)
 
 def main():
@@ -205,14 +244,117 @@ def main():
     # og.set_point(16,18, NOT_ACCESSABLE)
     # og.set_point(17,17, NOT_ACCESSABLE)
     # og.set_point(18,16, NOT_ACCESSABLE)
-    og.set_point(4,  3, NOT_ACCESSABLE)
-    og.set_point(5,  3, NOT_ACCESSABLE)
-    og.set_point(6,  3, NOT_ACCESSABLE)
-    og.set_point(11, 7, NOT_ACCESSABLE)
-    og.set_point(12, 7, NOT_ACCESSABLE)
-    og.set_point(13, 7, NOT_ACCESSABLE)
+    # og.set_point(4,  3, NOT_ACCESSABLE)
+    # og.set_point(5,  3, NOT_ACCESSABLE)
+    # og.set_point(6,  3, NOT_ACCESSABLE)
+    # og.set_point(11, 8, NOT_ACCESSABLE)
+    # og.set_point(12, 8, NOT_ACCESSABLE)
+    # og.set_point(13, 8, NOT_ACCESSABLE)
+    # og.set_point(11, 7, NOT_ACCESSABLE)
+    # og.set_point(12, 7, NOT_ACCESSABLE)
+    # og.set_point(13, 7, NOT_ACCESSABLE)
+
+    # Draw the field
+    og.set_point( 3,  8, DONT_CUT)
+    og.set_point( 3,  9, DONT_CUT)
+    og.set_point( 3, 10, DONT_CUT)
+    og.set_point( 3, 11, DONT_CUT)
+    og.set_point( 3, 12, DONT_CUT)
+    og.set_point( 3, 13, DONT_CUT)
+    og.set_point( 3, 14, DONT_CUT)
+    og.set_point( 3, 15, DONT_CUT)
+    og.set_point( 3, 16, DONT_CUT)
+    og.set_point( 3, 17, DONT_CUT)
+    og.set_point( 3, 18, DONT_CUT)
+    og.set_point( 3, 19, DONT_CUT)
+    og.set_point( 3, 20, DONT_CUT)
+    og.set_point( 3, 21, DONT_CUT)
+    og.set_point( 3, 22, DONT_CUT)
+    og.set_point( 3, 23, DONT_CUT)
+    og.set_point( 4, 23, DONT_CUT)
+    og.set_point( 5, 23, DONT_CUT)
+    og.set_point( 6, 23, DONT_CUT)
+    og.set_point( 7, 23, DONT_CUT)
+    og.set_point( 8, 23, DONT_CUT)
+    og.set_point( 9, 23, DONT_CUT)
+    og.set_point(10, 23, DONT_CUT)
+    og.set_point(11, 23, DONT_CUT)
+    og.set_point(12, 23, DONT_CUT)
+    og.set_point(13, 23, DONT_CUT)
+    og.set_point(14, 23, DONT_CUT)
+    og.set_point(15, 23, DONT_CUT)
+    og.set_point(16, 23, DONT_CUT)
+    og.set_point(17, 23, DONT_CUT)
+    og.set_point(18, 23, DONT_CUT)
+    og.set_point(19, 23, DONT_CUT)
+    og.set_point(20, 23, DONT_CUT)
+    og.set_point(21, 23, DONT_CUT)
+    og.set_point(22, 23, DONT_CUT)
+    og.set_point(23, 23, DONT_CUT)
+    og.set_point(24, 23, DONT_CUT)
+    og.set_point(25, 23, DONT_CUT)
+    og.set_point(25,  8, DONT_CUT)
+    og.set_point(25,  9, DONT_CUT)
+    og.set_point(25, 10, DONT_CUT)
+    og.set_point(25, 11, DONT_CUT)
+    og.set_point(25, 12, DONT_CUT)
+    og.set_point(25, 13, DONT_CUT)
+    og.set_point(25, 14, DONT_CUT)
+    og.set_point(25, 15, DONT_CUT)
+    og.set_point(25, 16, DONT_CUT)
+    og.set_point(25, 17, DONT_CUT)
+    og.set_point(25, 18, DONT_CUT)
+    og.set_point(25, 19, DONT_CUT)
+    og.set_point(25, 20, DONT_CUT)
+    og.set_point(25, 21, DONT_CUT)
+    og.set_point(25, 22, DONT_CUT)
+    og.set_point( 4,  8, DONT_CUT)
+    og.set_point( 5,  8, DONT_CUT)
+    og.set_point( 6,  8, DONT_CUT)
+    og.set_point( 7,  8, DONT_CUT)
+    og.set_point( 8,  8, DONT_CUT)
+    og.set_point( 9,  8, DONT_CUT)
+    og.set_point(10,  8, DONT_CUT)
+    og.set_point(11,  8, DONT_CUT)
+    og.set_point(12,  8, DONT_CUT)
+    og.set_point(13,  8, DONT_CUT)
+    og.set_point(14,  8, DONT_CUT)
+    og.set_point(15,  8, DONT_CUT)
+    og.set_point(16,  8, DONT_CUT)
+    og.set_point(17,  8, DONT_CUT)
+    og.set_point(18,  8, DONT_CUT)
+    og.set_point(19,  8, DONT_CUT)
+    og.set_point(20,  8, DONT_CUT)
+    og.set_point(21,  8, DONT_CUT)
+    og.set_point(22,  8, DONT_CUT)
+    og.set_point(23,  8, DONT_CUT)
+    og.set_point(24,  8, DONT_CUT)
+
+
+    # Draw the flowerbed-ish
+    og.set_point(9,  13, NOT_ACCESSABLE)
+    og.set_point(9,  14, NOT_ACCESSABLE)
+    og.set_point(9,  15, NOT_ACCESSABLE)
+    og.set_point(9,  16, NOT_ACCESSABLE)
+    og.set_point(9,  17, NOT_ACCESSABLE)
+    og.set_point(10,  13, NOT_ACCESSABLE)
+    og.set_point(10,  14, NOT_ACCESSABLE)
+    og.set_point(10,  15, NOT_ACCESSABLE)
+    og.set_point(10,  16, NOT_ACCESSABLE)
+    og.set_point(10,  17, NOT_ACCESSABLE)
+    og.set_point(11,  13, NOT_ACCESSABLE)
+    og.set_point(11,  14, NOT_ACCESSABLE)
+    og.set_point(11,  15, NOT_ACCESSABLE)
+    og.set_point(11,  16, NOT_ACCESSABLE)
+    og.set_point(11,  17, NOT_ACCESSABLE)
+
+
+    og.set_points(range(1,3), range(1,29), DONT_CUT)
+    og.set_points(range(3,26), range(1,8), DONT_CUT)
+    og.set_points(range(3,26), range(24,29), DONT_CUT)
+    og.set_points(range(26,29), range(1,29), DONT_CUT)
     
-    og.update_costmap(0, 0, og.x-1, og.y-1)
+    og.update_costmap()
     
     # print og.get_point(2, 4), og.get_point(0, 1) 
     og.print_occupancy()
