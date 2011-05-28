@@ -1,4 +1,5 @@
 import numpy as np
+import threading
 
 def wrapToPi(angle):
     """
@@ -43,7 +44,9 @@ class AutomowEKF:
         @param R_imu : The AHRS measurement noise covariance
         @param type R_imu : (1,1) numpy.array, dtype=np.double
         """
-        self.x_hat = x_hat_i
+        self.state_lock = threading.Lock()
+        with self.state_lock:
+            self.x_hat = x_hat_i
         self.P = P_i
         self.Q = Q
         self.R_gps = R_gps
@@ -107,22 +110,21 @@ class AutomowEKF:
         self.G[3,3] = dt 
         self.G[4,4] = dt
         self.G[5,5] = dt
-
         return
-
+    
     def timeUpdate(self,u,time):
         dt = time - self.__prev_time
         self.__prev_time = time
         self.updateModel(u,dt)
-
+        
         v = self.x_hat[4]/2.0 * u[1] + self.x_hat[3]/2.0 * u[0]
         w = self.x_hat[4]/self.x_hat[5] * u[1] - \
                 self.x_hat[3]/self.x_hat[5] * u[0]
-
-        self.x_hat[0] += dt * v * np.cos(self.x_hat[2] + dt * w/2.0)
-        self.x_hat[1] += dt * v * np.sin(self.x_hat[2] + dt * w/2.0)
-        self.x_hat[2] += dt * w
-        self.x_hat[2] = wrapToPi(self.x_hat[2])
+        with self.state_lock:
+            self.x_hat[0] += dt * v * np.cos(self.x_hat[2] + dt * w/2.0)
+            self.x_hat[1] += dt * v * np.sin(self.x_hat[2] + dt * w/2.0)
+            self.x_hat[2] += dt * w
+            self.x_hat[2] = wrapToPi(self.x_hat[2])
         self.P = np.dot(self.F,np.dot(self.P,self.F.T)) \
                 + np.dot(self.G,np.dot(self.Q,self.G.T))
         return v,w
@@ -136,7 +138,8 @@ class AutomowEKF:
         S = np.dot(self.C_gps,np.dot(self.P,self.C_gps.T)) 
         S += R
         K = np.dot(self.P,np.dot(self.C_gps.conj().T,np.linalg.inv(S)))
-        self.x_hat = self.x_hat + np.dot(K,innovation)
+        with self.state_lock:
+            self.x_hat = self.x_hat + np.dot(K,innovation)
         self.P = np.dot((np.eye(self.__nx) - np.dot(K,self.C_gps)),self.P)
         return innovation, S, K
     
@@ -149,19 +152,23 @@ class AutomowEKF:
         S = np.dot(self.C_imu,np.dot(self.P,self.C_imu.T))
         S += self.R_imu[0,0]
         K = np.dot(self.P,self.C_imu.T/S)
-        self.x_hat += K * innovation
-        self.x_hat[2] = wrapToPi(self.x_hat[2])
+        with self.state_lock:
+            self.x_hat += K * innovation
+            self.x_hat[2] = wrapToPi(self.x_hat[2])
         self.P = np.dot((np.eye(self.__nx) - \
                 np.dot(K.reshape((6,1)),self.C_imu.reshape((1,6)))),self.P)
         return innovation, S, K
     
     def getYaw(self):
-        return self.x_hat[2]
+        with self.state_lock:
+            return self.x_hat[2]
     
     def getNorthing(self):
-        return self.x_hat[1]
+        with self.state_lock:
+            return self.x_hat[1]
     
     def getEasting(self):
-        return self.x_hat[0]
+        with self.state_lock:
+            return self.x_hat[0]
 
 

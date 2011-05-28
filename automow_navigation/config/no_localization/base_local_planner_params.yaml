@@ -1,8 +1,9 @@
+controller_frequency: 10
 TrajectoryPlannerROS:
   max_vel_x: 0.8
-  min_vel_x: 0.3
-  max_rotational_vel: 0.4
-  min_in_place_rotational_vel: 0.15
+  min_vel_x: 0.4
+  max_rotational_vel: 0.6
+  min_in_place_rotational_vel: 0.40
   
   acc_lim_th: 5.0
   acc_lim_x: 4.0
@@ -16,14 +17,15 @@ TrajectoryPlannerROS:
   sim_granularity: 0.025
   vx_samples: 3 # Default 3, 8-15 for high speed comupters
   vtheta_samples: 20
-  controller_frequency: 10
   
-  meter_scoring: false
-  path_distance_bias: 0.6
-  goal_distance_bias: 0.8
-  occdist_scale: 0.2
+  meter_scoring: true
+  path_distance_bias: 0.1
+  goal_distance_bias: 2.8
+  occdist_scale: 0.01
   
-  publish_cost_grid: true
+  escape_vel: -0.5
+  
+  # publish_cost_grid: true
   
   dwa: false
   
