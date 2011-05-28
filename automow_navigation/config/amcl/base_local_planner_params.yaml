@@ -8,7 +8,7 @@ TrajectoryPlannerROS:
   acc_lim_x: 4.0
   acc_lim_y: 0.0
   
-  yaw_goal_tolerance: 0.5
+  yaw_goal_tolerance: 6 # We don't really care about goal angle
   xy_goal_tolerance: 0.5
   latch_xy_goal_tolerance: true
   
@@ -16,14 +16,20 @@ TrajectoryPlannerROS:
   sim_granularity: 0.025
   vx_samples: 3 # Default 3, 8-15 for high speed comupters
   vtheta_samples: 20
-  controller_frequency: 10
+  controller_frequency: 50
   
   meter_scoring: false
-  path_distance_bias: 0.6
-  goal_distance_bias: 0.8
+  path_distance_bias: 10.0
+  goal_distance_bias: 10.0
   occdist_scale: 0.2
   
+  heading_scoring: false
+  heading_scoring_timestep: 0.8
+  
   publish_cost_grid: true
+  
+  publish_cost_grid_pc: true
+  global_frame_id: "odom_combined"
   
   dwa: false
   
