@@ -23,7 +23,7 @@ class AutomowEKF_Node:
         self.gps_used = rospy.get_param("~gps_used",True)
         self.decimate_ahrs = rospy.get_param("~decimate_ahrs_by_factor",0)
         self.publish_rate = 1.0/rospy.get_param("~output_publish_rate", 25)
-        self.time_delay = rospy.get_param("~time_delay",0.01)
+        self.time_delay = rospy.get_param("~time_delay",0.0)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         
         self.location_initilized = False
