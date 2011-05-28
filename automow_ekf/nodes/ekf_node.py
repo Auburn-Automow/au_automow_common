@@ -22,6 +22,8 @@ class AutomowEKF_Node:
         self.imu_used = rospy.get_param("~imu_used",True)
         self.gps_used = rospy.get_param("~gps_used",True)
         self.decimate_ahrs = rospy.get_param("~decimate_ahrs_by_factor",0)
+        self.publish_rate = 1.0/rospy.get_param("~output_publish_rate", 25)
+        self.time_delay = rospy.get_param("~time_delay",0.01)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         
         self.location_initilized = False
@@ -49,12 +51,16 @@ class AutomowEKF_Node:
         self.odometry_timer.start()
     
     def odometry_cb(self):
+        if rospy.is_shutdown():
+            return
+        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
+        self.odometry_timer.start()
         if not self.location_initilized or not self.heading_initilized:
             return
         
         msg = Odometry()
         # Header
-        msg.header.stamp = rospy.Time.now()
+        msg.header.stamp = rospy.Time.now() - rospy.Duration(self.time_delay)
         msg.header.frame_id = self.output_frame
         # Position
         msg.pose.pose.position = Vector3(self.ekf.getEasting(),self.ekf.getNorthing(),0)
@@ -68,9 +74,6 @@ class AutomowEKF_Node:
         msg.twist.twist.linear = Vector3(self.v,0,0)
         msg.twist.twist.angular = Vector3(0,0,self.w)
         self.odom_pub.publish(msg)
-        
-        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
-        self.odometry_timer.start()
     
     def encoders_cb(self,data):
         u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
@@ -130,6 +133,8 @@ def main():
     ekf_node = AutomowEKF_Node()
     
     rospy.spin()
+    
+    ekf_node.odometry_timer.cancel()
 
 if __name__ == '__main__':
     main()
