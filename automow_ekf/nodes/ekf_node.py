@@ -25,7 +25,13 @@ class AutomowEKF_Node:
         self.publish_rate = 1.0/rospy.get_param("~output_publish_rate", 25)
         self.time_delay = rospy.get_param("~time_delay",0.01)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
-        
+        self.output_states = rospy.get_param("~output_states",False)
+        self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
+        if self.output_states is True:
+            import time
+            self.output_states_file = self.output_states_dir + "ekf_states-" + \
+                    time.strftime('%F-%H-%M')
+            self.output_file = open(self.output_states_file,'w')
         self.location_initilized = False
         self.heading_initilized = False
         self.ahrs_count = 0
