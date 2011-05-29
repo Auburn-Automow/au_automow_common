@@ -30,6 +30,7 @@ class AutomowEKF_Node:
         self.output_states = rospy.get_param("~output_states",False)
         self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
         self.adaptive_encoders = rospy.get_param("~adaptive_encoders",False)
+        self.adaptive_cutters = rospy.get_param("~adaptive_cutters",False)
 
         if self.output_states:
             import time
@@ -68,11 +69,13 @@ class AutomowEKF_Node:
                 Odometry,
                 self.gps_cb)
 
-        if self.cutters_used:
+        if self.cutters_used or self.adaptive_cutters:
             rospy.loginfo("Subscribing to the cutter status")
             self.cut_sub = rospy.Subscriber("/CutterControl",
                     CutterControl,
                     self.cutter_cb)
+            if self.adaptive_cutters:
+                rospy.loginfo("P matrix will change on cutter status")
 
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
@@ -123,12 +126,24 @@ class AutomowEKF_Node:
         return
     
     def cutter_cb(self,data):
-        if data.LeftControl and not self.cutter_l:
-            rospy.loginfo("Filter Toggling Left Cutter State")
-        if data.RightControl and not self.cutter_r:
-            rospy.loginfo("Filter Toggling Right Cutter State")
+        if self.adaptive_cutters:
+            """ This is questionable... 
+            Basically, I'm going to spike the P matrix values for heading and 
+            heading bias right after the cutters come on."""
+            # Cutters come on
+            if (data.LeftControl and not self.cutter_l) or \
+                    (data.RightControl and not self.cutter_r):
+                        rospy.loginfo("Cutters came on! Fire ze missles!")
+                        self.ekf.P[3,3] = 1e2
+                        self.ekf.P[6,6] = 1e6
+            if (not data.LeftControl and self.cutter_l) or \
+                    (not data.RightControl and self.cutter_r):
+                        rospy.loginfo("Cutters turned off! Fire ze missles!")
+                        self.ekf.P[3,3] = 1e2
+                        self.ekf.P[6,6] = 1e6
         self.cutter_l = int(data.LeftControl)
         self.cutter_r = int(data.RightControl)
+        
         return
         
     def encoders_cb(self,data):
