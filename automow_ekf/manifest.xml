@@ -15,7 +15,7 @@
   <depend package="nav_msgs"/>
   <depend package="tf"/>
   <depend package="ax2550"/>
-
+  <depend package="power_control_board"/>
 </package>
 
 
