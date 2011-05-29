@@ -107,7 +107,7 @@ def generateMapFromCSV(file_name, meters_per_cell):
 
 if __name__ == '__main__':
     # test_costmap(example_map)
-    test_costmap(generateMapFromCSV("/Users/william/Desktop/survey.csv", 0.2))
+    test_costmap(generateMapFromCSV("survey.csv", 0.2))
     # generateMapFromCSV("/Users/william/Desktop/survey.csv", 0.5)
 
 
