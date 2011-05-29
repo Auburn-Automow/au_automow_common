@@ -4,5 +4,7 @@
         <param name="imu_used" value="false"/>
         <param name="gps_used" value="true"/>
         <param name="output_frame" value="odom_combined"/>
+        <param name="adaptive_encoders" value="true"/>
+        <param name="adaptive_cutters" value="true"/>
     </node>
 </launch>
