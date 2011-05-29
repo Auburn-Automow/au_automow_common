@@ -58,7 +58,7 @@ def generateMapFromCSV(file_name, meters_per_cell):
     draw = ImageDraw.Draw(im)
     draw.polygon(img_points, fill=0)
     rad = 1
-    draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
+    # draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
     del draw
     
     return image2array(im)

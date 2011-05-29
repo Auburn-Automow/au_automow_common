@@ -31,6 +31,8 @@ class Costmap2D:
         self.consumed_cells = []
         self.use_color = True
         self.robot_position = (-1,-1)
+        self.target_position = None
+        self.sorted_consumables = {}
     
     def __str__(self):
         """docstring for __str__"""
@@ -172,14 +174,42 @@ class Costmap2D:
         """docstring for setRobotPosition"""
         self.robot_position = (int(floor(x)), int(floor(y)))
         self.consumed_cells.append(self.robot_position)
-    
-    def isConsumed(self, x, y):
-        """docstring for isConsumed"""
-        
-        return 
+        if self.target_position != None and self.target_position == self.robot_position:
+            self.target_position = None
     
     def getNextPosition(self):
         """docstring for getNextPosition"""
+        # return self._getNextPositionWander()
+        return self._getNextPositionBurnDown()
+    
+    def _getNextPositionBurnDown(self):
+        """docstring for _getNextPositionBurnDown"""
+        self._generateSortedConsumables()
+        if self.target_position == None:
+            target_num = max(self.sorted_consumables.keys())
+            target_positions = self.sorted_consumables[target_num]
+            target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
+            (x,y,value) = target_positions[0]
+            self.target_position = (x,y)
+            if len(target_positions) == 1:
+                del self.sorted_consumables[target_num]
+            else:
+                self.sorted_consumables[target_num].remove(target_positions[0])
+        return self.target_position
+    
+    def _generateSortedConsumables(self):
+        """docstring for _generateSortedConsumables"""
+        if self.sorted_consumables == {}:
+            for x in range(self.x_dim):
+                for y in range(self.y_dim):
+                    value = int(self.__data[x][y])
+                    if value != NOTRVRSE:
+                        if value not in self.sorted_consumables:
+                            self.sorted_consumables[value] = []
+                        self.sorted_consumables[value].append((x,y,value))
+    
+    def _getNextPositionWander(self):
+        """docstring for _getNextPositionWander"""
         neighbors = self.getNeighbors(*self.robot_position)
         possible_next_positions = []
         for xn,yn,neighbor in neighbors:
