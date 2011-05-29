@@ -27,6 +27,6 @@ TrajectoryPlannerROS:
   
   # publish_cost_grid: true
   
-  dwa: false
+  dwa: true
   
   holonomic_robot: false

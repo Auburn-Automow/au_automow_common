@@ -2,7 +2,8 @@
 import roslib; roslib.load_manifest('automow_maps')
 import rospy
 
-from geometry_msgs.msg import Polygon, Point32
+from geometry_msgs.msg import PolygonStamped, Point32, Polygon
+from std_msgs.msg import Header
 
 points = None
 poly = None
@@ -31,9 +32,11 @@ def main():
         else:
             rospy.logwarn("Error unpacking: %s" % line)
     
-    poly = Polygon(points)
+    poly = PolygonStamped(Header(),Polygon(points))
+    poly.header.stamp = rospy.Time.now()
+    poly.header.frame_id="odom_combined"
     
-    pub = rospy.Publisher("field_shape", Polygon)
+    pub = rospy.Publisher("field_shape", PolygonStamped)
     
     rate = rospy.Rate(1)
     
