@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_maps</url>
   <depend package="map_server"/>
+  <depend package="geometry_msgs"/>
 
 </package>
 
