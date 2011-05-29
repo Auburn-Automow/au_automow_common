@@ -114,6 +114,7 @@ class AutomowEKF_Node:
         if self.output_states:
             string = str(self.filter_time) + "," + \
                     self.ekf.getStateString()
+            print(string + "\n")
             if self.cutters_used:
                 string += str(self.cutter_l) + "," + \
                         str(self.cutter_r)
@@ -176,7 +177,7 @@ class AutomowEKF_Node:
         n_covar = data.pose.covariance[4]
         if n_covar < 0.004:
             n_covar = 0.004
-        covar = np.diag(np.array([e_covar, n_covar]))
+        covar = np.diag(np.array([e_covar*10, n_covar*10]))
         self.ekf.measurementUpdateGPS(y, covar)
         self.filter_time = data.header.stamp
         return

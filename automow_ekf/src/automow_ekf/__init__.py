@@ -61,7 +61,7 @@ class AutomowEKF:
         Initialize the Kalman Filter with a set of default arguments
         """
         x_hat_i = np.array([0,0,0,0.159,0.159,0.5461,0],dtype=cls.__dt)
-        P_i = np.diag(np.array([100,100,100,1e-4,1e-4,1e-4,1e-4],dtype=cls.__dt))
+        P_i = np.diag(np.array([100,100,100,1e-4,1e-4,1e-4,1],dtype=cls.__dt))
         Q = np.diag(np.array([0.1,0.1,0,0,0,0,0],dtype=cls.__dt))
         R_gps = np.eye(2,dtype=cls.__dt) * 0.1
         R_imu = np.eye(1,dtype=cls.__dt) * 0.02
