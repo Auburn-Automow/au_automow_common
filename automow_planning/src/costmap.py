@@ -33,6 +33,7 @@ class Costmap2D:
         self.robot_position = (-1,-1)
         self.target_position = None
         self.sorted_consumables = {}
+        self.consumption_complete = False
     
     def __str__(self):
         """docstring for __str__"""
@@ -184,6 +185,9 @@ class Costmap2D:
     
     def _getNextPositionBurnDown(self):
         """docstring for _getNextPositionBurnDown"""
+        if self.consumption_complete:
+            self.consumption_complete = False
+            return None
         self._generateSortedConsumables()
         if self.target_position == None:
             target_num = max(self.sorted_consumables.keys())
@@ -195,6 +199,8 @@ class Costmap2D:
                 del self.sorted_consumables[target_num]
             else:
                 self.sorted_consumables[target_num].remove(target_positions[0])
+            if self.sorted_consumables == {}:
+                self.consumption_complete = True
         return self.target_position
     
     def _generateSortedConsumables(self):

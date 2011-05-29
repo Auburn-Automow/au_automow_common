@@ -4,6 +4,7 @@ from costmap import Costmap2D
 from maptools import *
 
 from math import *
+import time
 
 import numpy as np
 
@@ -58,7 +59,7 @@ def generateMapFromCSV(file_name, meters_per_cell):
     draw = ImageDraw.Draw(im)
     draw.polygon(img_points, fill=0)
     rad = 1
-    # draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
+    draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
     del draw
     
     return image2array(im)
@@ -67,18 +68,23 @@ def simulate_path_consumption(my_costmap, meters_per_cell):
     """docstring for simulate_path_consumption"""
     my_costmap.setRobotPosition(1,1)
     print my_costmap
-    count = 0
+    # count = 0
     while True:
-        my_costmap.setRobotPosition(*my_costmap.getNextPosition())
+        tick = time.time()
+        next_position = my_costmap.getNextPosition()
+        if next_position == None:
+            return
+        my_costmap.setRobotPosition(*next_position)
         print my_costmap
-        count += 1
-        stuff = raw_input()
-        if stuff == 'e':
-            break
+        print "Position retrival time: %f milliseconds."%((time.time() - tick)*1000.0)
+        # count += 1
+        # stuff = raw_input()
+        # if stuff == 'e':
+            # break
 
 
 if __name__ == '__main__':
-    mpc = 0.8
+    mpc = 0.4
     my_costmap = test_costmap(generateMapFromCSV("survey.csv", mpc))
     simulate_path_consumption(my_costmap, mpc)
 
