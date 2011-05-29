@@ -3,8 +3,8 @@
     <include file="$(find automow_maps)/launch/empty_map_server.launch" />
     
     <!-- Start the ACML Node -->
-    <include file="$(find automow_navigation)/launch/amcl_diff.xml" />
+    <!-- <include file="$(find automow_navigation)/launch/amcl_diff.xml" /> -->
     
     <!-- Start the move_base Node -->
-    <include file="$(find automow_navigation)/launch/move_base.xml" />
+    <include file="$(find automow_navigation)/launch/move_base_amcl.xml" />
 </launch>

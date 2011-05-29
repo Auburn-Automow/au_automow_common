@@ -1,8 +1,10 @@
 <launch>
     <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py" output="screen">
         <param name="odom_used" value="true"/>
-        <param name="imu_used" value="true"/>
+        <param name="imu_used" value="false"/>
         <param name="gps_used" value="true"/>
         <param name="output_frame" value="odom_combined"/>
+        <param name="adaptive_encoders" value="true"/>
+        <param name="cutters_used" value="false"/>
     </node>
 </launch>
