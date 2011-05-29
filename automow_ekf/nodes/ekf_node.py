@@ -6,6 +6,7 @@ from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, PoseStamped
 from ax2550.msg import StampedEncoders
+from power_control_board.msg import CutterControl
 
 from tf.transformations import euler_from_quaternion
 import tf
@@ -28,11 +29,14 @@ class AutomowEKF_Node:
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         self.output_states = rospy.get_param("~output_states",False)
         self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
+        self.adaptive_encoders = rospy.get_param("~adaptive_encoders",False)
+
         if self.output_states:
             import time
             self.output_states_file = self.output_states_dir + "ekf_states-" + \
-                    time.strftime('%F-%H-%M')
+                    time.strftime('%F-%H-%M') + ".csv"
             self.output_file = open(self.output_states_file,'w')
+
         self.location_initilized = False
         self.heading_initilized = False
         self.ahrs_count = 0
@@ -42,16 +46,34 @@ class AutomowEKF_Node:
         self.v = 0
         self.w = 0
         self.filter_time = rospy.Time.now()
+        self.cutter_l = 0
+        self.cutter_r = 0
         
         # Subscribers
         if self.odom_used:
             rospy.loginfo("Adding Encoders to the EKF")
-            self.enc_sub = rospy.Subscriber("encoders",StampedEncoders,self.encoders_cb)
-        else: rospy.loginfo("You aren't using the wheel encoders, expect bad results")
+            self.enc_sub = rospy.Subscriber("encoders",
+                    StampedEncoders,
+                    self.encoders_cb)
+        else: 
+            rospy.loginfo("You aren't using the wheel encoders, expect bad results")
+
         rospy.loginfo("Adding IMU to the EKF")
-        self.imu_sub = rospy.Subscriber("imu/data",Imu,self.imu_cb)
+        self.imu_sub = rospy.Subscriber("imu/data",
+                Imu,
+                self.imu_cb)
+
         rospy.loginfo("Adding GPS to the EKF")
-        self.gps_sub = rospy.Subscriber("gps/odometry",Odometry,self.gps_cb)
+        self.gps_sub = rospy.Subscriber("gps/odometry",
+                Odometry,
+                self.gps_cb)
+
+        if self.cutters_used:
+            rospy.loginfo("Subscribing to the cutter status")
+            self.cut_sub = rospy.Subscriber("/CutterControl",
+                    CutterControl,
+                    self.cutter_cb)
+
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
         
@@ -90,12 +112,30 @@ class AutomowEKF_Node:
                          "base_footprint",
                          self.output_frame)
         if self.output_states:
-            self.output_file.write(str(self.filter_time) + \
-                                self.ekf.getStateString + "\n")
+            string = str(self.filter_time) + "," + \
+                    self.ekf.getStateString()
+            if self.cutters_used:
+                string += str(self.cutter_l) + "," + \
+                        str(self.cutter_r)
+            string += "\n"
+            self.output_file.write(string)
+        return
     
+    def cutter_cb(self,data):
+        if data.LeftControl and not self.cutter_l:
+            rospy.loginfo("Filter Toggling Left Cutter State")
+        if data.RightControl and not self.cutter_r:
+            rospy.loginfo("Filter Toggling Right Cutter State")
+        self.cutter_l = int(data.LeftControl)
+        self.cutter_r = int(data.RightControl)
+        return
+        
     def encoders_cb(self,data):
         u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
                 dtype=np.double)
+        if self.adaptive_encoders:
+            self.ekf.Q[0,0] = u[0] * 0.05
+            self.ekf.Q[1,1] = u[1] * 0.05
         (self.v,self.w) = self.ekf.timeUpdate(u, data.header.stamp.to_sec())
         self.filter_time = data.header.stamp
         return

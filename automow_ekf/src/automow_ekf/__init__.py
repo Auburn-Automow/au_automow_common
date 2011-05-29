@@ -15,7 +15,7 @@ def wrapToPi(angle):
 class AutomowEKF:
     __nx = 7                    # Number of States in the Kalman Filter        
     __ny_gps = 2                # Number of measurements from the GPS
-    __ny_imu = 1                # Number of measurements from the IMU
+    __ny_imu = 2                # Number of measurements from the IMU
     __nu = 2                    # Number of inputs
     __prev_time = 0
     __dt = np.double
@@ -61,10 +61,10 @@ class AutomowEKF:
         Initialize the Kalman Filter with a set of default arguments
         """
         x_hat_i = np.array([0,0,0,0.159,0.159,0.5461,0],dtype=cls.__dt)
-        P_i = np.diag(np.array([100,100,100,1e-3,1e-3,1e-3,1e-3],dtype=cls.__dt))
-        Q = np.diag(np.array([0.2,0.2,0,0,0,0,0],dtype=cls.__dt))
+        P_i = np.diag(np.array([100,100,100,1e-4,1e-4,1e-4,1e-4],dtype=cls.__dt))
+        Q = np.diag(np.array([0.1,0.1,0,0,0,0,0],dtype=cls.__dt))
         R_gps = np.eye(2,dtype=cls.__dt) * 0.1
-        R_imu = np.eye(1,dtype=cls.__dt) * 0.012
+        R_imu = np.eye(1,dtype=cls.__dt) * 0.02
         return cls(x_hat_i,P_i,Q,R_gps,R_imu)
 
     def updateModel(self,u,dt):
@@ -116,6 +116,7 @@ class AutomowEKF:
     def timeUpdate(self,u,time):
         dt = time - self.__prev_time
         self.__prev_time = time
+
         self.updateModel(u,dt)
         
         v = self.x_hat[4]/2.0 * u[1] + self.x_hat[3]/2.0 * u[0]
@@ -156,6 +157,7 @@ class AutomowEKF:
         with self.state_lock:
             self.x_hat += K * innovation
             self.x_hat[2] = wrapToPi(self.x_hat[2])
+            self.x_hat[6] = wrapToPi(self.x_hat[6])
         self.P = np.dot((np.eye(self.__nx) - \
                 np.dot(K.reshape((self.__nx,1)),self.C_imu.reshape((1,self.__nx)))),self.P)
         return innovation, S, K
