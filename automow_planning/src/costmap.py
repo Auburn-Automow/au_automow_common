@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+from math import *
 
 WHITE = '\033[97m'
 CYAN = '\033[96m'
@@ -11,6 +12,8 @@ GREEN = '\033[92m'
 YELLOW = '\033[93m'
 RED = '\033[91m'
 GRAY = '\033[90m'
+GRAY_BG = '\033[100m'
+WHITE_BG = '\033[107m'
 ENDC = '\033[0m'
 
 NOTRVRSE = 255
@@ -25,7 +28,9 @@ class Costmap2D:
         self.exterior_obstacles = []
         self.cutgrass = [0]
         self.leading_edge = []
+        self.consumed_cells = []
         self.use_color = True
+        self.robot_position = (-1,-1)
     
     def __str__(self):
         """docstring for __str__"""
@@ -33,42 +38,32 @@ class Costmap2D:
         for x in range(self.x_dim):
             for y in range(self.y_dim):
                 if self.use_color:
+                    color = None
                     if (x,y) in self.exterior_obstacles:
-                        result += GRAY
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = GRAY
                     elif self.__data[x][y] == NOTRVRSE:
-                        result += WHITE
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = WHITE
                     elif self.__data[x][y] == 1:
-                        result += GREEN
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = GREEN
                     elif self.__data[x][y] == 2:
-                        result += BLUE
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = BLUE
                     elif self.__data[x][y] == 3:
-                        result += CYAN
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = CYAN
                     elif self.__data[x][y] == 4:
-                        result += YELLOW
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = YELLOW
                     elif self.__data[x][y] == 5:
-                        result += MAGENTA
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = MAGENTA
                     elif self.__data[x][y] >= 6:
-                        result += RED
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = RED
                     else:
-                        result += WHITE
-                        result += "%3s"%self.__data[x][y]
-                        result += ENDC
+                        color = WHITE
+                    if (x,y) in self.consumed_cells:
+                        color += GRAY_BG
+                    if (x,y) == self.robot_position:
+                        color += WHITE_BG
+                    result += color
+                    result += "%3s"%self.__data[x][y]
+                    result += ENDC
                 else:
                     result += "%3s"%self.__data[x][y]
             result += "\n"
@@ -84,23 +79,41 @@ class Costmap2D:
         self.x_dim = len(data)
         self.y_dim = len(data[0])
     
-    def getNeighbors(self, x, y):
+    def getCardinalNeighbors(self, x, y):
         """docstring for getNeighbors"""
         d = self.__data
         neighbors = []
         if x > 0:
-            neighbors.append((x-1,y,d[x-1][y]))
+            neighbors.append(self._getNeighbor(x-1,y))
         if x < self.x_dim-1:
-            neighbors.append((x+1,y,d[x+1][y]))
+            neighbors.append(self._getNeighbor(x+1,y))
         if y > 0:
-            neighbors.append((x,y-1,d[x][y-1]))
+            neighbors.append(self._getNeighbor(x,y-1))
         if y < self.y_dim-1:
-            neighbors.append((x,y+1,d[x][y+1]))
+            neighbors.append(self._getNeighbor(x,y+1))
         return neighbors
+    
+    def getNeighbors(self, x, y):
+        """docstring for getNeighbors"""
+        d = self.__data
+        neighbors = []
+        if x > 0 and y > 0:
+            neighbors.append(self._getNeighbor(x-1,y-1))
+        if x < self.x_dim-1 and y > 0:
+            neighbors.append(self._getNeighbor(x+1,y-1))
+        if x < self.x_dim-1 and y < self.y_dim-1:
+            neighbors.append(self._getNeighbor(x+1,y+1))
+        if x > 0 and y < self.y_dim-1:
+            neighbors.append(self._getNeighbor(x-1,y+1))
+        return neighbors+self.getCardinalNeighbors(x,y)
+    
+    def _getNeighbor(self,x,y):
+        """docstring for _getNeighbor"""
+        return x,y,self.__data[x][y]
     
     def isExteriorObstacle(self, x, y):
         """docstring for isSurrounded"""
-        neighbors = self.getNeighbors(x,y)
+        neighbors = self.getCardinalNeighbors(x,y)
         for x,y,neighbor in neighbors:
             if neighbor != NOTRVRSE:
                 return True
@@ -120,7 +133,7 @@ class Costmap2D:
                     self.exterior_obstacles.append((x,y))
             for x,y in self.exterior_obstacles:
                 current_cell = self.__data[x][y]
-                neighbors = self.getNeighbors(x,y)
+                neighbors = self.getCardinalNeighbors(x,y)
                 for xn,yn,neighbor in neighbors:
                     if neighbor != NOTRVRSE and neighbor == 0:
                         self.__data[xn][yn] = 1
@@ -135,7 +148,7 @@ class Costmap2D:
             for x,y in le:
                 # self.__data[x][y] += 1
                 current_cell = self.__data[x][y]
-                neighbors = self.getNeighbors(x,y)
+                neighbors = self.getCardinalNeighbors(x,y)
                 for xn,yn,neighbor in neighbors:
                     if neighbor == 0:
                         self.__data[xn][yn] = current_cell + 1
@@ -154,6 +167,35 @@ class Costmap2D:
         if count == COVERAGE_ITERATION_LIMIT:
             return False
         return True
+    
+    def setRobotPosition(self, x, y):
+        """docstring for setRobotPosition"""
+        self.robot_position = (int(floor(x)), int(floor(y)))
+        self.consumed_cells.append(self.robot_position)
+    
+    def isConsumed(self, x, y):
+        """docstring for isConsumed"""
+        
+        return 
+    
+    def getNextPosition(self):
+        """docstring for getNextPosition"""
+        neighbors = self.getNeighbors(*self.robot_position)
+        possible_next_positions = []
+        for xn,yn,neighbor in neighbors:
+            if (xn, yn) in self.consumed_cells or neighbor == NOTRVRSE:
+                continue
+            possible_next_positions.append((xn,yn,neighbor))
+        if len(possible_next_positions) == 0: # All neighbors are consumed
+            for xn2,yn2,neighbor2 in neighbors:
+                if neighbor2 != NOTRVRSE:
+                    possible_next_positions.append((xn2,yn2,neighbor2))
+            if len(possible_next_positions) == 0: # No traversable paths!
+                print "ERROR: No traversable paths!"
+                return None
+        xs,ys,values = zip(*possible_next_positions)
+        index = values.index(max(values))
+        return xs[index], ys[index]
     
 
 
