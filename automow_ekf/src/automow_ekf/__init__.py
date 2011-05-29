@@ -185,3 +185,10 @@ class AutomowEKF:
                 string += str(self.x_hat[ii]) + ","
             return string
 
+    def getStateList(self):
+        with self.state_lock:
+            return self.x_hat.flatten().tolist()
+
+    def getPList(self):
+        with self.state_lock:
+            return self.P.flatten()

@@ -4,9 +4,10 @@ import rospy
 
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Vector3, PoseStamped
+from geometry_msgs.msg import Vector3
 from ax2550.msg import StampedEncoders
 from power_control_board.msg import CutterControl
+from automow_ekf.msg import States
 
 from tf.transformations import euler_from_quaternion
 import tf
@@ -31,12 +32,15 @@ class AutomowEKF_Node:
         self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
         self.adaptive_encoders = rospy.get_param("~adaptive_encoders",False)
         self.adaptive_cutters = rospy.get_param("~adaptive_cutters",False)
+        self.publish_states = rospy.get_param("~publish_states",False)
 
         if self.output_states:
             import time
             self.output_states_file = self.output_states_dir + "ekf_states-" + \
                     time.strftime('%F-%H-%M') + ".csv"
             self.output_file = open(self.output_states_file,'w')
+    
+           
 
         self.location_initilized = False
         self.heading_initilized = False
@@ -83,6 +87,9 @@ class AutomowEKF_Node:
         self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
         self.odometry_timer.start()
     
+        if self.publish_states:
+            self.states_pub = rospy.Publisher("ekf/states",States) 
+ 
     def odometry_cb(self):
         if rospy.is_shutdown():
             return
@@ -117,12 +124,14 @@ class AutomowEKF_Node:
         if self.output_states:
             string = str(self.filter_time) + "," + \
                     self.ekf.getStateString()
-            print(string + "\n")
             if self.cutters_used:
                 string += str(self.cutter_l) + "," + \
                         str(self.cutter_r)
             string += "\n"
             self.output_file.write(string)
+
+        if self.publish_states:
+            self.states_pub.publish(States(self.ekf.getStateList(),self.ekf.getPList()))
         return
     
     def cutter_cb(self,data):
@@ -143,7 +152,6 @@ class AutomowEKF_Node:
                         self.ekf.P[6,6] = 1e6
         self.cutter_l = int(data.LeftControl)
         self.cutter_r = int(data.RightControl)
-        
         return
         
     def encoders_cb(self,data):
