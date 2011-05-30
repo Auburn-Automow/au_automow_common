@@ -5,7 +5,7 @@ def image2array(im):
     if im.mode not in ("L", "F"):
         raise ValueError, "can only convert single-layer images"
     if im.mode == "L":
-        a = np.fromstring(np.tostring(), dtype=np.uint8)
+        a = np.fromstring(im.tostring(), dtype=np.uint8)
     else:
         a = np.fromstring(im.tostring(), dtype=np.float32)
     a.shape = im.size[1], im.size[0]
