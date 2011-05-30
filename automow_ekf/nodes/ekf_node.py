@@ -158,8 +158,8 @@ class AutomowEKF_Node:
         u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
                 dtype=np.double)
         if self.adaptive_encoders:
-            self.ekf.Q[0,0] = u[0] * 0.05
-            self.ekf.Q[1,1] = u[1] * 0.05
+            self.ekf.Q[0,0] = abs(u[0]) * 0.05
+            self.ekf.Q[1,1] = abs(u[1]) * 0.05
         (self.v,self.w) = self.ekf.timeUpdate(u, data.header.stamp.to_sec())
         self.filter_time = data.header.stamp
         return

@@ -1,36 +1,21 @@
-TrajectoryPlannerROS:
-  max_vel_x: 0.8
-  min_vel_x: 0.3
-  max_rotational_vel: 0.3
-  min_in_place_rotational_vel: 0.15
-  
-  acc_lim_th: 5.0
-  acc_lim_x: 4.0
-  acc_lim_y: 0.0
-  
-  yaw_goal_tolerance: 6 # We don't really care about goal angle
-  xy_goal_tolerance: 0.5
-  latch_xy_goal_tolerance: true
-  
-  sim_time: 2.0
-  sim_granularity: 0.025
-  vx_samples: 3 # Default 3, 8-15 for high speed comupters
-  vtheta_samples: 20
-  controller_frequency: 50
-  
-  meter_scoring: false
-  path_distance_bias: 10.0
-  goal_distance_bias: 10.0
-  occdist_scale: 0.2
-  
-  heading_scoring: false
-  heading_scoring_timestep: 0.8
-  
-  publish_cost_grid: true
-  
-  publish_cost_grid_pc: true
-  global_frame_id: "odom_combined"
-  
-  dwa: false
-  
-  holonomic_robot: false
+PoseFollower:
+    k_trans: 1.0
+    k_rot: 0.5
+
+    tolerance_trans: 0.5
+    tolerance_rot: 1.0
+    tolerance_timeout: 0.5
+
+    holonomic: false
+    samples: 10
+
+    max_vel_lin: 1.0
+    max_vel_th: 1.4
+
+    min_vel_lin: 0.1
+    min_vel_th: 0.1
+    min_in_place_vel_th: 0.1
+    in_place_trans_vel: 0.0
+
+    #trans_stopped_velocity
+    #rot_stopped_velocity
