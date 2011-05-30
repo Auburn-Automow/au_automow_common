@@ -47,16 +47,18 @@ class PathPlanner:
         self.setupCostmap()
         
         # Connect ROS Topics
+        self.current_position = None
         rospy.Subscriber("ekf/odom", Odometry, self.odomCallback)
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
         
         # Start Actionlib loop
-        self.performPathPlanning()
-        
-        # Shutdown
-        rospy.signal_shutdown("Done.")
+        try:
+            self.performPathPlanning()
+        finally:
+            # Shutdown
+            rospy.signal_shutdown("Done.")
     
     def odomCallback(self, data):
         """docstring for odomCallback"""
@@ -66,9 +68,11 @@ class PathPlanner:
         y = data.pose.pose.position.y
         y /= self.meters_per_cell
         y = self.offset[1] - y
-        rospy.loginfo("Setting robot position to %f, %f"%(x,y))
-        self.costmap.setRobotPosition(x, y)
-        print self.costmap
+        if self.current_position != (int(floor(x)), int(floor(y))):
+            self.current_position = (int(floor(x)), int(floor(y)))
+            self.costmap.setRobotPosition(y, x)
+            rospy.loginfo("Setting robot position to %f, %f"%(x,y))
+            print self.costmap
     
     def performPathPlanning(self):
         """docstring for performPathPlanning"""
@@ -90,24 +94,35 @@ class PathPlanner:
             destination.target_pose.header.frame_id = self.field_frame_id
             destination.target_pose.header.stamp = rospy.Time.now()
             
-            x,y = zip(*next_position)
+            print next_position
             
-            x += self.offest[0]
+            (x,y) = next_position
+            
+            x += self.offset[0]
             x *= self.meters_per_cell
-            y += self.offest[1]
+            y = self.offset[1] - y
             y *= self.meters_per_cell
             
             next_position = (x,y)
             
+            print next_position
+            
             destination.target_pose.pose.position.x = next_position[0]
             destination.target_pose.pose.position.y = next_position[1]
-            quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
+            quat = tf.transformations.quaternion_from_euler(0, 0, radians(90))
+            destination.target_pose.pose.orientation.x = quat[0]
+            destination.target_pose.pose.orientation.y = quat[1]
+            destination.target_pose.pose.orientation.z = quat[2]
+            destination.target_pose.pose.orientation.w = quat[3]
             
-            rsopy.loginfo("Sending goal %f, %f to move_base..."%next_position)
+            rospy.loginfo("Sending goal %f, %f to move_base..."%next_position)
             
             client.send_goal(destination)
             
-            client.wait_for_result(rospy.Duration(self.goal_timeout))
+            if client.wait_for_result(rospy.Duration(self.goal_timeout)):
+                rospy.loginfo("Goal reached successfully!")
+            else:
+                rospy.logwarn("Goal aborted!")
             
             next_position = self.costmap.getNextPosition()
     
@@ -186,8 +201,8 @@ class PathPlanner:
                 return
         
         xs,ys = zip(*self.points)
-        offset = self.offset = (int(ceil(min(xs)))-2, int(floor(max(ys)))+1) # (east, north)
-        size = self.size = (int(ceil(max(xs)) - floor(min(xs)))+2, int(ceil(max(ys)) - floor(min(ys)))+2)
+        offset = self.offset = (int(ceil(min(xs)))-4, int(floor(max(ys)))+4) # (east, north)
+        size = self.size = (int(ceil(max(xs)) - floor(min(xs)))+8, int(ceil(max(ys)) - floor(min(ys)))+8)
         rospy.loginfo("Map Offset East: %f cells (%f meters)"%(offset[0],offset[0]*self.meters_per_cell))
         rospy.loginfo("Map Offset North: %f cells (%f meters)"%(offset[1],offset[1]*self.meters_per_cell))
         rospy.loginfo("Map Size East: %f cells (%f meters)"%(size[0],size[0]*self.meters_per_cell))

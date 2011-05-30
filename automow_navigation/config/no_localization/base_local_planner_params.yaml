@@ -24,7 +24,7 @@ TrajectoryPlannerROS:
 
   heading_scoring: true
 
-  vx_samples: 20
+  vx_samples: 8
   vtheta_samples: 5 
 
   dwa: false
