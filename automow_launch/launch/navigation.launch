@@ -2,8 +2,11 @@
     <!-- Start automow ekf -->
     <include file="$(find automow_launch)/launch/ekf.xml" />
 
+    <!-- Start the field outline polygon publisher -->
+    <include file="$(find automow_maps)/launch/field_publisher.launch" />
+
     <!-- Start the motor controller -->
-    <include file="$(find automow_navigation)/launch/navigation_amcl.launch" />
+    <!-- <include file="$(find automow_navigation)/launch/navigation_amcl.launch" /> -->
     <!-- <include file="$(find automow_navigation)/launch/navigation_slam.launch" /> -->
-    <!-- <include file="$(find automow_navigation)/launch/naviagtion_no_localization.launch" /> -->
+    <include file="$(find automow_navigation)/launch/navigation_no_localization.launch" />
 </launch>

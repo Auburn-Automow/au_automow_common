@@ -1,0 +1,11 @@
+# base_global_planner: navfn/NavfnROS
+# base_local_planner:  dwa_local_planner/DWAPlannerROS
+
+controller_patience: 20.0
+planner_patience: 10.0
+
+recovery_behaviors:
+    - name: conservative_reset
+      type: clear_costmap_recovery/ClearCostmapRecovery
+    - name: aggressive_reset
+      type: clear_costmap_recovery/ClearCostmapRecovery

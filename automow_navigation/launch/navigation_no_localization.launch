@@ -1,4 +1,5 @@
 <launch>
+    <include file="$(find automow_maps)/launch/empty_map_server.launch" />
     <!-- Start the move_base Node -->
     <include file="$(find automow_navigation)/launch/move_base_no_localization.xml" />
 </launch>

@@ -1,0 +1,10 @@
+base_global_planner: navfn/NavfnROS
+base_local_planner:  pose_follower/PoseFollower
+controller_patience: 20.0
+planner_patience: 30.0
+
+recovery_behaviors:
+    - name: conservative_reset
+      type: clear_costmap_recovery/ClearCostmapRecovery
+    - name: aggressive_reset
+      type: clear_costmap_recovery/ClearCostmapRecovery
