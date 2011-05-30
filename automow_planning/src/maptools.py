@@ -12,12 +12,12 @@ def image2array(im):
     return a
 
 def array2image(a):
-    if a.dtype == Numeric.UnsignedInt8:
+    if a.typecode() == Numeric.UnsignedInt8:
         mode = "L"
-    elif a.dtype == Numeric.Float32:
+    elif a.typecode() == Numeric.Float32:
         mode = "F"
     else:
-        raise ValueError, "unsupported image mode"
+        raise ValueError, "unsupported image mode %s"%(a.typecode())
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
 

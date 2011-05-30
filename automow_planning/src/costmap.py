@@ -82,6 +82,10 @@ class Costmap2D:
         self.x_dim = len(data)
         self.y_dim = len(data[0])
     
+    def getData(self):
+        """docstring for getData"""
+        return self.__data
+    
     def getCardinalNeighbors(self, x, y):
         """docstring for getNeighbors"""
         d = self.__data
@@ -189,6 +193,9 @@ class Costmap2D:
             self.consumption_complete = False
             return None
         self._generateSortedConsumables()
+        if self.target_position != None:
+            self.consumed_cells(self.target_position)
+            self.target_position = None
         if self.target_position == None:
             target_num = max(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
