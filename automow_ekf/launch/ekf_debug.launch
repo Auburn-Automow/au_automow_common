@@ -10,5 +10,6 @@
         <param name="output_states_dir" value="/home/mjcarroll/data/"/>
         <param name="adaptive_encoders" value="true"/>
         <param name="adaptive_cutters" value="true"/>
+        <param name="publish_states" value="true"/>
     </node>
 </launch>

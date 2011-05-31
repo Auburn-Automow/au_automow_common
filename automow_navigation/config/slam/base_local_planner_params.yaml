@@ -22,6 +22,9 @@ TrajectoryPlannerROS:
   path_distance_bias: 0.6
   goal_distance_bias: 0.8
   occdist_scale: 0.2
+
+  heading_scoring: true
+  heading_scoring_timestep: 0.2
   
   publish_cost_grid: true
   

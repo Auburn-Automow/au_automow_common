@@ -13,6 +13,7 @@ import tf
 
 # ROS msg and srv imports
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from nav_msgs.msg import Odometry
 # from housekeeping.srv import CutterControl
 
 # Python Libraries
@@ -21,16 +22,25 @@ import sys
 # Peer Libraries
 
 ###  Variables  ###
-destination = None
+orig_pos = None
 
 ###  Functions  ###
 
+def odom_callback(data):
+    """docstring for odom_callback"""
+    global orig_pos
+    if orig_pos == None:
+        orig_pos = data.pose.pose
+
 def main():
     # sleep(10)
-    global destination
+    global orig_pos
+    orig_pos = None
     rospy.init_node("qualification_navigation")
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
     client.wait_for_server()
+    
+    rospy.Subscriber("/ekf/odom", Odometry, odom_callback)
     
     # try:
         # cutterControl = rospy.ServiceProxy('cutterControl', CutterControl)
@@ -38,59 +48,97 @@ def main():
     # except:
         # rospy.logerr("Failed to start cutters")
     
+    # Get pose
+    while orig_pos == None and not rospy.is_shutdown():
+        rospy.loginfo("Waiting on first pose...")
+        rospy.sleep(3.0)
+    if rospy.is_shutdown():
+        return
+    
+    (r,p,orig_rot) = tf.transformations.euler_from_quaternion([orig_pos.orientation.x, orig_pos.orientation.y, orig_pos.orientation.z, orig_pos.orientation.w])
+    orig_rot += 90
+    
     # First move
     destination = MoveBaseGoal()
     destination.target_pose.header.frame_id = "odom_combined"
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 0.668
-    destination.target_pose.pose.position.y = 8.99
-    # quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
-    destination.target_pose.pose.orientation.z = 0.692
-    destination.target_pose.pose.orientation.w = 0.721
+    destination.target_pose.pose.position.x = orig_pos.position.x+0.0
+    destination.target_pose.pose.position.y = orig_pos.position.y+5.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-90))
+    destination.target_pose.pose.orientation.x = quat[0]
+    destination.target_pose.pose.orientation.y = quat[1]
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    rospy.loginfo("Sending goal: %f, %f, %f"%(destination.target_pose.pose.position.x,destination.target_pose.pose.position.x,orig_rot-90))
     
     client.send_goal(destination)
     
-    client.wait_for_result()
+    if client.wait_for_result():
+        rospy.loginfo("Goal reached")
+    else:
+        rospy.logwarn("Did not reach goal")
     
     # Second move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 0.613
-    destination.target_pose.pose.position.y = 14.671
-    # quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
-    destination.target_pose.pose.orientation.z = -0.227
-    destination.target_pose.pose.orientation.w = 0.974
+    destination.target_pose.pose.position.x = orig_pos.position.x+5.0
+    destination.target_pose.pose.position.y = orig_pos.position.y+5.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-180))
+    destination.target_pose.pose.orientation.x = quat[0]
+    destination.target_pose.pose.orientation.y = quat[1]
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    rospy.loginfo("Sending goal: %f, %f, %f"%(destination.target_pose.pose.position.x,destination.target_pose.pose.position.x,orig_rot-180))
     
     client.send_goal(destination)
     
-    client.wait_for_result()
+    if client.wait_for_result():
+        rospy.loginfo("Goal reached")
+    else:
+        rospy.logwarn("Did not reach goal")
     
     # Third Move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 5.33
-    destination.target_pose.pose.position.y = 14.49
-    # quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
-    destination.target_pose.pose.orientation.z = -0.7
-    destination.target_pose.pose.orientation.w = 0.7
+    destination.target_pose.pose.position.x = orig_pos.position.x+5.0
+    destination.target_pose.pose.position.y = orig_pos.position.y+0.0
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-270))
+    destination.target_pose.pose.orientation.x = quat[0]
+    destination.target_pose.pose.orientation.y = quat[1]
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    rospy.loginfo("Sending goal: %f, %f, %f"%(destination.target_pose.pose.position.x,destination.target_pose.pose.position.x,orig_rot-270))
     
     client.send_goal(destination)
     
-    client.wait_for_result()
+    if client.wait_for_result():
+        rospy.loginfo("Goal reached")
+    else:
+        rospy.logwarn("Did not reach goal")
     
     # Final Move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = 5.62
-    destination.target_pose.pose.position.y = 9.27
-    # quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(90))
-    destination.target_pose.pose.orientation.z = -0.989
-    destination.target_pose.pose.orientation.w = 0.142
+    destination.target_pose.pose.position.x = orig_pos.position.x
+    destination.target_pose.pose.position.y = orig_pos.position.y
+    quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot))
+    destination.target_pose.pose.orientation.x = quat[0]
+    destination.target_pose.pose.orientation.y = quat[1]
+    destination.target_pose.pose.orientation.z = quat[2]
+    destination.target_pose.pose.orientation.w = quat[3]
+    
+    rospy.loginfo("Sending goal: %f, %f, %f"%(destination.target_pose.pose.position.x,destination.target_pose.pose.position.x,orig_rot))
     
     client.send_goal(destination)
     
-    client.wait_for_result()
+    if client.wait_for_result():
+        rospy.loginfo("Goal reached")
+    else:
+        rospy.logwarn("Did not reach goal")
 
 ###  If Main  ###
 if __name__ == '__main__':
@@ -98,27 +146,4 @@ if __name__ == '__main__':
         main()
     except Exception as err:
         rospy.logerr("Unhandled Exception in Qualification Node: \n"+str(err))
-    finally:
-        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        client.wait_for_server()
 
-        # try:
-            # cutterControl = rospy.ServiceProxy('cutterControl', CutterControl)
-            # cutterControl(True, True)
-        # except:
-            # rospy.logerr("Failed to start cutters")
-
-        # First move
-        destination = MoveBaseGoal()
-        destination.target_pose.header.frame_id = "base_link"
-        destination.target_pose.header.stamp = rospy.Time.now()
-
-        destination.target_pose.pose.position.x = 0.0
-        destination.target_pose.pose.position.y = 0.0
-        quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(0))
-        destination.target_pose.pose.orientation.z = quat[2]
-        destination.target_pose.pose.orientation.w = quat[3]
-
-        client.send_goal(destination)
-
-        client.wait_for_result()

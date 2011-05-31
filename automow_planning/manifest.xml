@@ -10,4 +10,7 @@
   <url>http://ros.org/wiki/automow_planning</url>
   <depend package="nav_msgs" />
   <depend package="rospy" />
+  <depend package="actionlib"/>
+  <depend package="tf"/>
+  <depend package="move_base_msgs"/>
 </package>
