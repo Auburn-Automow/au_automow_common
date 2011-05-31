@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import numpy as np
 from math import *
@@ -14,6 +13,7 @@ RED = '\033[91m'
 GRAY = '\033[90m'
 GRAY_BG = '\033[100m'
 WHITE_BG = '\033[107m'
+BLUE_BG = '\033[44m'
 ENDC = '\033[0m'
 
 NOTRVRSE = 255
@@ -23,7 +23,7 @@ COVERAGE_ITERATION_LIMIT = 100
 
 class Costmap2D:
     """Two Dimensional costmap"""
-    def __init__(self):
+    def __init__(self, value_min):
         self.__data = None
         self.exterior_obstacles = []
         self.cutgrass = [0]
@@ -33,6 +33,7 @@ class Costmap2D:
         self.robot_position = (-1,-1)
         self.target_position = None
         self.sorted_consumables = {}
+        self.value_min = value_min
         self.consumption_complete = False
     
     def __str__(self):
@@ -64,6 +65,8 @@ class Costmap2D:
                         color += GRAY_BG
                     if (x,y) == self.robot_position:
                         color += WHITE_BG
+                    if self.target_position and (x,y) == self.target_position:
+                        color += BLUE_BG
                     result += color
                     result += "%3s"%self.__data[x][y]
                     result += ENDC
@@ -197,9 +200,9 @@ class Costmap2D:
             self.consumed_cells.append(self.target_position)
             self.target_position = None
         if self.target_position == None:
-            target_num = max(self.sorted_consumables.keys())
+            target_num = min(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
-            target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
+            target_positions = sorted(target_positions, key=lambda pos: abs(sqrt((pos[0] - self.robot_position[0]) ** 2 + (pos[1] - self.robot_position[1]) ** 2)))
             (x,y,value) = target_positions[0]
             self.target_position = (x,y)
             if len(target_positions) == 1:
@@ -216,7 +219,7 @@ class Costmap2D:
             for x in range(self.x_dim):
                 for y in range(self.y_dim):
                     value = int(self.__data[x][y])
-                    if value != NOTRVRSE:
+                    if value != NOTRVRSE and value > self.value_min:
                         if value not in self.sorted_consumables:
                             self.sorted_consumables[value] = []
                         self.sorted_consumables[value].append((x,y,value))
@@ -237,8 +240,8 @@ class Costmap2D:
                 print "ERROR: No traversable paths!"
                 return None
         xs,ys,values = zip(*possible_next_positions)
-        index = values.index(max(values))
+        index = values.index(min(values))
         return xs[index], ys[index]
-    
+
 
 

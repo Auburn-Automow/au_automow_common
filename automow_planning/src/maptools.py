@@ -1,4 +1,4 @@
-import Image 
+from PIL import Image
 import numpy as np
 
 def image2array(im):
