@@ -54,7 +54,7 @@ class PathPlanner:
         self.occ_msg.info.height = self.costmap.x_dim
         self.occ_msg.info.weight = self.costmap.y_dim
         self.occ_msg.info.map_load_time = rospy.Time.now()
-        self.occ_msg.info.resolution = 3 # dont know...
+        self.occ_msg.info.resolution = 0.4 # dont know...
         
         # Connect ROS Topics
         self.current_position = None
@@ -165,7 +165,7 @@ class PathPlanner:
         del draw
         
         # Create and initialize the costmap
-        self.costmap = Costmap2D()
+        self.costmap = Costmap2D(1)
         self.costmap.setData(image2array(self.map_img))
         
         # Plan coverage
@@ -213,7 +213,16 @@ class PathPlanner:
         #     float64 y
         #     float64 z
         #     float64 w
-        self.occ_msg.data = self.costmap.getData()
+        data = self.costmap.getData()
+        def check_value(val):
+            val = abs(int(val))
+            if val > 255:
+                return 255
+            elif val < 0:
+                return 0
+            else
+                return val
+        self.occ_msg.data = [check_value(data[x][y]) for x in range(self.x_dim) for y in range(self.y_dim)]
         self.occ_pub.publish(self.occ_msg)
     
     def readFieldPolygon(self):
