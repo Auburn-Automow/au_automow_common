@@ -13,7 +13,7 @@ import threading
 from maptools import *
 from costmap import Costmap2D
 
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import PolygonStamped, Point32, Polygon
 from std_msgs.msg import Header
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -43,8 +43,18 @@ class PathPlanner:
         self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
         self.poly_pub_timer.start()
         
+        # Occupancy Grid
+        self.occ_pub = rospy.Publisher('field_status', OccupancyGrid)
+        self.occ_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.occPublishHandler)
+        self.occ_pub_timer.start()
+        
         # Setup costmap and path planning
         self.setupCostmap()
+        
+        self.occ_msg.info.height = self.costmap.x_dim
+        self.occ_msg.info.weight = self.costmap.y_dim
+        self.occ_msg.info.map_load_time = rospy.Time.now()
+        self.occ_msg.info.resolution = 3 # dont know...
         
         # Connect ROS Topics
         self.current_position = None
@@ -162,7 +172,7 @@ class PathPlanner:
         tick = time.time()
         self.costmap.planCoverage()
         tock = (time.time()-tick)*1000.0
-        print self.costmap
+        # print self.costmap
         rospy.loginfo("Map coverage planning completed in %f milliseconds."%tock)
     
     def spin(self):
@@ -176,6 +186,35 @@ class PathPlanner:
             self.poly_pub_timer.start()
         self.poly_msg.header.stamp = rospy.Time.now()
         self.poly_pub.publish(self.poly_msg)
+
+    def occPublishHandler(self):
+        """A function to publish an occupancy grid"""
+        if not rospy.is_shutdown():
+            self.occ_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.occPublishHandler)
+            self.occ_pub_timer.start()
+        self.occ_msg.header.stamp = rospy.Time.now()
+        
+        # self.occ_msg.header
+        # uint32 seq
+        # time stamp
+        # string frame_id
+        # self.occ_msg.info
+        # self.occ_msg.info.map_load_time
+        # self.occ_msg.info.resolution
+        # self.occ_msg.info.width
+        # self.occ_msg.info.height
+        # geometry_msgs/Pose origin
+        #   geometry_msgs/Point position
+        #     float64 x
+        #     float64 y
+        #     float64 z
+        #   geometry_msgs/Quaternion orientation
+        #     float64 x
+        #     float64 y
+        #     float64 z
+        #     float64 w
+        self.occ_msg.data = self.costmap.getData()
+        self.occ_pub.publish(self.occ_msg)
     
     def readFieldPolygon(self):
         """docstring for readFieldPolygon"""
@@ -210,6 +249,7 @@ class PathPlanner:
         
         self.poly_msg = PolygonStamped(Header(),Polygon(self.point32s))
         self.poly_msg.header.frame_id = self.field_frame_id
+        self.occ_msg = OccupancyGrid()
     
 
 if __name__ == '__main__':
