@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find automow_launch)/launch/hardware.launch" />
+    <include file="$(find automow_launch)/launch/navigation.launch" />
+    <include file="$(find automow_planning)/launch/path_planning.launch" />
+</launch>
