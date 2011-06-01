@@ -25,6 +25,7 @@ class PathPlanner:
         self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
         self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
         self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
+        self.pick_furthest = rospy.get_param("~pick_furthest", True)
         
         # Field File related stuff
         self.file_name = rospy.get_param("~field_csv_file","/tmp/field.csv")
@@ -86,7 +87,7 @@ class PathPlanner:
         rospy.loginfo("Waiting for move_base...")
         client.wait_for_server()
         
-        next_position = self.costmap.getNextPosition()
+        next_position = self.costmap.getNextPosition(self.pick_furthest)
         while next_position != None:
             if rospy.is_shutdown():
                 return
@@ -124,7 +125,7 @@ class PathPlanner:
             else:
                 rospy.logwarn("Goal aborted!")
             
-            next_position = self.costmap.getNextPosition()
+            next_position = self.costmap.getNextPosition(self.pick_furthest)
     
     def setupCostmap(self):
         """docstring for setupCostmap"""
