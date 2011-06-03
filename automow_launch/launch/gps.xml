@@ -1,6 +1,6 @@
 <launch>
     <node pkg="magellan_dg14" type="dg14_driver" name="dg14_driver" output="screen">
-        <param name="easting_origin" value="641734.486" />
-        <param name="northing_origin" value="3606767.78" />
+        <param name="easting_origin" value="755548.2002" />
+        <param name="northing_origin" value="4403950.3766" />
     </node>
 </launch>

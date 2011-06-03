@@ -64,7 +64,7 @@ def main():
     destination.target_pose.header.stamp = rospy.Time.now()
     
     destination.target_pose.pose.position.x = orig_pos.position.x+0.0
-    destination.target_pose.pose.position.y = orig_pos.position.y+5.0
+    destination.target_pose.pose.position.y = orig_pos.position.y-5.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-90))
     destination.target_pose.pose.orientation.x = quat[0]
     destination.target_pose.pose.orientation.y = quat[1]
@@ -83,8 +83,8 @@ def main():
     # Second move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = orig_pos.position.x+5.0
-    destination.target_pose.pose.position.y = orig_pos.position.y+5.0
+    destination.target_pose.pose.position.x = orig_pos.position.x-5.0
+    destination.target_pose.pose.position.y = orig_pos.position.y-5.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-180))
     destination.target_pose.pose.orientation.x = quat[0]
     destination.target_pose.pose.orientation.y = quat[1]
@@ -103,7 +103,7 @@ def main():
     # Third Move
     destination.target_pose.header.stamp = rospy.Time.now()
     
-    destination.target_pose.pose.position.x = orig_pos.position.x+5.0
+    destination.target_pose.pose.position.x = orig_pos.position.x-5.0
     destination.target_pose.pose.position.y = orig_pos.position.y+0.0
     quat = tf.transformations.quaternion_from_euler(0, 0, math.radians(orig_rot-270))
     destination.target_pose.pose.orientation.x = quat[0]
