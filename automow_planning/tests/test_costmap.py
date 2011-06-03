@@ -1,4 +1,6 @@
+#!/opt/local/bin/python
 import sys
+import os
 sys.path.append("../src")
 from costmap import Costmap2D
 from maptools import *
@@ -9,7 +11,7 @@ import time
 import numpy as np
 
 def test_costmap(example_map):
-    my_costmap = Costmap2D()
+    my_costmap = Costmap2D(1)
     my_costmap.setData(example_map)
     import time
     tock = time.time()
@@ -19,7 +21,6 @@ def test_costmap(example_map):
     if not finished:
         print "Failed to cover the field in %f iterations."%my_costmap.COVERAGE_ITERATION_LIMIT
     print "Coverage Expansion Execution Time: %f milliseconds" % ((tick-tock)*1000.0)
-    
     return my_costmap
 
 def generateMapFromCSV(file_name, meters_per_cell):
@@ -59,7 +60,7 @@ def generateMapFromCSV(file_name, meters_per_cell):
     draw = ImageDraw.Draw(im)
     draw.polygon(img_points, fill=0)
     rad = 1
-    draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
+    # draw.ellipse((size[0]/2-rad,size[1]/2-rad)+(size[0]/2+rad,size[1]/2+rad), fill=255)
     del draw
     
     return image2array(im)
@@ -74,9 +75,9 @@ def simulate_path_consumption(my_costmap, meters_per_cell):
         next_position = my_costmap.getNextPosition()
         if next_position == None:
             break
-        duration = (time.time() - tick)*1000.0
-        my_costmap.setRobotPosition(*next_position)
+        duration = (time.time() - tick) * 1000.0
         print my_costmap
+        my_costmap.setRobotPosition(*next_position)
         print "Position retrival time: %f milliseconds."%(duration)
         time.sleep(0.1)
         # count += 1
@@ -89,28 +90,5 @@ if __name__ == '__main__':
     mpc = 0.4
     my_costmap = test_costmap(generateMapFromCSV("survey.csv", mpc))
     simulate_path_consumption(my_costmap, mpc)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

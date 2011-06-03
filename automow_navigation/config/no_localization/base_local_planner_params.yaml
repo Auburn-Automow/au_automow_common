@@ -4,6 +4,8 @@ TrajectoryPlannerROS:
   max_rotational_vel: 0.5
   min_in_place_rotational_vel: 0.2
   escape_vel: -0.3
+  publish_cost_grid_pc: true
+  global_frame_id: "odom_combined"
 
   acc_lim_th: 5
   acc_lim_x: 3
@@ -25,6 +27,6 @@ TrajectoryPlannerROS:
   heading_scoring: true
 
   vx_samples: 8
-  vtheta_samples: 5 
+  vtheta_samples: 20 
 
   dwa: false

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-
 import os
 import numpy as np
 from math import *
+import threading
 
 WHITE = '\033[97m'
 CYAN = '\033[96m'
@@ -14,6 +14,7 @@ RED = '\033[91m'
 GRAY = '\033[90m'
 GRAY_BG = '\033[100m'
 WHITE_BG = '\033[107m'
+BLUE_BG = '\033[44m'
 ENDC = '\033[0m'
 
 NOTRVRSE = 255
@@ -23,8 +24,10 @@ COVERAGE_ITERATION_LIMIT = 100
 
 class Costmap2D:
     """Two Dimensional costmap"""
-    def __init__(self):
-        self.__data = None
+    def __init__(self, value_min):
+        self.data_lock = threading.Lock()
+        with self.data_lock:
+            self.__data = None
         self.exterior_obstacles = []
         self.cutgrass = [0]
         self.leading_edge = []
@@ -33,6 +36,7 @@ class Costmap2D:
         self.robot_position = (-1,-1)
         self.target_position = None
         self.sorted_consumables = {}
+        self.value_min = value_min
         self.consumption_complete = False
     
     def __str__(self):
@@ -40,23 +44,25 @@ class Costmap2D:
         result = "\n"
         for x in range(self.x_dim):
             for y in range(self.y_dim):
+                with self.data_lock:
+                    this_cell = self.__data[x][y]
                 if self.use_color:
                     color = None
                     if (x,y) in self.exterior_obstacles:
                         color = GRAY
-                    elif self.__data[x][y] == NOTRVRSE:
+                    elif this_cell == NOTRVRSE:
                         color = WHITE
-                    elif self.__data[x][y] == 1:
+                    elif this_cell == 1:
                         color = GREEN
-                    elif self.__data[x][y] == 2:
+                    elif this_cell == 2:
                         color = BLUE
-                    elif self.__data[x][y] == 3:
+                    elif this_cell == 3:
                         color = CYAN
-                    elif self.__data[x][y] == 4:
+                    elif this_cell == 4:
                         color = YELLOW
-                    elif self.__data[x][y] == 5:
+                    elif this_cell == 5:
                         color = MAGENTA
-                    elif self.__data[x][y] >= 6:
+                    elif this_cell >= 6:
                         color = RED
                     else:
                         color = WHITE
@@ -64,11 +70,13 @@ class Costmap2D:
                         color += GRAY_BG
                     if (x,y) == self.robot_position:
                         color += WHITE_BG
+                    if self.target_position and (x,y) == self.target_position:
+                        color += BLUE_BG
                     result += color
-                    result += "%3s"%self.__data[x][y]
+                    result += "%3s"%this_cell
                     result += ENDC
                 else:
-                    result += "%3s"%self.__data[x][y]
+                    result += "%3s"%this_cell
             result += "\n"
         return result
     
@@ -78,17 +86,18 @@ class Costmap2D:
     
     def setData(self, data):
         """asdf"""
-        self.__data = data
+        with self.data_lock:
+            self.__data = data
         self.x_dim = len(data)
         self.y_dim = len(data[0])
     
     def getData(self):
         """docstring for getData"""
-        return self.__data
+        with self.data_lock:
+            return self.__data
     
     def getCardinalNeighbors(self, x, y):
         """docstring for getNeighbors"""
-        d = self.__data
         neighbors = []
         if x > 0:
             neighbors.append(self._getNeighbor(x-1,y))
@@ -102,7 +111,6 @@ class Costmap2D:
     
     def getNeighbors(self, x, y):
         """docstring for getNeighbors"""
-        d = self.__data
         neighbors = []
         if x > 0 and y > 0:
             neighbors.append(self._getNeighbor(x-1,y-1))
@@ -116,7 +124,8 @@ class Costmap2D:
     
     def _getNeighbor(self,x,y):
         """docstring for _getNeighbor"""
-        return x,y,self.__data[x][y]
+        with self.data_lock:
+            return x,y,self.__data[x][y]
     
     def isExteriorObstacle(self, x, y):
         """docstring for isSurrounded"""
@@ -132,18 +141,21 @@ class Costmap2D:
             self.cutgrass = []
             for x in range(self.x_dim):
                 for y in range(self.y_dim):
-                    current_cell = self.__data[x][y]
+                    with self.data_lock:
+                        current_cell = self.__data[x][y]
                     if current_cell == CUTGRASS:
                         self.cutgrass.append((x,y))
                     if not self.isExteriorObstacle(x,y) or current_cell != NOTRVRSE:
                         continue
                     self.exterior_obstacles.append((x,y))
             for x,y in self.exterior_obstacles:
-                current_cell = self.__data[x][y]
+                with self.data_lock:
+                    current_cell = self.__data[x][y]
                 neighbors = self.getCardinalNeighbors(x,y)
                 for xn,yn,neighbor in neighbors:
                     if neighbor != NOTRVRSE and neighbor == 0:
-                        self.__data[xn][yn] = 1
+                        with self.data_lock:
+                            self.__data[xn][yn] = 1
                         self.leading_edge.append((xn,yn))
                         try:
                             self.cutgrass.remove((xn,yn))
@@ -153,12 +165,13 @@ class Costmap2D:
             le = list(self.leading_edge)
             self.leading_edge = []
             for x,y in le:
-                # self.__data[x][y] += 1
-                current_cell = self.__data[x][y]
+                with self.data_lock:
+                    current_cell = self.__data[x][y]
                 neighbors = self.getCardinalNeighbors(x,y)
                 for xn,yn,neighbor in neighbors:
                     if neighbor == 0:
-                        self.__data[xn][yn] = current_cell + 1
+                        with self.data_lock:
+                            self.__data[xn][yn] = current_cell + 1
                         self.leading_edge.append((xn,yn))
                         try:
                             self.cutgrass.remove((xn,yn))
@@ -182,12 +195,12 @@ class Costmap2D:
         if self.target_position != None and self.target_position == self.robot_position:
             self.target_position = None
     
-    def getNextPosition(self):
+    def getNextPosition(self, pick_furthest = True):
         """docstring for getNextPosition"""
         # return self._getNextPositionWander()
-        return self._getNextPositionBurnDown()
+        return self._getNextPositionBurnDown(pick_furthest)
     
-    def _getNextPositionBurnDown(self):
+    def _getNextPositionBurnDown(self,pick_furthest):
         """docstring for _getNextPositionBurnDown"""
         if self.consumption_complete:
             self.consumption_complete = False
@@ -197,9 +210,11 @@ class Costmap2D:
             self.consumed_cells.append(self.target_position)
             self.target_position = None
         if self.target_position == None:
-            target_num = max(self.sorted_consumables.keys())
+            target_num = min(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
             target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
+            if pick_furthest:
+                target_positions.reverse()
             (x,y,value) = target_positions[0]
             self.target_position = (x,y)
             if len(target_positions) == 1:
@@ -215,8 +230,9 @@ class Costmap2D:
         if self.sorted_consumables == {}:
             for x in range(self.x_dim):
                 for y in range(self.y_dim):
-                    value = int(self.__data[x][y])
-                    if value != NOTRVRSE:
+                    with self.data_lock:
+                        value = int(self.__data[x][y])
+                    if value != NOTRVRSE and value > self.value_min:
                         if value not in self.sorted_consumables:
                             self.sorted_consumables[value] = []
                         self.sorted_consumables[value].append((x,y,value))
@@ -237,8 +253,8 @@ class Costmap2D:
                 print "ERROR: No traversable paths!"
                 return None
         xs,ys,values = zip(*possible_next_positions)
-        index = values.index(max(values))
+        index = values.index(min(values))
         return xs[index], ys[index]
-    
+
 
 

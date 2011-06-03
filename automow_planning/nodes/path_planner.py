@@ -17,6 +17,7 @@ from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import PolygonStamped, Point32, Polygon
 from std_msgs.msg import Header
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from power_control_board.msg import CutterControl
 
 class PathPlanner:
     def __init__(self):
@@ -25,6 +26,7 @@ class PathPlanner:
         self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
         self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
         self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
+        self.pick_furthest = rospy.get_param("~pick_furthest", True)
         
         # Field File related stuff
         self.file_name = rospy.get_param("~field_csv_file","/tmp/field.csv")
@@ -54,11 +56,17 @@ class PathPlanner:
         self.occ_msg.info.height = self.costmap.x_dim
         self.occ_msg.info.weight = self.costmap.y_dim
         self.occ_msg.info.map_load_time = rospy.Time.now()
-        self.occ_msg.info.resolution = 3 # dont know...
+        self.occ_msg.info.resolution = 0.4 # dont know...
         
         # Connect ROS Topics
         self.current_position = None
         rospy.Subscriber("ekf/odom", Odometry, self.odomCallback)
+        
+        self.left_cutter_cooldown = None
+        self.left_cutter_state = False
+        self.right_cutter_cooldown = None
+        self.right_cutter_state = False
+        self.cutter_publisher = rospy.Subscriber("/CutterControl", CutterControl)
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
@@ -69,6 +77,32 @@ class PathPlanner:
         finally:
             # Shutdown
             rospy.signal_shutdown("Done.")
+    
+    def cutterControlHandler(self):
+        """docstring for cutterControlHandler"""
+        rate = rospy.Rate(rospy.Duration(0.1))
+        while not rospy.is_shutdown():
+            pass
+            rate.sleep()
+    
+    def point_inside_polygon(self,x,y,poly):
+        """Originally from: http://www.ariel.com.au/a/python-point-int-poly.html"""
+        n = len(poly)
+        inside = False
+        
+        p1x,p1y = poly[0]
+        for i in range(n+1):
+            p2x,p2y = poly[i % n]
+            if y > min(p1y,p2y):
+                if y <= max(p1y,p2y):
+                    if x <= max(p1x,p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
+        
+        return inside
     
     def odomCallback(self, data):
         """docstring for odomCallback"""
@@ -96,7 +130,7 @@ class PathPlanner:
         rospy.loginfo("Waiting for move_base...")
         client.wait_for_server()
         
-        next_position = self.costmap.getNextPosition()
+        next_position = self.costmap.getNextPosition(self.pick_furthest)
         while next_position != None:
             if rospy.is_shutdown():
                 return
@@ -134,7 +168,7 @@ class PathPlanner:
             else:
                 rospy.logwarn("Goal aborted!")
             
-            next_position = self.costmap.getNextPosition()
+            next_position = self.costmap.getNextPosition(self.pick_furthest)
     
     def setupCostmap(self):
         """docstring for setupCostmap"""
@@ -165,7 +199,7 @@ class PathPlanner:
         del draw
         
         # Create and initialize the costmap
-        self.costmap = Costmap2D()
+        self.costmap = Costmap2D(1)
         self.costmap.setData(image2array(self.map_img))
         
         # Plan coverage
@@ -213,7 +247,16 @@ class PathPlanner:
         #     float64 y
         #     float64 z
         #     float64 w
-        self.occ_msg.data = self.costmap.getData()
+        data = self.costmap.getData()
+        def check_value(val):
+            val = abs(int(val))
+            if val > 255:
+                return 255
+            elif val < 0:
+                return 0
+            else
+                return val
+        self.occ_msg.data = [check_value(data[x][y]) for x in range(self.x_dim) for y in range(self.y_dim)]
         self.occ_pub.publish(self.occ_msg)
     
     def readFieldPolygon(self):
