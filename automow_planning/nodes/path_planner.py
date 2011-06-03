@@ -12,6 +12,7 @@ import threading
 
 from maptools import *
 from costmap import Costmap2D
+import shapely.geometry as sg
 
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import PolygonStamped, Point32, Polygon
@@ -27,6 +28,7 @@ class PathPlanner:
         self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
         self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
         self.pick_furthest = rospy.get_param("~pick_furthest", True)
+        self.tf_listener = tf.TransformListener()
         
         # Field File related stuff
         self.file_name = rospy.get_param("~field_csv_file","/tmp/field.csv")
@@ -56,7 +58,16 @@ class PathPlanner:
         self.occ_msg.info.height = self.costmap.x_dim
         self.occ_msg.info.weight = self.costmap.y_dim
         self.occ_msg.info.map_load_time = rospy.Time.now()
-        self.occ_msg.info.resolution = 0.4 # dont know...
+        self.occ_msg.info.resolution = self.meters_per_cell
+        
+        # Field polygons
+        self.__polys = sg.MultiPolygon([gs.Polygon([(x,y),
+                                                    (x+self.meters_per_cell,y),
+                                                    (x+self.meters_per_cell,y+self.meters_per_cell),
+                                                    (x,y+self.meters_per_cell)]
+                                            for x in range(0, self.costmap.x_dim, self.meters_per_cell)
+                                            for y in range(0, self.costmap.y_dim, self.meters_per_cell)])
+        self.pick_furthest = rospy.get_param("~cutter_threshold", 0.5)
         
         # Connect ROS Topics
         self.current_position = None
@@ -115,6 +126,30 @@ class PathPlanner:
         if self.current_position != (int(floor(x)), int(floor(y))):
             self.current_position = (int(floor(x)), int(floor(y)))
             self.costmap.setRobotPosition(y, x)
+            
+            try:
+                (trans, _ ) = self.tf_listener.lookupTransform('base_link',
+                                                               'left_cutter',
+                                                               rospy.Time(0))
+                left_cutter = sg.Point([trans[1], trans[0]]).buffer(0.3556/2.0)
+                for cell in self.__polys:
+                    if cell.intersects(left_cutter):
+                        area_ratio = cell.intersection(left_cutter).area/cell.area
+                        if area_ratio > self.pick_furthest:
+                            self.costmap.consumeCell(trans[1], trans[0])
+                (trans, _ ) = self.tf_listener.lookupTransform('base_link',
+                                                               'right_cutter',
+                                                               rospy.Time(0))
+                right_cutter = sg.Point([trans[0], trans[1]]).buffer(0.3556/2.0)
+                for cell in self.__polys:
+                    if cell.intersects(right_cutter):
+                        area_ratio = cell.intersection(right_cutter).area/cell.area
+                        if area_ratio > self.pick_furthest:
+                            self.costmap.consumeCell(trans[1], trans[0])
+            except (tf.LookupException, tf.ConnectivityException):
+                continue
+            
+            self.costmap.consumeCell(y, x)
             rospy.loginfo("Setting robot position to %f, %f"%(x,y))
             print self.costmap
     

@@ -191,9 +191,11 @@ class Costmap2D:
     def setRobotPosition(self, x, y):
         """docstring for setRobotPosition"""
         self.robot_position = (int(floor(x)), int(floor(y)))
-        self.consumed_cells.append(self.robot_position)
         if self.target_position != None and self.target_position == self.robot_position:
             self.target_position = None
+    
+    def consumeCell(self, x, y):
+        self.consumed_cells.append((int(floor(x)),int(floor(y))))
     
     def getNextPosition(self, pick_furthest = True):
         """docstring for getNextPosition"""
@@ -255,6 +257,4 @@ class Costmap2D:
         xs,ys,values = zip(*possible_next_positions)
         index = values.index(min(values))
         return xs[index], ys[index]
-
-
 

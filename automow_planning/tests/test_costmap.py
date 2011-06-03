@@ -72,12 +72,13 @@ def simulate_path_consumption(my_costmap, meters_per_cell):
     # count = 0
     while True:
         tick = time.time()
-        next_position = my_costmap.getNextPosition()
+        next_position = my_costmap.getNextPosition(False)
         if next_position == None:
             break
         duration = (time.time() - tick) * 1000.0
         print my_costmap
         my_costmap.setRobotPosition(*next_position)
+        my_costmap.consumeCell(*next_position)
         print "Position retrival time: %f milliseconds."%(duration)
         time.sleep(0.1)
         # count += 1
