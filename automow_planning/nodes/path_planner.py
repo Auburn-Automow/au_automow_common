@@ -99,6 +99,27 @@ class PathPlanner:
         
         # Start Actionlib loop
         try:
+            # Drive into the field first
+            cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist)
+            msg = Twist()
+            msg.linear.x = 1.0
+            msg.angular.z = 0.0
+            
+            cmd_vel_pub.publish(msg)
+            
+            rospy.sleep(3.0)
+            
+            msg.linear.x = 0.0
+            
+            cmd_vel_pub.publish(msg)
+            
+            rospy.sleep(1.0)
+            
+            self.desired_right_cutter_state = True
+            self.desired_left_cutter_state = True
+            self.setCutters()
+            
+            # Coverage
             self.performPathPlanning()
         finally:
             # Shutdown

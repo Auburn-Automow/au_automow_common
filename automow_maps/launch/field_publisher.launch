@@ -1,6 +1,5 @@
 <launch>
     <node pkg="automow_maps" type="field_publisher.py" name="field_publisher" >
-        <param name="field_csv_file" value="$(find
-            automow_maps)/maps/field_solarhouse_may29.csv" />
+        <param name="field_csv_file" value="/Users/william/practice_field.csv" />
     </node>
 </launch>
