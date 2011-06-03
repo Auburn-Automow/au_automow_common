@@ -36,6 +36,7 @@ class PathPlanner:
         
         if not self.testing:
             self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
+            self.cutter_cooldown = rospy.get_param("~cutter_cooldown", 5.0)
             self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
             self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
             self.pick_furthest = rospy.get_param("~pick_furthest", True)
@@ -68,11 +69,11 @@ class PathPlanner:
         
         # Field polygons
         self.__polys = sg.MultiPolygon([gs.Polygon([(x,y),
-                                                    (x+self.meters_per_cell,y),
-                                                    (x+self.meters_per_cell,y+self.meters_per_cell),
-                                                    (x,y+self.meters_per_cell)]
-                                            for x in range(0, self.costmap.x_dim, self.meters_per_cell)
-                                            for y in range(0, self.costmap.y_dim, self.meters_per_cell)])
+                                                    (x+1,y),
+                                                    (x+1,y+1),
+                                                    (x,y+1)]
+                                            for x in range(0, self.costmap.x_dim)
+                                            for y in range(0, self.costmap.y_dim)])
         self.pick_furthest = rospy.get_param("~cutter_threshold", 0.5)
 
         # Connect ROS Topics
@@ -82,9 +83,16 @@ class PathPlanner:
         
         self.left_cutter_cooldown = None
         self.left_cutter_state = False
+        self.desired_left_cutter_state = False
         self.right_cutter_cooldown = None
         self.right_cutter_state = False
-        # self.cutter_publisher = rospy.Subscriber("/CutterControl", CutterControl)
+        self.desired_right_cutter_state = False
+        rospy.Subscriber("/PowerControl", PowerControl, self.cutterCallback)
+        self.pub_cutter = rospy.Publisher("/CutterControl", CutterControl)
+        self.sg_field_poly = sg.Polygon(self.points)
+        
+        # Transformer
+        self.listener = tf.TransformListener()
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
@@ -95,6 +103,11 @@ class PathPlanner:
         finally:
             # Shutdown
             rospy.signal_shutdown("Done.")
+    
+    def cutterCallback(self, data):
+        """docstring for cutterCallback"""
+        self.left_cutter_state = data.LeftCutterStatus
+        self.right_cutter_state = data.RightCutterStatus
     
     def cutterControlHandler(self):
         """docstring for cutterControlHandler"""
@@ -130,35 +143,92 @@ class PathPlanner:
         y = data.pose.pose.position.y
         y /= self.meters_per_cell
         y = self.offset[1] - y
+        self.checkCutters()
         if self.current_position != (int(floor(x)), int(floor(y))):
             self.current_position = (int(floor(x)), int(floor(y)))
             self.costmap.setRobotPosition(y, x)
+            rospy.loginfo("Setting robot position to %f, %f"%(x,y))
+            self.publishVisualizations()
+    
+    def setCutters(self):
+        """docstring for setCutters"""
+        msg = CutterControl()
+        msg.LeftControl = self.desired_left_cutter_state
+        msg.RightControl = self.desired_right_cutter_state
+        
+        self.pub_cutter.publish(msg)
+    
+    def checkCutters(self):
+        """docstring for checkCutters"""
+        try:
+            (left_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
+                                                           'left_cutter',
+                                                           rospy.Time.now())
+            abs_left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer(0.3556/2.0)
             
-            try:
-                (trans, _ ) = self.tf_listener.lookupTransform('base_link',
-                                                               'left_cutter',
-                                                               rospy.Time(0))
-                left_cutter = sg.Point([trans[1], trans[0]]).buffer(0.3556/2.0)
+            area_ratio = self.sg_field_poly.intersection(abs_left_cutter)/abs_left_cutter.area
+            if area_ratio != 1.0:
+                temp_state = False
+            else:
+                temp_state = True
+            if temp_state != self.desired_left_cutter_state:
+                if self.left_cutter_cooldown == None or self.left_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
+                    self.desired_left_cutter_state = temp_state
+                    self.left_cutter_cooldown = rospy.Time.now()
+            
+            (right_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
+                                                           'right_cutter',
+                                                           rospy.Time.now())
+            abs_right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer(0.3556/2.0)
+            
+            area_ratio = self.sg_field_poly.intersection(abs_right_cutter)/abs_right_cutter.area
+            if area_ratio != 1.0:
+                temp_state = False
+            else:
+                temp_state = True
+            if temp_state != self.desired_right_cutter_state:
+                if self.right_cutter_cooldown == None or self.right_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
+                    self.desired_right_cutter_state = temp_state
+                    self.right_cutter_cooldown = rospy.Time.now()
+            
+            
+            if self.desired_left_cutter_state != self.left_cutter_state or self.desired_right_cutter_state != self.right_cutter_state:
+                self.setCutters()
+            
+            x = left_trans[0]
+            x /= self.meters_per_cell
+            x -= self.offset[0]
+            y = left_trans[1]
+            y /= self.meters_per_cell
+            y = self.offset[1] - y
+            left_trans = (x,y)
+
+            left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            
+            if self.left_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(left_cutter):
                         area_ratio = cell.intersection(left_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(trans[1], trans[0])
-                (trans, _ ) = self.tf_listener.lookupTransform('base_link',
-                                                               'right_cutter',
-                                                               rospy.Time(0))
-                right_cutter = sg.Point([trans[0], trans[1]]).buffer(0.3556/2.0)
+                            self.costmap.consumeCell(left_trans[1], left_trans[0])
+            
+            x = right_trans[0]
+            x /= self.meters_per_cell
+            x -= self.offset[0]
+            y = right_trans[1]
+            y /= self.meters_per_cell
+            y = self.offset[1] - y
+            right_trans = (x,y)
+            
+            right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            if self.right_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(right_cutter):
                         area_ratio = cell.intersection(right_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(trans[1], trans[0])
-            except (tf.LookupException, tf.ConnectivityException):
-                continue
-            
-            self.costmap.consumeCell(y, x)
-            rospy.loginfo("Setting robot position to %f, %f"%(x,y))
-            self.publishVisualizations()
+                            self.costmap.consumeCell(right_trans[1], right_trans[0])
+        except (tf.LookupException, tf.ConnectivityException):
+            return
     
     def performPathPlanning(self):
         """docstring for performPathPlanning"""
