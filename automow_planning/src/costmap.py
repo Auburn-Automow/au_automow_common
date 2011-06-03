@@ -185,12 +185,12 @@ class Costmap2D:
         if self.target_position != None and self.target_position == self.robot_position:
             self.target_position = None
     
-    def getNextPosition(self):
+    def getNextPosition(self, pick_furthest = True):
         """docstring for getNextPosition"""
         # return self._getNextPositionWander()
-        return self._getNextPositionBurnDown()
+        return self._getNextPositionBurnDown(pick_furthest)
     
-    def _getNextPositionBurnDown(self):
+    def _getNextPositionBurnDown(self,pick_furthest):
         """docstring for _getNextPositionBurnDown"""
         if self.consumption_complete:
             self.consumption_complete = False
@@ -202,7 +202,9 @@ class Costmap2D:
         if self.target_position == None:
             target_num = min(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
-            target_positions = sorted(target_positions, key=lambda pos: abs(sqrt((pos[0] - self.robot_position[0]) ** 2 + (pos[1] - self.robot_position[1]) ** 2)))
+            target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
+            if pick_furthest:
+                target_positions.reverse()
             (x,y,value) = target_positions[0]
             self.target_position = (x,y)
             if len(target_positions) == 1:
