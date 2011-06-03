@@ -13,4 +13,5 @@
   <depend package="actionlib"/>
   <depend package="tf"/>
   <depend package="move_base_msgs"/>
+  <depend package="power_control_board"/>
 </package>

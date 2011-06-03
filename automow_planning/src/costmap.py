@@ -221,7 +221,7 @@ class Costmap2D:
                 self.consumed_cells.append(self.target_position)
             self.target_position = None
         if self.target_position == None:
-            target_num = min(self.sorted_consumables.keys())
+            target_num = max(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
             target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
             if pick_furthest:

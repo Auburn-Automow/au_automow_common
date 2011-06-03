@@ -1,6 +1,6 @@
 <launch>
     <node pkg="automow_planning" type="path_planner.py" name="path_planner" output="screen" required="true">
-        <param name="field_csv_file" type="string" value="$(find automow_maps)/maps/fieldsurveymay31.csv" />
+        <param name="field_csv_file" type="string" value="$(find automow_maps)/maps/practice_field.csv" />
         <param name="goal_timeout" value="20.0" />
     </node>
 </launch>

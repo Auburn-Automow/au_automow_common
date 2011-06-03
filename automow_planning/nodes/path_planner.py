@@ -15,10 +15,10 @@ from costmap import Costmap2D
 import shapely.geometry as sg
 
 from nav_msgs.msg import Odometry, OccupancyGrid, GridCells
-from geometry_msgs.msg import PolygonStamped, Point32, Polygon
+from geometry_msgs.msg import PolygonStamped, Point32, Polygon, Point, Twist
 from std_msgs.msg import Header
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-# from power_control_board.msg import CutterControl
+from power_control_board.msg import CutterControl, PowerControl
 
 class PathPlanner:
     def __init__(self, testing=False):
@@ -37,10 +37,10 @@ class PathPlanner:
         if not self.testing:
             self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
             self.cutter_cooldown = rospy.get_param("~cutter_cooldown", 5.0)
+            self.cost_threshold = rospy.get_param("~cost_threshold", 3)
             self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
             self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
             self.pick_furthest = rospy.get_param("~pick_furthest", True)
-            self.tf_listener = tf.TransformListener()
 
         # Field File related stuff
         if not self.testing:
@@ -60,6 +60,7 @@ class PathPlanner:
         self.poly_pub = rospy.Publisher("field_shape", PolygonStamped)
         self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
         self.poly_pub_timer.start()
+        self.sg_field_poly = sg.Polygon(self.points)
         
         # Occupancy Grid
         self.vis_pub = rospy.Publisher('coverage_map', GridCells)
@@ -68,10 +69,10 @@ class PathPlanner:
         self.setupCostmap()
         
         # Field polygons
-        self.__polys = sg.MultiPolygon([gs.Polygon([(x,y),
+        self.__polys = sg.MultiPolygon([sg.Polygon([(x,y),
                                                     (x+1,y),
                                                     (x+1,y+1),
-                                                    (x,y+1)]
+                                                    (x,y+1)])
                                             for x in range(0, self.costmap.x_dim)
                                             for y in range(0, self.costmap.y_dim)])
         self.pick_furthest = rospy.get_param("~cutter_threshold", 0.5)
@@ -89,10 +90,9 @@ class PathPlanner:
         self.desired_right_cutter_state = False
         rospy.Subscriber("/PowerControl", PowerControl, self.cutterCallback)
         self.pub_cutter = rospy.Publisher("/CutterControl", CutterControl)
-        self.sg_field_poly = sg.Polygon(self.points)
         
         # Transformer
-        self.listener = tf.TransformListener()
+        self.tf_listener = tf.TransformListener()
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
@@ -118,6 +118,9 @@ class PathPlanner:
             self.desired_right_cutter_state = True
             self.desired_left_cutter_state = True
             self.setCutters()
+            
+            while not rospy.is_shutdown():
+                rospy.sleep(0.1)
             
             # Coverage
             self.performPathPlanning()
@@ -182,12 +185,13 @@ class PathPlanner:
     def checkCutters(self):
         """docstring for checkCutters"""
         try:
+            # self.tf_listener.waitForTransform("odom_combined", "left_cutter", )
             (left_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
                                                            'left_cutter',
-                                                           rospy.Time.now())
+                                                           rospy.Time(0))
             abs_left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer(0.3556/2.0)
             
-            area_ratio = self.sg_field_poly.intersection(abs_left_cutter)/abs_left_cutter.area
+            area_ratio = self.sg_field_poly.intersection(abs_left_cutter).area/abs_left_cutter.area
             if area_ratio != 1.0:
                 temp_state = False
             else:
@@ -199,10 +203,10 @@ class PathPlanner:
             
             (right_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
                                                            'right_cutter',
-                                                           rospy.Time.now())
+                                                           rospy.Time(0))
             abs_right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer(0.3556/2.0)
             
-            area_ratio = self.sg_field_poly.intersection(abs_right_cutter)/abs_right_cutter.area
+            area_ratio = self.sg_field_poly.intersection(abs_right_cutter).area/abs_right_cutter.area
             if area_ratio != 1.0:
                 temp_state = False
             else:
@@ -333,7 +337,7 @@ class PathPlanner:
         del draw
         
         # Create and initialize the costmap
-        self.costmap = Costmap2D(1)
+        self.costmap = Costmap2D(self.cost_threshold)
         self.costmap.setData(image2array(self.map_img))
         
         # Plan coverage
@@ -357,7 +361,8 @@ class PathPlanner:
     
     def publishVisualizations(self):
         """A function to publish an occupancy grid"""
-        consumed_cells = self.costmap.getConsumedCells()
+        print self.costmap
+        consumed_cells = self.costmap.getConsumedCell()
         
         msg = GridCells()
         msg.header.stamp = rospy.Time.now()
@@ -365,12 +370,13 @@ class PathPlanner:
         msg.cell_width = self.meters_per_cell
         msg.cell_height = self.meters_per_cell
         
-        msg.cells.resize(len(consumed_cells))
+        cells = []
         
         for i in range(len(consumed_cells)):
-            msg.cells[i].x = consumed_cells[i][0]
-            msg.cells[i].y = consumed_cells[i][1]
-            msg.cells[i].z = 0.0
+            p = Point(consumed_cells[i][0], consumed_cells[i][1], 0.0)
+            cells.append(p)
+        
+        msg.cells = cells
         
         self.vis_pub.publish(msg)
     
