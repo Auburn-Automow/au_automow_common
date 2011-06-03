@@ -14,24 +14,36 @@ from maptools import *
 from costmap import Costmap2D
 import shapely.geometry as sg
 
-from nav_msgs.msg import Odometry, OccupancyGrid
+from nav_msgs.msg import Odometry, OccupancyGrid, GridCells
 from geometry_msgs.msg import PolygonStamped, Point32, Polygon
 from std_msgs.msg import Header
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from power_control_board.msg import CutterControl
+# from power_control_board.msg import CutterControl
 
 class PathPlanner:
-    def __init__(self):
+    def __init__(self, testing=False):
+        self.testing = testing
+        
+        self.current_destination = -1
+        
+        if not self.testing:
+            self.Init()
+    
+    def Init(self):
+        """docstring for Init"""
         rospy.init_node('path_planner')
         
-        self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
-        self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
-        self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
-        self.pick_furthest = rospy.get_param("~pick_furthest", True)
-        self.tf_listener = tf.TransformListener()
         
+        if not self.testing:
+            self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
+            self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
+            self.goal_timeout = rospy.get_param("~goal_timeout", 15.0)
+            self.pick_furthest = rospy.get_param("~pick_furthest", True)
+            self.tf_listener = tf.TransformListener()
+
         # Field File related stuff
-        self.file_name = rospy.get_param("~field_csv_file","/tmp/field.csv")
+        if not self.testing:
+            self.file_name = rospy.get_param("~field_csv_file","/tmp/field.csv")
         if not os.path.exists(self.file_name):
             rospy.logerr("Specified field csv file does not exist: %s"%self.file_name)
             return
@@ -42,23 +54,17 @@ class PathPlanner:
             return
         
         # Setup field polygon publisher
-        self.field_shape_publish_rate = rospy.get_param("~field_shape_publish_rate", 1.0)
+        if not self.testing:
+            self.field_shape_publish_rate = rospy.get_param("~field_shape_publish_rate", 1.0)
         self.poly_pub = rospy.Publisher("field_shape", PolygonStamped)
         self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
         self.poly_pub_timer.start()
         
         # Occupancy Grid
-        self.occ_pub = rospy.Publisher('field_status', OccupancyGrid)
-        self.occ_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.occPublishHandler)
-        self.occ_pub_timer.start()
+        self.vis_pub = rospy.Publisher('coverage_map', GridCells)
         
         # Setup costmap and path planning
         self.setupCostmap()
-        
-        self.occ_msg.info.height = self.costmap.x_dim
-        self.occ_msg.info.weight = self.costmap.y_dim
-        self.occ_msg.info.map_load_time = rospy.Time.now()
-        self.occ_msg.info.resolution = self.meters_per_cell
         
         # Field polygons
         self.__polys = sg.MultiPolygon([gs.Polygon([(x,y),
@@ -68,16 +74,17 @@ class PathPlanner:
                                             for x in range(0, self.costmap.x_dim, self.meters_per_cell)
                                             for y in range(0, self.costmap.y_dim, self.meters_per_cell)])
         self.pick_furthest = rospy.get_param("~cutter_threshold", 0.5)
-        
+
         # Connect ROS Topics
         self.current_position = None
-        rospy.Subscriber("ekf/odom", Odometry, self.odomCallback)
+        if not self.testing:
+            rospy.Subscriber("ekf/odom", Odometry, self.odomCallback)
         
         self.left_cutter_cooldown = None
         self.left_cutter_state = False
         self.right_cutter_cooldown = None
         self.right_cutter_state = False
-        self.cutter_publisher = rospy.Subscriber("/CutterControl", CutterControl)
+        # self.cutter_publisher = rospy.Subscriber("/CutterControl", CutterControl)
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
@@ -151,7 +158,7 @@ class PathPlanner:
             
             self.costmap.consumeCell(y, x)
             rospy.loginfo("Setting robot position to %f, %f"%(x,y))
-            print self.costmap
+            self.publishVisualizations()
     
     def performPathPlanning(self):
         """docstring for performPathPlanning"""
@@ -161,19 +168,18 @@ class PathPlanner:
             if rospy.is_shutdown():
                 return
         
-        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        rospy.loginfo("Waiting for move_base...")
-        client.wait_for_server()
+        if not self.testing:
+            client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+            rospy.loginfo("Waiting for move_base...")
+            client.wait_for_server()
         
         next_position = self.costmap.getNextPosition(self.pick_furthest)
         while next_position != None:
             if rospy.is_shutdown():
-                return
+                break
             destination = MoveBaseGoal()
             destination.target_pose.header.frame_id = self.field_frame_id
             destination.target_pose.header.stamp = rospy.Time.now()
-            
-            print next_position
             
             (x,y) = next_position
             
@@ -183,8 +189,6 @@ class PathPlanner:
             y *= self.meters_per_cell
             
             next_position = (x,y)
-            
-            print next_position
             
             destination.target_pose.pose.position.x = next_position[0]
             destination.target_pose.pose.position.y = next_position[1]
@@ -196,7 +200,10 @@ class PathPlanner:
             
             rospy.loginfo("Sending goal %f, %f to move_base..."%next_position)
             
-            client.send_goal(destination)
+            if not self.testing:
+                client.send_goal(destination)
+            else:
+                self.current_destination = destination
             
             if client.wait_for_result(rospy.Duration(self.goal_timeout)):
                 rospy.loginfo("Goal reached successfully!")
@@ -204,6 +211,7 @@ class PathPlanner:
                 rospy.logwarn("Goal aborted!")
             
             next_position = self.costmap.getNextPosition(self.pick_furthest)
+        self.current_destination = None
     
     def setupCostmap(self):
         """docstring for setupCostmap"""
@@ -255,44 +263,25 @@ class PathPlanner:
             self.poly_pub_timer.start()
         self.poly_msg.header.stamp = rospy.Time.now()
         self.poly_pub.publish(self.poly_msg)
-
-    def occPublishHandler(self):
+    
+    def publishVisualizations(self):
         """A function to publish an occupancy grid"""
-        if not rospy.is_shutdown():
-            self.occ_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.occPublishHandler)
-            self.occ_pub_timer.start()
-        self.occ_msg.header.stamp = rospy.Time.now()
+        consumed_cells = self.costmap.getConsumedCells()
         
-        # self.occ_msg.header
-        # uint32 seq
-        # time stamp
-        # string frame_id
-        # self.occ_msg.info
-        # self.occ_msg.info.map_load_time
-        # self.occ_msg.info.resolution
-        # self.occ_msg.info.width
-        # self.occ_msg.info.height
-        # geometry_msgs/Pose origin
-        #   geometry_msgs/Point position
-        #     float64 x
-        #     float64 y
-        #     float64 z
-        #   geometry_msgs/Quaternion orientation
-        #     float64 x
-        #     float64 y
-        #     float64 z
-        #     float64 w
-        data = self.costmap.getData()
-        def check_value(val):
-            val = abs(int(val))
-            if val > 255:
-                return 255
-            elif val < 0:
-                return 0
-            else
-                return val
-        self.occ_msg.data = [check_value(data[x][y]) for x in range(self.x_dim) for y in range(self.y_dim)]
-        self.occ_pub.publish(self.occ_msg)
+        msg = GridCells()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = self.field_frame_id
+        msg.cell_width = self.meters_per_cell
+        msg.cell_height = self.meters_per_cell
+        
+        msg.cells.resize(len(consumed_cells))
+        
+        for i in range(len(consumed_cells)):
+            msg.cells[i].x = consumed_cells[i][0]
+            msg.cells[i].y = consumed_cells[i][1]
+            msg.cells[i].z = 0.0
+        
+        self.vis_pub.publish(msg)
     
     def readFieldPolygon(self):
         """docstring for readFieldPolygon"""
@@ -327,7 +316,6 @@ class PathPlanner:
         
         self.poly_msg = PolygonStamped(Header(),Polygon(self.point32s))
         self.poly_msg.header.frame_id = self.field_frame_id
-        self.occ_msg = OccupancyGrid()
     
 
 if __name__ == '__main__':
