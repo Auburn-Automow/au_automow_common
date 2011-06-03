@@ -6,9 +6,9 @@ inflation_radius: 0.55
 transform_tolerance: 0.2 # Max running just hardware nodes is ~0.0006 secs according to tf_monitor
 cost_scaling_factor: 11.8
 
-observation_sources: hokuyo_laser_scan_sensor
+#observation_sources: hokuyo_laser_scan_sensor
 # observation_sources: laser_scan_sensor point_cloud_sensor
 
-hokuyo_laser_scan_sensor: {sensor_frame: laser, data_type: LaserScan, topic: scan, 
-                           marking: true, clearing: true,  expected_update_rate: 0.133} # LRf @ 15Hz so 7.5Hz for update rate
+#hokuyo_laser_scan_sensor: {sensor_frame: laser, data_type: LaserScan, topic: scan, 
+#                           marking: true, clearing: true,  expected_update_rate: 0.133} # LRf @ 15Hz so 7.5Hz for update rate
 # point_cloud_sensor: {sensor_frame: frame_name, data_type: PointCloud, topic: topic_name, marking: true, clearing: true}

@@ -20,8 +20,8 @@ TrajectoryPlannerROS:
   sim_granularity: 0.025
 
   meter_scoring: false 
-  path_distance_bias: 0.1 
-  goal_distance_bias: 0.8 
+  path_distance_bias: 0.8 
+  goal_distance_bias: 0.6 
   occdist_scale: 0.05
 
   heading_scoring: true

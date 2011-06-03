@@ -60,7 +60,13 @@ class PathPlanner:
         self.poly_pub = rospy.Publisher("field_shape", PolygonStamped)
         self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
         self.poly_pub_timer.start()
-        self.sg_field_poly = sg.Polygon(self.points)
+        import copy
+        new_points = copy.copy(self.points)
+        # print "OldPoints", self.points
+        for i in range(len(new_points)):
+            new_points[i] = (new_points[i][0]*self.meters_per_cell,new_points[i][1]*self.meters_per_cell)
+        # print "NewPoints",new_points
+        self.sg_field_poly = sg.Polygon(new_points)
         
         # Occupancy Grid
         self.vis_pub = rospy.Publisher('coverage_map', GridCells)
@@ -96,7 +102,11 @@ class PathPlanner:
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
-        
+       
+        while not rospy.is_shutdown():
+            rospy.sleep(0.1)
+
+        return
         # Start Actionlib loop
         try:
             # Drive into the field first
@@ -119,8 +129,6 @@ class PathPlanner:
             self.desired_left_cutter_state = True
             self.setCutters()
             
-            while not rospy.is_shutdown():
-                rospy.sleep(0.1)
             
             # Coverage
             self.performPathPlanning()
@@ -189,22 +197,26 @@ class PathPlanner:
             (left_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
                                                            'left_cutter',
                                                            rospy.Time(0))
-            abs_left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer(0.3556/2.0)
-            
+            abs_left_cutter = sg.Point([left_trans[0], left_trans[1]]).buffer(0.3556/2.0)
+            # print "abs_left_cutter: " + str(abs_left_cutter.bounds)
             area_ratio = self.sg_field_poly.intersection(abs_left_cutter).area/abs_left_cutter.area
-            if area_ratio != 1.0:
+            # print self.sg_field_poly.bounds
+            print 'area:', area_ratio
+            if area_ratio == 1.0:
+                print 'it is inside'
                 temp_state = False
             else:
+                print 'it is outside'
                 temp_state = True
-            if temp_state != self.desired_left_cutter_state:
-                if self.left_cutter_cooldown == None or self.left_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
-                    self.desired_left_cutter_state = temp_state
-                    self.left_cutter_cooldown = rospy.Time.now()
+            #if temp_state != self.desired_left_cutter_state:
+            #    if self.left_cutter_cooldown == None or self.left_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
+            #        self.desired_left_cutter_state = temp_state
+            #        self.left_cutter_cooldown = rospy.Time.now()
             
             (right_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
                                                            'right_cutter',
                                                            rospy.Time(0))
-            abs_right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer(0.3556/2.0)
+            abs_right_cutter = sg.Point([right_trans[0], right_trans[1]]).buffer(0.3556/2.0)
             
             area_ratio = self.sg_field_poly.intersection(abs_right_cutter).area/abs_right_cutter.area
             if area_ratio != 1.0:
@@ -228,14 +240,14 @@ class PathPlanner:
             y = self.offset[1] - y
             left_trans = (x,y)
 
-            left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            left_cutter = sg.Point([left_trans[0], left_trans[1]]).buffer((0.3556/2.0)/self.meters_per_cell)
             
             if self.left_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(left_cutter):
                         area_ratio = cell.intersection(left_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(left_trans[1], left_trans[0])
+                            self.costmap.consumeCell(left_trans[0], left_trans[1])
             
             x = right_trans[0]
             x /= self.meters_per_cell
@@ -245,13 +257,13 @@ class PathPlanner:
             y = self.offset[1] - y
             right_trans = (x,y)
             
-            right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            right_cutter = sg.Point([right_trans[0], right_trans[1]]).buffer((0.3556/2.0)/self.meters_per_cell)
             if self.right_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(right_cutter):
                         area_ratio = cell.intersection(right_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(right_trans[1], right_trans[0])
+                            self.costmap.consumeCell(right_trans[0], right_trans[1])
         except (tf.LookupException, tf.ConnectivityException):
             return
     
@@ -353,6 +365,7 @@ class PathPlanner:
     
     def polyPublishHandler(self):
         """docstring for polyPublishHandler"""
+        print 'publish'
         if not rospy.is_shutdown():
             self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
             self.poly_pub_timer.start()
