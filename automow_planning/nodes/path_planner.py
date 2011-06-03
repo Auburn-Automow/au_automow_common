@@ -201,17 +201,15 @@ class PathPlanner:
             # print "abs_left_cutter: " + str(abs_left_cutter.bounds)
             area_ratio = self.sg_field_poly.intersection(abs_left_cutter).area/abs_left_cutter.area
             # print self.sg_field_poly.bounds
-            print 'area:', area_ratio
-            if area_ratio == 1.0:
-                print 'it is inside'
+            if area_ratio != 1.0:
                 temp_state = False
             else:
-                print 'it is outside'
                 temp_state = True
-            #if temp_state != self.desired_left_cutter_state:
-            #    if self.left_cutter_cooldown == None or self.left_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
-            #        self.desired_left_cutter_state = temp_state
-            #        self.left_cutter_cooldown = rospy.Time.now()
+            if temp_state != self.desired_left_cutter_state:
+                #if self.left_cutter_cooldown == None or self.left_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
+                #    self.desired_left_cutter_state = temp_state
+                #    self.left_cutter_cooldown = rospy.Time.now()
+                self.desired_left_cutter_state = temp_state
             
             (right_trans, _ ) = self.tf_listener.lookupTransform('odom_combined',
                                                            'right_cutter',
@@ -224,9 +222,10 @@ class PathPlanner:
             else:
                 temp_state = True
             if temp_state != self.desired_right_cutter_state:
-                if self.right_cutter_cooldown == None or self.right_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
-                    self.desired_right_cutter_state = temp_state
-                    self.right_cutter_cooldown = rospy.Time.now()
+                #if self.right_cutter_cooldown == None or self.right_cutter_cooldown > rospy.Time.now()-rospy.Duration(self.cutter_cooldown):
+                #    self.desired_right_cutter_state = temp_state
+                #    self.right_cutter_cooldown = rospy.Time.now()
+                self.desired_right_cutter_state = temp_state
             
             
             if self.desired_left_cutter_state != self.left_cutter_state or self.desired_right_cutter_state != self.right_cutter_state:
@@ -240,14 +239,14 @@ class PathPlanner:
             y = self.offset[1] - y
             left_trans = (x,y)
 
-            left_cutter = sg.Point([left_trans[0], left_trans[1]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            left_cutter = sg.Point([left_trans[1], left_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
             
             if self.left_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(left_cutter):
                         area_ratio = cell.intersection(left_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(left_trans[0], left_trans[1])
+                            self.costmap.consumeCell(left_trans[1], left_trans[0])
             
             x = right_trans[0]
             x /= self.meters_per_cell
@@ -257,13 +256,13 @@ class PathPlanner:
             y = self.offset[1] - y
             right_trans = (x,y)
             
-            right_cutter = sg.Point([right_trans[0], right_trans[1]]).buffer((0.3556/2.0)/self.meters_per_cell)
+            right_cutter = sg.Point([right_trans[1], right_trans[0]]).buffer((0.3556/2.0)/self.meters_per_cell)
             if self.right_cutter_state:
                 for cell in self.__polys:
                     if cell.intersects(right_cutter):
                         area_ratio = cell.intersection(right_cutter).area/cell.area
                         if area_ratio > self.pick_furthest:
-                            self.costmap.consumeCell(right_trans[0], right_trans[1])
+                            self.costmap.consumeCell(right_trans[1], right_trans[0])
         except (tf.LookupException, tf.ConnectivityException):
             return
     
@@ -365,7 +364,6 @@ class PathPlanner:
     
     def polyPublishHandler(self):
         """docstring for polyPublishHandler"""
-        print 'publish'
         if not rospy.is_shutdown():
             self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
             self.poly_pub_timer.start()
