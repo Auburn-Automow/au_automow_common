@@ -31,7 +31,8 @@ class Costmap2D:
         self.exterior_obstacles = []
         self.cutgrass = [0]
         self.leading_edge = []
-        self.consumed_cells = []
+        with self.data_lock:
+            self.consumed_cells = []
         self.use_color = True
         self.robot_position = (-1,-1)
         self.target_position = None
@@ -66,8 +67,9 @@ class Costmap2D:
                         color = RED
                     else:
                         color = WHITE
-                    if (x,y) in self.consumed_cells:
-                        color += GRAY_BG
+                    with self.data_lock:
+                        if (x,y) in self.consumed_cells:
+                            color += GRAY_BG
                     if (x,y) == self.robot_position:
                         color += WHITE_BG
                     if self.target_position and (x,y) == self.target_position:
@@ -95,6 +97,11 @@ class Costmap2D:
         """docstring for getData"""
         with self.data_lock:
             return self.__data
+    
+    def getConsumedCell(self):
+        """docstring for getConsumedCell"""
+        with self.data_lock:
+            return self.consumed_cells
     
     def getCardinalNeighbors(self, x, y):
         """docstring for getNeighbors"""
@@ -191,7 +198,8 @@ class Costmap2D:
     def setRobotPosition(self, x, y):
         """docstring for setRobotPosition"""
         self.robot_position = (int(floor(x)), int(floor(y)))
-        self.consumed_cells.append(self.robot_position)
+        with self.data_lock:
+            self.consumed_cells.append(self.robot_position)
         if self.target_position != None and self.target_position == self.robot_position:
             self.target_position = None
     
@@ -207,7 +215,8 @@ class Costmap2D:
             return None
         self._generateSortedConsumables()
         if self.target_position != None:
-            self.consumed_cells.append(self.target_position)
+            with self.data_lock:
+                self.consumed_cells.append(self.target_position)
             self.target_position = None
         if self.target_position == None:
             target_num = min(self.sorted_consumables.keys())
@@ -242,8 +251,9 @@ class Costmap2D:
         neighbors = self.getNeighbors(*self.robot_position)
         possible_next_positions = []
         for xn,yn,neighbor in neighbors:
-            if (xn, yn) in self.consumed_cells or neighbor == NOTRVRSE:
-                continue
+            with self.data_lock:
+                if (xn, yn) in self.consumed_cells or neighbor == NOTRVRSE:
+                    continue
             possible_next_positions.append((xn,yn,neighbor))
         if len(possible_next_positions) == 0: # All neighbors are consumed
             for xn2,yn2,neighbor2 in neighbors:
