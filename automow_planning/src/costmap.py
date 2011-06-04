@@ -265,6 +265,6 @@ class Costmap2D:
                 print "ERROR: No traversable paths!"
                 return None
         xs,ys,values = zip(*possible_next_positions)
-        index = values.index(min(values))
+        index = values.index(max(values))
         return xs[index], ys[index]
 

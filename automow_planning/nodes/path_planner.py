@@ -103,33 +103,11 @@ class PathPlanner:
         # Start spin thread
         threading.Thread(target=self.spin).start()
        
-        while not rospy.is_shutdown():
-            rospy.sleep(0.1)
-
-        return
+        #while not rospy.is_shutdown():
+        #    rospy.sleep(0.1)
+        #        return
         # Start Actionlib loop
         try:
-            # Drive into the field first
-            cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist)
-            msg = Twist()
-            msg.linear.x = 1.0
-            msg.angular.z = 0.0
-            
-            cmd_vel_pub.publish(msg)
-            
-            rospy.sleep(3.0)
-            
-            msg.linear.x = 0.0
-            
-            cmd_vel_pub.publish(msg)
-            
-            rospy.sleep(1.0)
-            
-            self.desired_right_cutter_state = True
-            self.desired_left_cutter_state = True
-            self.setCutters()
-            
-            
             # Coverage
             self.performPathPlanning()
         finally:
@@ -287,7 +265,7 @@ class PathPlanner:
             destination.target_pose.header.frame_id = self.field_frame_id
             destination.target_pose.header.stamp = rospy.Time.now()
             
-            (x,y) = next_position
+            (y,x) = next_position
             
             x += self.offset[0]
             x *= self.meters_per_cell
