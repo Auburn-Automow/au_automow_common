@@ -1,7 +1,7 @@
 obstacle_range: 3.0 
 raytrace_range: 6.0
 footprint: [[-0.20, 0.39], [0.94, 0.39], [0.94, -0.39], [-0.20, -0.39]]
-inflation_radius: 0.55
+inflation_radius: 0.75
 
 transform_tolerance: 0.2 # Max running just hardware nodes is ~0.0006 secs according to tf_monitor
 cost_scaling_factor: 11.8

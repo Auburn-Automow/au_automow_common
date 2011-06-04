@@ -22,7 +22,7 @@ TrajectoryPlannerROS:
   meter_scoring: false 
   path_distance_bias: 0.8 
   goal_distance_bias: 0.6 
-  occdist_scale: 0.05
+  occdist_scale: 0.15
   
   heading_scoring: true
   
