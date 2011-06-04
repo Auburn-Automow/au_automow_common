@@ -27,6 +27,14 @@ class FieldMap:
         self.current_position_needs_updating = False
         self.coordinates = []
         
+        self.grabbing_point = False
+        self.grabbing_thread = None
+        
+        self.new_point = False
+        
+        import os
+        self.all_points_file = open(os.path.expanduser("~/all_points.csv"), "w")
+        
         # GUI Stuff
         if self.gui_enabled:
             self.root = Tk()
@@ -55,6 +63,10 @@ class FieldMap:
         else:
             rospy.spin()
     
+    def close(self):
+        """docstring for close"""
+        self.all_points_file.close()
+    
     def drawGrid(self):
         for x in range(1,H/40):
             self.canvas.create_line(0, x*40, W, x*40, fill='black', dash=(2,2))
@@ -73,18 +85,48 @@ class FieldMap:
         except Exception as e:
             rospy.logerr(str(e))
     
-    def grabPoint(self,data):
-        with self.position_lock:
-            x = self.x
-            y = self.y
-            fix_type = self.fix_type
-        if None in [x,y,fix_type]:
-            rospy.logerr("Error, not enough information to collect a point.")
-            return
-        with self.position_lock:
-            self.coordinates.append((x,y,fix_type))
-        rospy.loginfo("Recording position: %f, %f, %f"%(x,y,fix_type))
-        self.position_queue.put((x,y,4,'red'))
+    def grabPoint(self, data=None):
+        """docstring for grabPoint"""
+        if self.grabbing_point:
+            self.grabbing_point = False
+        else:
+            self.grabbing_point = True
+            self.grabbing_thread = threading.Thread(target=self._grabPoint)
+            self.grabbing_thread.start()
+    
+    def _grabPoint(self):
+        try:
+            xs = []
+            ys = []
+            fix_type_ = None
+            while self.grabbing_point:
+                if rospy.is_shutdown():
+                    return
+                if not self.new_point:
+                    continue
+                with self.position_lock:
+                    x = self.x
+                    y = self.y
+                    fix_type = self.fix_type
+                    self.new_point = False
+                xs.append(x)
+                ys.append(y)
+                fix_type_ = fix_type
+                if None in [x,y,fix_type]:
+                    rospy.logerr("Error, not enough information to collect a point.")
+                    return
+            if len(xs) == 0 or len(ys) == 0 or fix_type_ == None:
+                rospy.logerr("Error, not enough information to collect a point.")
+                return
+            x = sum(xs)/len(xs)
+            y = sum(ys)/len(ys)
+            fix_type = fix_type_
+            with self.position_lock:
+                self.coordinates.append((x,y,fix_type))
+            rospy.loginfo("Recording position: %f, %f, %f after averaging %f points"%(x,y,fix_type,len(xs)))
+            self.position_queue.put((x,y,4,'red'))
+        except Exception as e:
+            rospy.logerr("Error in grabbing point: "+str(e))
     
     def gpsFixCallback(self, data):
         """docstring for gpsFixCallback"""
@@ -103,7 +145,10 @@ class FieldMap:
                 self.canvas.itemconfig(self.current_position, state=NORMAL)
                 if None not in [self.x, self.y, self.fix_type]:
                     self.canvas.delete(self.status_text)
-                    text = "Relative Easting: %f Northing: %f Fix Type: %f" % (self.y, self.x, self.fix_type)
+                    text = ""
+                    if self.grabbing_point:
+                        text += "Averaging "
+                    text += "Relative Easting: %f Northing: %f Fix Type: %f" % (self.y, self.x, self.fix_type)
                     self.status_text = self.canvas.create_text(W/2,H-20, text=text)
                 self.canvas.update_idletasks()
         except Queue.Empty:
@@ -128,6 +173,8 @@ class FieldMap:
         if self.gui_enabled:
             self.position_queue.put((self.x, self.y, 2, 'blue'))
             self.current_position_needs_updating = True
+        self.all_points_file.write(str(data.pose.pose.position.x)+","+str(data.pose.pose.position.y)+"\n")
+        self.new_point = True
     
     def spin(self):
         rospy.spin()
@@ -136,6 +183,8 @@ def main():
     rospy.init_node('field_map')
     
     field_map = FieldMap()
+    
+    field_map.close()
 
 if __name__ == '__main__':
     main()
