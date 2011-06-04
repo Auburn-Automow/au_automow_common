@@ -220,7 +220,7 @@ class Costmap2D:
             with self.data_lock:
                 self.consumed_cells.append(self.target_position)
             self.target_position = None
-        if self.target_position == None:
+        while self.target_position == None:
             target_num = max(self.sorted_consumables.keys())
             target_positions = self.sorted_consumables[target_num]
             target_positions = sorted(target_positions, key=lambda pos: abs(sqrt( (pos[0]-self.robot_position[0])**2 + (pos[1]-self.robot_position[1])**2 )))
@@ -234,6 +234,8 @@ class Costmap2D:
                 self.sorted_consumables[target_num].remove(target_positions[0])
             if self.sorted_consumables == {}:
                 self.consumption_complete = True
+            if self.target_position in self.consumed_cells:
+                self.target_position = None
         return self.target_position
     
     def _generateSortedConsumables(self):
