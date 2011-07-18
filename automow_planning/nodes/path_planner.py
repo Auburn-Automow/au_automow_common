@@ -102,11 +102,10 @@ class PathPlanner:
         
         # Start spin thread
         threading.Thread(target=self.spin).start()
-        
-        # while not rospy.is_shutdown():
-        #     rospy.sleep(0.1)
-        # return
-        
+       
+        #while not rospy.is_shutdown():
+        #    rospy.sleep(0.1)
+        #        return
         # Start Actionlib loop
         try:
             # Coverage
@@ -159,8 +158,7 @@ class PathPlanner:
             self.current_position = (int(floor(x)), int(floor(y)))
             self.costmap.setRobotPosition(y, x)
             rospy.loginfo("Setting robot position to %f, %f"%(x,y))
-            print self.costmap
-            # self.publishVisualizations()
+            self.publishVisualizations()
     
     def setCutters(self):
         """docstring for setCutters"""
@@ -348,11 +346,11 @@ class PathPlanner:
             self.poly_pub_timer = threading.Timer(1.0/self.field_shape_publish_rate, self.polyPublishHandler)
             self.poly_pub_timer.start()
         self.poly_msg.header.stamp = rospy.Time.now()
-        self.poly_msg.header.seq += 1
         self.poly_pub.publish(self.poly_msg)
     
     def publishVisualizations(self):
         """A function to publish an occupancy grid"""
+        print self.costmap
         consumed_cells = self.costmap.getConsumedCell()
         
         msg = GridCells()

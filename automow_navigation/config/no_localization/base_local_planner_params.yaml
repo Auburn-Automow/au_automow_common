@@ -1,8 +1,8 @@
 TrajectoryPlannerROS:
-  max_vel_x: 0.7
+  max_vel_x: 0.8
   min_vel_x: 0.4
   max_rotational_vel: 0.5
-  min_in_place_rotational_vel: 0.25
+  min_in_place_rotational_vel: 0.2
   escape_vel: -0.3
   publish_cost_grid_pc: true
   global_frame_id: "odom_combined"
@@ -22,11 +22,11 @@ TrajectoryPlannerROS:
   meter_scoring: false 
   path_distance_bias: 0.8 
   goal_distance_bias: 0.6 
-  occdist_scale: 0.15
-  
+  occdist_scale: 0.05
+
   heading_scoring: true
-  
+
   vx_samples: 8
   vtheta_samples: 20 
-  
+
   dwa: false
