@@ -1,0 +1,6 @@
+python:
+  PIL
+  Shapely
+
+C:
+  libgeos
