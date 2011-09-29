@@ -1,0 +1,15 @@
+- git:
+    uri: 'git@github.com:Auburn-Automow/au_automow_drivers.git'
+    local-name: au_automow_drivers
+    meta:
+        repo-name: au-automow
+- git:
+    uri: 'git@github.com:Auburn-Automow/au_automow_common.git'
+    local-name: au_automow_common
+    meta:
+        repo-name: au-automow
+- git:
+    uri: 'git@github.com:Auburn-Automow/au_automow_simulation.git'
+    local-name: au_automow_simulation
+    meta:
+        repo-name: au-automow
