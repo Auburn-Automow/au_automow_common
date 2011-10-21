@@ -17,7 +17,7 @@ from math import ceil, floor
 
 # ROS msgs
 from std_msgs.msg import Header
-from geometry_msgs.msg import PolygonStamped, Polygon
+from geometry_msgs.msg import PolygonStamped, Polygon, Point32
 
 def load_field_shape(file_name, meters_per_cell, image_padding):
     """
@@ -71,7 +71,7 @@ def poly_publisher(poly_pub, shape_pub_rate, poly_msg):
     """
     if not rospy.is_shutdown():
         poly_pub_timer = threading.Timer(1.0 / shape_pub_rate,
-                                         polyPublishHandler,
+                                         poly_publisher,
                                          args=(poly_pub,
                                                shape_pub_rate,
                                                poly_msg))
@@ -81,6 +81,9 @@ def poly_publisher(poly_pub, shape_pub_rate, poly_msg):
 
 
 def main():
+    """
+    Launch the map_polygon util.
+    """
     rospy.init_node("map_polygon")
     field_file      = rospy.get_param("~field_csv_file", "/tmp/field.csv")
     meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
@@ -98,7 +101,7 @@ def main():
 
     poly_pub = rospy.Publisher("field_shape", PolygonStamped)
     poly_pub_timer = threading.Timer(1.0 / shape_pub_rate,
-                                     polyPublishHandler,
+                                     poly_publisher,
                                      args=(poly_pub, shape_pub_rate, poly_msg))
     poly_pub_timer.start()
 
