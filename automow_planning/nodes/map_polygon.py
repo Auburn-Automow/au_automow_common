@@ -81,6 +81,7 @@ def poly_publisher(poly_pub, shape_pub_rate, poly_msg):
 
 
 def main():
+    rospy.init_node("map_polygon")
     field_file      = rospy.get_param("~field_csv_file", "/tmp/field.csv")
     meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
     image_padding   = rospy.get_param("~image_padding", 4)
@@ -89,6 +90,7 @@ def main():
     if not os.path.exists(field_file):
         rospy.logerr("Specified field csv file does not exist: %s" %
                          field_file)
+        rospy.logerr("Resolved name: %s" % rospy.resolve_name("field_csv_file"))
         return
 
     poly_msg = load_field_shape(field_file, meters_per_cell, image_padding)
