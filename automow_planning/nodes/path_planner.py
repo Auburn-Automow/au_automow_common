@@ -35,7 +35,7 @@ class PathPlanner:
         
         
         if not self.testing:
-            self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.4)
+            self.meters_per_cell = rospy.get_param("~meters_per_cell", 0.01)
             self.cutter_cooldown = rospy.get_param("~cutter_cooldown", 5.0)
             self.cost_threshold = rospy.get_param("~cost_threshold", 3)
             self.field_frame_id = rospy.get_param("~field_frame_id","odom_combined")
@@ -316,7 +316,11 @@ class PathPlanner:
         
         # Draw the polygon
         draw = ImageDraw.Draw(self.map_img)
-        draw.polygon(img_points, fill=0)
+        draw.polygon(img_points, fill=255, outline=0)
+        
+        print('Saving image')
+        self.map_img.save("/tmp/field_border.jpeg", "JPEG")
+        import sys; sys.exit(0)
         
         # Uncomment for "flowerbed" in the middle of the field
         # rad = 1
