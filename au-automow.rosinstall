@@ -13,3 +13,6 @@
     local-name: au_automow_simulation
     meta:
         repo-name: au-automow
+- git:
+    uri: 'https://github.com/Auburn-Automow/rososc.git'
+    local-name: rososc
