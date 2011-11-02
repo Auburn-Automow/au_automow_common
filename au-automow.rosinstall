@@ -19,3 +19,6 @@
 - git:
     uri: 'https://github.com/Auburn-Automow/rososc_tutorials.git'
     local-name: rososc_tutorials
+- git:
+    uri: 'https://github.com/Auburn-Automow/rososc_utilities.git'
+    local-name: rososc_utilities
