@@ -15,7 +15,7 @@ class RotationTransform:
         self.angle = angle
         self.irm = np.mat([[cos(self.angle), -sin(self.angle), 0],
                            [sin(self.angle), cos(self.angle),  0],
-                           [0,           0,            1]])
+                           [0,               0,                1]])
     
 
 def rotate_to(points, rotation_transform):
@@ -64,15 +64,15 @@ if __name__ == '__main__':
     ext = [(0, 0), (-3, 11), (10, 16), (10, 12)]
     polygon = Polygon(ext)
     polygon_points = np.array(polygon.exterior)
-    
+
     rt = RotationTransform(45)
-    
+
     tf_points = rotate_to(polygon_points, rt)
     tf_polygon = ndarray2polygon(tf_points)
 
     un_tf_points = rotate_from(tf_points, rt)
     un_tf_polygon = ndarray2polygon(un_tf_points)
-    
+
     plot_polygon(polygon)
     plot_polygon(tf_polygon)
     plot_polygon(un_tf_polygon)
