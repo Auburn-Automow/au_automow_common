@@ -7,9 +7,9 @@ Contains utilities for working with maps and field shapes.
 import numpy as np
 from PIL import Image
 from shapely.geometry import Polygon
-from shapely.ops import polygonize
 from math import cos, sin
 
+##### Numpy-PIL Functions #####
 def image2array(im):
     if im.mode not in ("L", "F"):
         raise ValueError, "can only convert single-layer images"
@@ -29,6 +29,18 @@ def array2image(a):
         raise ValueError, "unsupported image mode %s"%(a.typecode())
     return Image.fromstring(mode, (a.shape[1], a.shape[0]), a.tostring())
 
+
+##### Numpy-Shapely Functions #####
+def ndarray2polygon(points):
+    if type(points) != np.ndarray:
+        raise TypeError("ndarray2polygon: takes an numpy.ndarray")
+    new_tuples = []
+    for point in points:
+        new_tuples.append((point[0],point[1]))
+    return Polygon(new_tuples)
+
+
+##### Rotation Transformations #####
 class RotationTransform:
     """Represents a rotational transform"""
     def __init__(self, angle):
@@ -37,6 +49,18 @@ class RotationTransform:
                            [sin(self.angle), cos(self.angle),  0],
                            [0,               0,                1]])
     
+
+def rotate_polygon_to(polygon, rotation_transform):
+    """Takes a polygon and a rotation, returns a rotated polygon"""
+    points = np.array(polygon.exterior)
+    tf_points = rotate_to(points, rotation_transform)
+    return ndarray2polygon(tf_points)
+
+def rotate_polygon_from(polygon, rotation_transform):
+    """Takes a polygon and a rotation, returns an inverse rotated polygon"""
+    points = np.array(polygon.exterior)
+    tf_points = rotate_from(points, rotation_transform)
+    return ndarray2polygon(tf_points)
 
 def rotate_to(points, rotation_transform):
     """Rotates an ndarray of given points(x,y) to a given rotation"""
@@ -60,26 +84,25 @@ def rotate_from(points, rotation_transform):
         new_points.append(np.array(new_point[:-1].T))
     return np.squeeze(np.array(new_points))
 
-def plot_polygon(polygon, show = True):
-    import pylab
-    from pylab import plot, figure
-    ax = figure(1, dpi=90).add_subplot(111)
+
+##### Plotting Tools #####
+def plot_polygon(polygon, ax = None):
+    show = False
+    if ax == None:
+        from pylab import plot, figure
+        ax = figure(1, dpi=90).add_subplot(111)
+        show = True
     x,y = polygon.exterior.xy
     ax.plot(x,y)
     ax.set_xlim(min(x)-1,max(x)+1)
     ax.set_ylim(min(y)-1,max(y)+1)
     ax.set_aspect(1)
     if show:
+        import pylab
         pylab.show()
 
-def ndarray2polygon(points):
-    if type(points) != np.ndarray:
-        raise TypeError("ndarray2polygon: takes an numpy.ndarray")
-    new_tuples = []
-    for point in points:
-        new_tuples.append((point[0],point[1]))
-    return Polygon(new_tuples)
 
+##### Tests #####
 if __name__ == '__main__':
     ext = [(0, 0), (-3, 11), (10, 16), (10, 12)]
     polygon = Polygon(ext)

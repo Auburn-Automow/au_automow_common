@@ -14,4 +14,10 @@
   <depend package="tf"/>
   <depend package="move_base_msgs"/>
   <depend package="power_control_board"/>
+  
+  <rosdep name="lbgeos"/>
+  <rosdep name="numpy"/>
+  <rosdep name="matplotlib"/>
+  <rosdep name="pil"/>
+  <rosdep name="shapely"/>
 </package>
