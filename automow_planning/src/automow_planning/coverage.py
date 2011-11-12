@@ -1,24 +1,18 @@
-from matplotlib import pyplot
-from shapely.geometry import Point, Polygon, LineString, MultiLineString, MultiPoint
-from descartes.patch import PolygonPatch
+#!/usr/bin/env python
+
+"""
+This module contains code to plan coverage paths
+"""
+
+from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import MultiLineString, MultiPoint
+from shapely.geometry import GeometryCollection
 import math
 import numpy as np
-import copy
+from copy import deepcopy
 
 from pprint import pprint
 
-def plot_coords(ax, ob, color='#999999'):
-    x, y = ob.xy
-    ax.plot(x, y, 'o', color=color, zorder=1)
-
-def plot_line(ax, ob):
-    x, y = ob.xy
-    ax.plot(x, y, color='#6699cc', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
-
-def plot_lines(ax, ob):
-    for line in ob:
-        x, y = line.xy
-        ax.plot(x, y, color='#121212', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
 
 def generate_intersections(poly, width):
     "Subdivide a filed into coverage lines."
@@ -26,23 +20,21 @@ def generate_intersections(poly, width):
     line = LineString([starting_breakdown, (starting_breakdown[0],
                                             starting_breakdown[1] +
                                             poly.bounds[3] - poly.bounds[1])])
-    bounded_line = polygon.intersection(line)
+    bounded_line = poly.intersection(line)
     lines = [bounded_line]
-
-    x = 0
-    while 1:
-        x += 1
+    print line
+    iterations = int(math.ceil(poly.bounds[2] - poly.bounds[0] / width)) + 1
+    for x in range(1, iterations):
         bounded_line = line.parallel_offset(x * width, 'right')
-        if polygon.intersects(bounded_line):
-            bounded_line = polygon.intersection(bounded_line)
+        print bounded_line
+        if poly.intersects(bounded_line):
+            bounded_line = poly.intersection(bounded_line)
             lines.append(bounded_line)
-        else:
-            break
     return lines
 
 def sort_to(point, list):
     "Sorts a set of points by distance to a point"
-    l = copy.deepcopy(list)
+    l = deepcopy(list)
     l.sort(lambda x, y: cmp(x.distance(Point(*point)),
                             y.distance(Point(*point))))
     return l
@@ -57,25 +49,29 @@ def order_points(lines, initial_origin):
     "Return a list of points in a given coverage path order"
     origin = initial_origin
     results = []
-    while origin != None:
-        if len(lines):
-            lines = sort_to(origin, lines)
-            f = lines[0]
-            lines = lines[1:]
-            if type(f) == MultiLineString:
-                for ln in f:
-                    lines.append(ln)
-                continue
-            if type(f) == Point or type(f) == MultiPoint:
-                continue
-            xs, ys = f.xy
-            ps = zip(xs, ys)
-            (start, origin_) = get_furthest(ps, origin)
-            results.append((origin, start))
-            results.append((start, origin_))
-            origin = origin_
-        else:
-            origin = None
+    while True:
+        if not len(lines):
+            break
+        lines = sort_to(origin, lines)
+        f = lines.pop(0)
+        if type(f) == GeometryCollection:
+            for geom in f:
+                print f
+            continue
+        if type(f) == MultiLineString:
+            for ln in f:
+                lines.append(ln)
+            continue
+        if type(f) == Point or type(f) == MultiPoint:
+            continue
+        xs, ys = f.xy
+        ps = zip(xs, ys)
+        (start, end) = get_furthest(ps, origin)
+        results.append(origin)
+        results.append(start)
+        results.append(start)
+        results.append(end)
+        origin = end
     return results
 
 def decompose(polygon, origin=None, width=1.0):
@@ -89,31 +85,29 @@ def decompose(polygon, origin=None, width=1.0):
         return order_points(p, origin)
 
 if __name__ == '__main__':
-    fig = pyplot.figure(1, dpi=90)
-    # 3: invalid polygon, ring touch along a line
-    ax = fig.add_subplot(111)
-
-    ext = [(0, 0), (2, 5), (0, 11), (10, 11), (15, 5), (10, 0), (0, 0)]
-    inter = [(3, 3), (3, 7), (7, 7), (7,3), (3, 3)]
-    polygon = Polygon(ext, [inter])
-    plot_coords(ax, polygon.exterior)
-
-    patch = PolygonPatch(polygon, facecolor='#6699cc',
-                         edgecolor='#235612', alpha=0.5, zorder=2)
-    ax.add_patch(patch)
-
-    bounds = polygon.bounds
-    xrange = (bounds[0]-1, bounds[2]+1)
-    yrange = (bounds[1]-1, bounds[3]+1)
-    ax.set_xlim(*xrange)
-    ax.set_ylim(*yrange)
-    ax.set_aspect(1)
-
-    r = decompose(polygon)
-
-    pprint(r)
-
-    ll = MultiLineString(r)
-    plot_lines(ax, ll)
-
-    pyplot.show()
+    from maptools import RotationTransform, rotation_tf_from_longest_edge
+    from maptools import rotate_polygon_to, make_axis, plot_polygon
+    from maptools import zoom_extents, rotate_from, plot_line, rotate_to
+    
+    ext = [(1, 1), (-3, 11), (4, 16), (10, 10)]
+    polygon = Polygon(ext)
+    polygon_points = np.array(polygon.exterior)
+    
+    rt = rotation_tf_from_longest_edge(polygon)
+    
+    tf_polygon = rotate_polygon_to(polygon, rt)
+    
+    origin = rotate_to(np.array([(1,1)]),rt).tolist()
+    
+    result = decompose(tf_polygon, origin, width=0.5)
+    tf_result = rotate_from(np.array(result), rt)
+    
+    ll = LineString(tf_result)
+    
+    ax, _ = make_axis()
+    plot_polygon(polygon, ax, color='blue')
+    plot_line(ll, ax)
+    ax.axvline(x=0, color='black')
+    ax.axhline(y=0, color='black')
+    zoom_extents(ax, [polygon,tf_polygon])
+    import pylab; pylab.show()
