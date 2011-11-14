@@ -119,6 +119,7 @@ if __name__ == '__main__':
     
     ax, _ = make_axis()
     plot_polygon(polygon, ax, color='blue')
+    plot_polygon(tf_polygon, ax, color='blue')
     plot_line(ll, ax)
     ax.axvline(x=0, color='black')
     ax.axhline(y=0, color='black')

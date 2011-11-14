@@ -40,7 +40,8 @@ def figure1():
     """Shows the different angles for planning"""
     def render_subplot(rotation, ax):
         # ext = [(1, 1), (-3, 11), (4, 16), (10, 10)]
-        ext = [(1, 1), (1, 11), (21, 11), (21, 1)]
+        # ext = [(1, 1), (1, 11), (21, 11), (21, 1)]
+        ext = get_competition_field()
         polygon = Polygon(ext)
         polygon_points = np.array(polygon.exterior)
         
