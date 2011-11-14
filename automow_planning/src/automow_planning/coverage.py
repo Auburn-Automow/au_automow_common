@@ -28,7 +28,7 @@ def generate_intersections(poly, width):
         error("Problem looking for intersection.", exc_info=1)
         return
     lines = [bounded_line]
-    iterations = int(math.ceil(poly.bounds[2] - poly.bounds[0] / width)) + 1
+    iterations = int(math.ceil((poly.bounds[2] - poly.bounds[0]) / width)) + 1
     for x in range(1, iterations):
         bounded_line = line.parallel_offset(x * width, 'right')
         if poly.intersects(bounded_line):
