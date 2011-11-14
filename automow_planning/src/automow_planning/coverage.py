@@ -7,12 +7,14 @@ This module contains code to plan coverage paths
 from shapely.geometry import Point, Polygon, LineString
 from shapely.geometry import MultiLineString, MultiPoint
 from shapely.geometry import GeometryCollection
+from shapely.geos import TopologicalError
 import math
 import numpy as np
 from copy import deepcopy
 
 from pprint import pprint
 
+from logging import error
 
 def generate_intersections(poly, width):
     "Subdivide a filed into coverage lines."
@@ -20,15 +22,21 @@ def generate_intersections(poly, width):
     line = LineString([starting_breakdown, (starting_breakdown[0],
                                             starting_breakdown[1] +
                                             poly.bounds[3] - poly.bounds[1])])
-    bounded_line = poly.intersection(line)
+    try:
+        bounded_line = poly.intersection(line)
+    except TopologicalError as e:
+        error("Problem looking for intersection.", exc_info=1)
+        return
     lines = [bounded_line]
-    print line
     iterations = int(math.ceil(poly.bounds[2] - poly.bounds[0] / width)) + 1
     for x in range(1, iterations):
         bounded_line = line.parallel_offset(x * width, 'right')
-        print bounded_line
         if poly.intersects(bounded_line):
-            bounded_line = poly.intersection(bounded_line)
+            try:
+                bounded_line = poly.intersection(bounded_line)
+            except TopologicalError as e:
+                error("Problem looking for intersection.", exc_info=1)
+                continue
             lines.append(bounded_line)
     return lines
 
@@ -55,8 +63,6 @@ def order_points(lines, initial_origin):
         lines = sort_to(origin, lines)
         f = lines.pop(0)
         if type(f) == GeometryCollection:
-            for geom in f:
-                print f
             continue
         if type(f) == MultiLineString:
             for ln in f:
@@ -73,6 +79,10 @@ def order_points(lines, initial_origin):
         results.append(end)
         origin = end
     return results
+
+def bottom_left(points):
+    """returns the bottom left point from the list of points given"""
+    pass
 
 def decompose(polygon, origin=None, width=1.0):
     """
@@ -93,13 +103,16 @@ if __name__ == '__main__':
     polygon = Polygon(ext)
     polygon_points = np.array(polygon.exterior)
     
-    rt = rotation_tf_from_longest_edge(polygon)
+    rt = RotationTransform(66)
     
     tf_polygon = rotate_polygon_to(polygon, rt)
     
     origin = rotate_to(np.array([(1,1)]),rt).tolist()
     
+    from time import time; start = time()
     result = decompose(tf_polygon, origin, width=0.5)
+    print "Decomposition Time:", time()-start
+    
     tf_result = rotate_from(np.array(result), rt)
     
     ll = LineString(tf_result)
