@@ -159,7 +159,7 @@ def plot_line(line, ax=None, color='#6699cc', alpha=1.0):
     lines = []
     for p in range(0, len(x), 2):
         lines.append(LineString([(x[p], y[p]), (x[p+1], y[p+1])]))
-    t = np.linspace(0, 10, len(lines))
+    t = np.linspace(12, 20, len(lines))
     lc = LineCollection(lines, cmap=pyplot.get_cmap('jet'),
                                norm=pyplot.Normalize(0, 20))
     ax.add_collection(lc)

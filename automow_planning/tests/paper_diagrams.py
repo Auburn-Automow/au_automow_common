@@ -60,7 +60,7 @@ def figure1():
         ll = LineString(result)
         ll_tf = LineString(tf_result)
         
-        plot_polygon(polygon, ax, color='red')
+        plot_polygon(polygon, ax, color='blue')
         plot_line(ll_tf, ax)
         ax.axvline(x=0, color='black')
         ax.axhline(y=0, color='black')
@@ -69,8 +69,8 @@ def figure1():
     from pylab import plot, figure
     fig = figure(1, dpi=90)
     ax = fig.add_subplot(1,3,1)
-    bx = fig.add_subplot(1,3,2,sharex=ax,sharey=ax)
-    cx = fig.add_subplot(1,3,3,sharex=ax,sharey=ax)
+    bx = fig.add_subplot(1,3,2)#,sharex=ax,sharey=ax)
+    cx = fig.add_subplot(1,3,3)#,sharex=ax,sharey=ax)
     
     render_subplot(0,ax)
     render_subplot(90,bx)
@@ -83,6 +83,77 @@ def figure1():
     bx.set_xlabel("Planned Coverage at different angles 0, 90, and 37.5 respectively", fontsize=14, horizontalalignment='center')
     
     pylab.show()
+    
+def figure2():
+    """Show align to longest edge"""
+    ext = get_competition_field()
+    polygon = Polygon(ext)
+    polygon_points = np.array(polygon.exterior)
+    
+    # rt = rotation_tf_from_longest_edge(polygon)
+    # print rt.angle
+    rt = RotationTransform(3)
+    
+    tf_points = rotate_to(polygon_points, rt)
+    tf_polygon = ndarray2polygon(tf_points)
+    
+    origin = rotate_to(np.array([(1,1)]),rt).tolist()
+    
+    from time import time; start = time()
+    result = decompose(tf_polygon, origin, width=0.5)
+    print "Decomposition Time:", time()-start
+    
+    tf_result = rotate_from(np.array(result), rt)
+    
+    ll = LineString(result)
+    ll_tf = LineString(tf_result)
+    
+    ax, _ = make_axis()
+    plot_polygon(polygon, ax, color='blue')
+    plot_line(ll_tf, ax)
+    ax.axvline(x=0, color='black')
+    ax.axhline(y=0, color='black')
+    zoom_extents(ax, [polygon])
+    ax.set_xlabel("Path Aligned with the Longest Edge of the Polygon")
+    import pylab; pylab.show()
+
+def figure3():
+    """Show vertical intersection lines"""
+    ext = get_competition_field()
+    polygon = Polygon(ext)
+    polygon_points = np.array(polygon.exterior)
+    
+    rt = RotationTransform(66)
+    
+    tf_polygon = rotate_polygon_to(polygon, rt)
+    
+    origin = rotate_to(np.array([(1,1)]),rt).tolist()
+    
+    from time import time; start = time()
+    p = generate_intersections(tf_polygon, 0.5)
+    result = order_points(p, origin)
+    print "Decomposition Time:", time()-start
+    
+    tf_result = rotate_from(np.array(result), rt)
+    
+    ll = LineString(result)
+    
+    ax, _ = make_axis()
+    # ax.axvline(x=0, color='black')
+    # ax.axhline(y=0, color='black')
+    for e in p:
+        if type(e) == LineString:
+            plot_line(e, ax, color='black')
+        else:
+            ax.axvline(x=np.array(e)[0], color='red')
+    # plot_line(ll, ax, alpha=0.75)
+    plot_polygon(tf_polygon, ax, color='blue')
+    zoom_extents(ax, [tf_polygon])
+    ax.set_xlabel("Rotated Map Polygon with Intersection Lines Drawn")
+    import pylab; pylab.show()
 
 if __name__ == '__main__':
     figure1()
+    # figure2()
+    # figure3()
+

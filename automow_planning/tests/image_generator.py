@@ -14,11 +14,11 @@ def plot_coords(ax, ob, color='#999999'):
 
 def plot_line(ax, ob):
     x, y = ob.xy
-    ax.plot(x, y, color='#6699cc', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
+    ax.plot(x, y, color='#6699cc', alpha=1.0, linewidth=3, solid_capstyle='round', zorder=2)
 
 def plot_lines(ax, ob):
-    t = np.linspace(0, 10, len(ob))
-    lc = LineCollection(ob, cmap=pyplot.get_cmap('hot'),
+    t = np.linspace(0, 20, len(ob))
+    lc = LineCollection(ob, cmap=pyplot.get_cmap('autumn'),
                             norm=pyplot.Normalize(0, 20))
     ax.add_collection(lc)
     lc.set_array(t)
@@ -101,7 +101,7 @@ def plot_and_save(name, polygon):
     ax = fig.add_subplot(111)
 
     patch = PolygonPatch(polygon, facecolor='#6699cc',
-                         edgecolor='#235612', alpha=0.5, zorder=2)
+                         edgecolor='#235612', alpha=0.5, zorder=-1)
     ax.add_patch(patch)
 
     bounds = polygon.bounds
@@ -111,7 +111,7 @@ def plot_and_save(name, polygon):
     ax.set_ylim(*yrange)
     ax.set_aspect(1)
 
-    r = decompose(polygon)
+    r = decompose(polygon, width=0.25)
     
     print '[',
     printed = []
@@ -122,7 +122,7 @@ def plot_and_save(name, polygon):
     print ']'
     # ll = MultiLineString(r)
     plot_lines(ax, r)
-    pyplot.savefig(name)
+    # pyplot.savefig(name)
     pyplot.show()
 
 if __name__ == '__main__':
