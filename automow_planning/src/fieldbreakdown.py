@@ -3,6 +3,7 @@ from shapely.geometry import Point, Polygon, LineString, MultiLineString, MultiP
 from descartes.patch import PolygonPatch
 import math
 import numpy as np
+from matplotlib.collections import LineCollection
 import copy
 
 from pprint import pprint
@@ -16,9 +17,15 @@ def plot_line(ax, ob):
     ax.plot(x, y, color='#6699cc', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
 
 def plot_lines(ax, ob):
-    for line in ob:
-        x, y = line.xy
-        ax.plot(x, y, color='#121212', alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
+    t = np.linspace(0, 10, len(ob))
+    lc = LineCollection(ob, cmap=pyplot.get_cmap('hot'),
+                            norm=pyplot.Normalize(0, 20))
+    ax.add_collection(lc)
+    lc.set_array(t)
+    lc.set_linewidth(3)
+    # for z, line in enumerate(ob):
+    #     x, y = line.xy
+    #     ax.plot(x, y, alpha=0.7, linewidth=3, solid_capstyle='round', zorder=2)
 
 def generate_intersections(poly, width):
     "Subdivide a filed into coverage lines."
@@ -26,15 +33,15 @@ def generate_intersections(poly, width):
     line = LineString([starting_breakdown, (starting_breakdown[0],
                                             starting_breakdown[1] +
                                             poly.bounds[3] - poly.bounds[1])])
-    bounded_line = polygon.intersection(line)
+    bounded_line = poly.intersection(line)
     lines = [bounded_line]
 
     x = 0
     while 1:
         x += 1
         bounded_line = line.parallel_offset(x * width, 'right')
-        if polygon.intersects(bounded_line):
-            bounded_line = polygon.intersection(bounded_line)
+        if poly.intersects(bounded_line):
+            bounded_line = poly.intersection(bounded_line)
             lines.append(bounded_line)
         else:
             break
@@ -88,15 +95,10 @@ def decompose(polygon, origin=None, width=1.0):
     else:
         return order_points(p, origin)
 
-if __name__ == '__main__':
+def plot_and_save(name, polygon):
     fig = pyplot.figure(1, dpi=90)
     # 3: invalid polygon, ring touch along a line
     ax = fig.add_subplot(111)
-
-    ext = [(0, 0), (2, 5), (0, 11), (10, 11), (15, 5), (10, 0), (0, 0)]
-    inter = [(3, 3), (3, 7), (7, 7), (7,3), (3, 3)]
-    polygon = Polygon(ext, [inter])
-    plot_coords(ax, polygon.exterior)
 
     patch = PolygonPatch(polygon, facecolor='#6699cc',
                          edgecolor='#235612', alpha=0.5, zorder=2)
@@ -110,10 +112,34 @@ if __name__ == '__main__':
     ax.set_aspect(1)
 
     r = decompose(polygon)
-
-    pprint(r)
-
-    ll = MultiLineString(r)
-    plot_lines(ax, ll)
-
+    
+    print '[',
+    printed = []
+    for p, _ in r:
+        if p not in printed:
+            print p[0], ',', p[1], '; ',
+            printed.append(p)
+    print ']'
+    # ll = MultiLineString(r)
+    plot_lines(ax, r)
+    pyplot.savefig(name)
     pyplot.show()
+
+if __name__ == '__main__':
+    square = [(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)]
+    sq_polygon = Polygon(square)
+    plot_and_save('square-field.png', sq_polygon)
+
+    rectangle = [(0, 0), (0, 5), (10, 5), (10, 0), (0, 0)]
+    rect_polygon = Polygon(rectangle)
+    plot_and_save('rectangle-field.png', rect_polygon)
+
+    circle = Point(5,5)
+    circular_polygon = circle.buffer(5)
+    plot_and_save('circle-field.png', circular_polygon)
+
+    ext = [(0, 0), (2, 5), (0, 11), (10, 11), (15, 5), (10, 0), (0, 0)]
+    inter = [(3, 3), (3, 7), (7, 7), (7,3), (3, 3)]
+    irregular_polygon = Polygon(ext, [inter])
+    plot_and_save('irregular-field.png', irregular_polygon)
+    
