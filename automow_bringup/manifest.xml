@@ -1,0 +1,19 @@
+<package>
+  <description brief="automow_bringup">
+
+     automow_bringup provides roslaunch scripts for bringing up base functionality of the lawnmower.
+
+  </description>
+  <author>Michael Carroll</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow_bringup</url>
+  <depend package="app_manager"/>
+  <depend package="automow_node"/>
+  <depend package="automow_description"/>
+  <depend package="joy"/>
+  <depend package="robot_state_publisher"/>
+
+</package>
+
+

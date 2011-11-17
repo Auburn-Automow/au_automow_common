@@ -1,0 +1,2 @@
+pub_rate: 1.0
+base_path: '' # Optional, prepended to all diagnostic output
