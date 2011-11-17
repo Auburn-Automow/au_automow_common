@@ -1,2 +1,18 @@
 pub_rate: 1.0
 base_path: '' # Optional, prepended to all diagnostic output
+analyzers:
+  sensors:
+    type: AnalyzerGroup
+    path: Sensors
+    analyzers:
+      hokuyo:
+        type: GenericAnalyzer
+        path: Base Hokuyo
+        timeout: 5.0
+        find_and_remove_prefix: hokuyo
+      ahrs:
+        type: GenericAnalyzer
+        path: Microstrain AHRS
+        timeout: 5.0
+        find_and_remove_prefix: ahrs
+
