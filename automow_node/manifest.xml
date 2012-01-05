@@ -1,13 +1,18 @@
 <package>
-  <description brief="automow_node">
+  <description brief="Auburn Automow ROS driver node">
 
-     automow_node
+      ROS interface for the Auburn Autonomous Lawnmower.
 
   </description>
   <author>Michael Carroll</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_node</url>
+
+  <depend package="rospy"/>
+  <depend package="geometry_msgs"/>
+  <depend package="diagnostic_msgs"/>
+  <depend package="dynamic_reconfigure"/>
 
 </package>
 
