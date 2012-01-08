@@ -1,2 +1,0 @@
-float32 temperature_1
-float32 temperature_2
