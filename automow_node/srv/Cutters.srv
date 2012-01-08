@@ -1,6 +1,5 @@
 bool cutter_1
 bool cutter_2
 ----
-bool cutter_1_state
-bool cutter_2_state
-bool error
+bool cutter_1
+bool cutter_2
