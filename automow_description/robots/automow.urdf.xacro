@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"    
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"  
+       name="automow" >
+       
+       <include filename="$(find automow_description)/urdf/common.xacro" />
+       
+       <include filename="$(find automow_description)/urdf/materials.urdf.xacro" />
+       
+       <include filename="$(find automow_description)/urdf/base/base.urdf.xacro"/>
+       
+       <xacro:automow_base name="base"/>
+       
+</robot>
