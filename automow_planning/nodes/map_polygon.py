@@ -53,14 +53,14 @@ def load_field_shape(file_name, meters_per_cell, image_padding):
     size = (ceil(max(field_xs)) - floor(min(field_xs)) + (2 * image_padding),
             ceil(max(field_ys)) - floor(min(field_ys)) + (2 * image_padding))
 
-    rospy.loginfo("Map Offset East: %f cells (%f meters)" %
-                     (offset[0], offset[0] * meters_per_cell))
-    rospy.loginfo("Map Offset North: %f cells (%f meters)" %
-                     (offset[1], offset[1] * meters_per_cell))
-    rospy.loginfo("Map Size East: %f cells (%f meters)" % 
-                     (size[0], size[0] * meters_per_cell))
-    rospy.loginfo("Map Size North: %f cells (%f meters)" %
-                     (size[1], size[1] * meters_per_cell))
+    # rospy.loginfo("Map Offset East: %f cells (%f meters)" %
+    #                  (offset[0], offset[0] * meters_per_cell))
+    # rospy.loginfo("Map Offset North: %f cells (%f meters)" %
+    #                  (offset[1], offset[1] * meters_per_cell))
+    # rospy.loginfo("Map Size East: %f cells (%f meters)" % 
+    #                  (size[0], size[0] * meters_per_cell))
+    # rospy.loginfo("Map Size North: %f cells (%f meters)" %
+    #                  (size[1], size[1] * meters_per_cell))
 
     poly_msg = PolygonStamped(Header(), Polygon(point32s))
     return poly_msg
