@@ -8,7 +8,7 @@
     <author>Michael Carroll</author>
     <license>BSD</license>
     <review status="unreviewed" notes="" />
-    <url>http://ros.org/wiki/automow_robot_model</url>
+    <url>http://ros.org/wiki/automow_description</url>
     <depend package="urdf" />
     <depend package="xacro" />
 
