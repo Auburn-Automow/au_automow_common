@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"    
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro"  
+       name="automow" >
+       
+<property name="wheel_diameter" value="0.27" />
+<property name="wheel_length" value="0.1" />
+<property name="wheel_offset_y" value="0.305" />
+
+<property name="base_mass" value="100"/>
+
+<property name="base_size_x" value="0.73"/>
+<property name="base_size_y" value="0.45"/>
+<property name="base_size_z" value="0.25"/>
+<property name="ground_clearance" value="0.065"/>
+
+<xacro:macro name="automow_wheel" params="suffix parent reflect *origin">
+	<joint name="${parent}_${suffix}_wheel_joint" type="continuous">
+		<axis xyz="0 1 0"/>
+		<limit effort="100" velocity="100"/>
+		<safety_controller k_velocity="10" />
+		<dynamics damping="0.0" friction="0.0" />
+		<insert_block name="origin"/>
+		<parent link="${parent}"/>
+		<child link="${parent}_${suffix}_wheel_link" />
+	</joint>
+	
+	<link name="${parent}_${suffix}_wheel_link">
+		<inertial>
+			<mass value="3"/>
+			<origin xyz="0 0 0"/>
+			<inertia ixx="0.01" ixy="0.0" ixz="0.0"
+                 	 iyy="0.01" iyz="0.0"
+                 	 izz="0.01" />
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 ${M_PI/2} ${reflect*M_PI/2}"/>
+			<geometry>
+				<mesh filename="package://automow_description/meshes/wheel.stl"/>
+			</geometry>
+			<material name="Grey"/>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 ${M_PI/2} ${M_PI/2}"/>
+			<geometry>
+				<cylinder radius="${wheel_diameter/2}" length="${wheel_length}"/>
+			</geometry>
+		</collision>
+	</link>
+</xacro:macro>
+
+<xacro:macro name="automow_base" params="name">
+	<link name="${name}_link">
+		<inertial>
+			<mass value="${base_mass}"/>
+			<origin xyz="0 0 0"/>
+			<inertia ixx="5" ixy="0.0" ixz="0.0"
+                	 iyy="5" iyz="0.0"
+                 	 izz="5" />
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<!--  <mesh filename="package://automow_description/meshes/base/base.stl"/> -->
+				<box size="${base_size_x} ${base_size_y} ${base_size_z}"/>
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<!--  <mesh filename="package://automow_description/meshes/base/base.stl"/> -->
+				<box size="${base_size_x} ${base_size_y} ${base_size_z}"/>
+			</geometry>
+		</collision>
+	</link>
+
+	<!--  base_footprint is a fictitious link for navigation stack -->
+	<link name="${name}_footprint">
+		<inertial>
+			<mass value="0.0001"/>
+			<inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                	 iyy="0.0001" iyz="0.0"
+                 	 izz="0.0001" />
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0"/>
+			<geometry>
+				<box size="0.001 0.001 0.001"/>
+			</geometry>
+			<material name="Red"/>
+		</visual>
+		<collision>
+			<origin xyz="0 0 ${ground_clearance}"/>
+			<geometry>
+				<box size="0.001 0.001 0.001"/>
+			</geometry>
+		</collision>
+	</link>
+	
+	<joint name="${name}_footprint_joint" type="fixed">
+		<origin xyz="0 0 ${ground_clearance}" rpy="0 0 0" />
+		<child link="${name}_link"/>
+		<parent link="${name}_footprint"/>
+	</joint>
+	
+	<xacro:automow_wheel suffix="l" parent="base_link" reflect="1">
+		<origin xyz="0 ${base_size_y/2+0.05} 0" rpy="0 0 0"/>
+	</xacro:automow_wheel>
+	<xacro:automow_wheel suffix="r" parent="base_link" reflect="-1">
+		<origin xyz="0 -${base_size_y/2+0.05} 0" rpy="0 0 0"/>
+	</xacro:automow_wheel>
+</xacro:macro>
+
+</robot>
