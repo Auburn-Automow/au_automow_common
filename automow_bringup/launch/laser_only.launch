@@ -23,8 +23,6 @@
           file="$(find automow_bringup)/config/diagnostics.yaml" />
   </node>
 
-  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
-
   <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
       <param name="port" type="str" value="/dev/laser" />
       <param name="frame_id" type="str" value="/laser" />
@@ -41,10 +39,5 @@
       <param name="autocalibrate" value="false" />
       <param name="angular_velocity_stdev" type="double" value="0.00017" />
   </node>
-
-  <node pkg="rosserial_python" type="serial_node.py" name="automow_pcb">
-      <param name="port" value="/dev/power_control"/>
-  </node>
-  <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
 </launch>
