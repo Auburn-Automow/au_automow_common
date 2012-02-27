@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
-<robot 
-    xmlns:xacro="http://www.ros.org/wiki/xacro"
-    name="automow">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="automow">
 
     <material name="Green">
         <color rgba="0.0 0.8 0.0 1.0"/>
@@ -36,14 +34,6 @@
     <!-- base_footprint is a ficticious frame on the ground below base_link
      for the navigation stack to properly function -->
     <link name="base_footprint">
-        <inertial>
-        <mass value="0.0001" />
-        <origin xyz="0 0 0" />
-        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-                 iyy="0.0001" iyz="0.0"
-                 izz="0.0001" />
-        </inertial>
-
         <visual>
          <origin xyz="0 0 0" rpy="0 0 0" />
          <geometry>
@@ -253,9 +243,7 @@
     </link>
 
     <joint name="laser_joint" type="fixed">
-        <!-- <origin xyz="0.815 0 0.215" rpy="0 0 -0.0523598776"/> -->
-        <!-- <origin xyz="0.815 0 0.215" rpy="0 0 -0.034906585"/> -->
-        <origin xyz="0.815 0 0.215" rpy="${M_PI} 0 0"/>
+        <origin xyz="0.9 0.17 ${0.145 - clearance}" rpy="${M_PI} 0 0.785398163"/>
         <parent link="base_link" />
         <child link="laser" />
     </joint>
@@ -265,6 +253,10 @@
         <parent link="base_link" />
         <child link="ahrs" />
     </joint>
+
+    <!--
+    Kinect related links and joints
+    -->
 
     <link name="kinect_link">
         <xacro:default_inertial mass="0.0001"/>
@@ -283,51 +275,18 @@
         </collision>
     </link>
 
-    <link name="kinect_depth_frame">
-        <xacro:default_inertial mass="0.000001"/>
-    </link>
-
-    <link name="kinect_depth_optical_frame">
-        <xacro:default_inertial mass="0.000001"/>
-    </link>
-
-    <link name="kinect_rgb_frame">
-        <xacro:default_inertial mass="0.000001"/>
-    </link>
-
-    <link name="kinect_rgb_optical_frame">
-        <xacro:default_inertial mass="0.000001"/>
-    </link>
-
+    <link name="openni_camera"/>
 
     <joint name="base_kinect_joint" type="fixed">
-        <origin xyz="0.49  0.005 ${c_height + 0.05}" rpy="0 ${M_PI/12} 0.034906585"/>
+        <origin xyz="0.755 0 ${0.58 - clearance}" rpy="0 0 0"/>
         <parent link="base_link"/>
         <child link="kinect_link"/>
     </joint>
 
-    <joint name="kinect_depth_joint" type="fixed">
-        <origin xyz="0 0.018 0" rpy="0 0 0" />
-        <parent link="kinect_link" />
-        <child link="kinect_depth_frame" />
-    </joint>
-
-    <joint name="kinect_depth_optical_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
-        <parent link="kinect_depth_frame" />
-        <child link="kinect_depth_optical_frame" />
-    </joint>
-
-    <joint name="kinect_rgb_joint" type="fixed">
-      <origin xyz="0 -0.005 0" rpy="0 0 0" />
-      <parent link="kinect_link" />
-      <child link="kinect_rgb_frame" />
-    </joint>
-
-    <joint name="kinect_rgb_optical_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
-      <parent link="kinect_rgb_frame" />
-      <child link="kinect_rgb_optical_frame" />
+    <joint name="kinect_openni_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="kinect_link"/>
+        <child link="openni_camera"/>
     </joint>
 </robot>
 
