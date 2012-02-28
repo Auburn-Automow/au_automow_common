@@ -284,7 +284,7 @@
     </joint>
 
     <joint name="kinect_openni_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0.04 0" rpy="0 0 0"/>
         <parent link="kinect_link"/>
         <child link="openni_camera"/>
     </joint>
