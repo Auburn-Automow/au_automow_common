@@ -1,0 +1,14 @@
+<launch>
+  <arg name="urdf_file" 
+      default="$(find xacro)/xacro.py '$(find automow_description)/urdf/automow.urdf.xacro'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+
+  <param name="robot/name" value="$(optenv ROBOT automow)"/>
+  <param name="robot/type" value="automow"/>
+
+  <node pkg="robot_state_publisher" type="state_publisher" 
+      name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="30.0" />
+      <!--param name="tf_prefix" type="string" value="" /-->
+  </node>
+</launch>
