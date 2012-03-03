@@ -11,4 +11,6 @@
       <param name="publish_frequency" type="double" value="30.0" />
       <!--param name="tf_prefix" type="string" value="" /-->
   </node>
+
+  <include file="$(find openni_camera)/launch/kinect_frames.launch"/>
 </launch>

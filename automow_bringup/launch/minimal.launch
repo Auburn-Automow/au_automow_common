@@ -53,6 +53,4 @@
     <rosparam command="load" file="$(find openni_camera)/info/openni_params.yaml" />
   </node>
 
-  <include file="$(find openni_camera)/launch/kinect_frames.launch"/>
-
 </launch>
