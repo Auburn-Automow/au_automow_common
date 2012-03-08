@@ -288,8 +288,52 @@
         <parent link="kinect_link"/>
         <child link="openni_camera"/>
     </joint>
+
+    <!--
+    Bumblebee related stuff
+    -->
+    <link name="bumblebee">
+        <xacro:default_inertial mass="0.0001"/>
+ <!--        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.04 0.16 0.4"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.04 0.16 0.4"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="bumblee_kinect_joint" type="fixed">
+        <origin xyz="0 0 0.10" rpy="0 0 0"/>
+        <parent link="kinect_link"/>
+        <child link="bumblebee"/>
+    </joint>
+
+
+<link name="sick_laser_link">
+<xacro:default_inertial mass="0.0001"/>
+        <visual>
+            <origin xyz="0 0 ${-0.15/2.0 + 0.03}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${0.09/2.0}" length="0.15"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${-0.15/2.0 + 0.03}" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="${0.09/2.0}" length="0.15"/>
+            </geometry>
+        </collision>
+</link>
+
+    <joint name="sick_laser_base_joint" type="fixed">
+        <origin xyz="0.83 -0.1525 ${0.38 - clearance}" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="sick_laser_link"/>
+    </joint>
 </robot>
-
-
-
-
