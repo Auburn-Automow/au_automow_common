@@ -1,7 +1,0 @@
-<launch>
-    <!-- Start SLAM -->
-    <include file="$(find automow_navigation)/launch/slam.xml" />
-    
-    <!-- Start the move_base Node -->
-    <include file="$(find automow_navigation)/launch/move_base_slam.xml" />
-</launch>
