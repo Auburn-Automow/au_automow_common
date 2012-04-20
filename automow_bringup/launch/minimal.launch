@@ -12,16 +12,15 @@
           file="$(find automow_bringup)/config/diagnostics.yaml" />
   </node>
 
-  <!-- Sick LMS1xx driver -->
+  <!-- Sick LMS1xx driver 
   <node name="LMS151_node" pkg="LMS1xx" type="LMS100" output="screen" required="true">
     <param name="host" value="192.168.0.195"/>
     <param name="frame_id" value="/sick_laser_link" />
     <remap from="/scan" to="/sick/scan"/>
   </node>
+  -->
 
-  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" >
-      <!--     <remaap from="cmd_vel" to="turtulebot_node/cmd_vel"/> -->
-    </node>
+  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
 
   <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
       <param name="port" type="str" value="/dev/laser" />
@@ -45,10 +44,9 @@
   </node>
   <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
-  <!-- Nodelet Manager -->
+  <!-- Nodelet Manager 
   <node pkg="nodelet" type="nodelet" name="openni_manager" output="screen" respawn="true" args="manager"/>
 
-  <!-- Openni Nodelet -->
   <node pkg="nodelet" type="nodelet" name="openni_camera" args="load openni_camera/OpenNINodelet openni_manager" respawn="true">
     <param name="rgb_frame_id" value="/openni_rgb_optical_frame" />
     <param name="depth_frame_id" value="/openni_depth_optical_frame" />
@@ -61,5 +59,6 @@
 
     <rosparam command="load" file="$(find openni_camera)/info/openni_params.yaml" />
   </node>
+  -->
 
 </launch>
