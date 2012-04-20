@@ -3,18 +3,13 @@
   <param name="/use_sim_time" value="false"/>
 
   <include file="$(find automow_bringup)/launch/transforms.xml" />
-
   <include file="$(find automow_bringup)/launch/app_manager.launch" />
 
-  <node pkg="diagnostic_aggregator" type="aggregator_node" 
-      name="diagnostic_aggregator" >
-      <rosparam command="load" 
-          file="$(find automow_bringup)/config/diagnostics.yaml" />
+  <node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator" >
+      <rosparam command="load" file="$(find automow_bringup)/config/diagnostics.yaml" />
   </node>
 
-  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" >
-      <!--     <remaap from="cmd_vel" to="turtulebot_node/cmd_vel"/> -->
-    </node>
+  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
 
   <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
       <param name="port" type="str" value="/dev/laser" />
@@ -36,6 +31,7 @@
   <node pkg="rosserial_python" type="serial_node.py" name="automow_pcb">
       <param name="port" value="/dev/power_control"/>
   </node>
+
   <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
   <!-- Nodelet Manager -->
