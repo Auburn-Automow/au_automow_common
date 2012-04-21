@@ -250,7 +250,7 @@
     </joint>
 
     <joint name="ahrs_joint" type="fixed">
-        <origin xyz="0.22 0 ${c_height - 0.02}" rpy="${M_PI} 0 0"/>
+        <origin xyz="0.22 0 ${c_height - 0.02}" rpy="0 0 0"/>
         <parent link="base_link" />
         <child link="ahrs" />
     </joint>
