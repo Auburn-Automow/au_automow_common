@@ -10,9 +10,12 @@
   <url>http://ros.org/wiki/automow_controller</url>
 
   <depend package="actionlib"/>
+  <depend package="actionlib_msgs"/>
   <depend package="rospy"/>
   <depend package="automow_ekf"/>
   <depend package="tf"/>
+  <depend package="nav_msgs"/>
+  <depend package="geometry_msgs"/>
 
 </package>
 

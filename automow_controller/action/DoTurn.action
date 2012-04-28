@@ -1,0 +1,9 @@
+#Define the goal
+float32 action_angle  # Number of degrees to turn. +=CCW, -=CW
+bool on_wheel # If true, turn is on a wheel, rather than on CoM
+---
+#Define the result
+bool turn_completed
+---
+#Define the feedback message
+float32 degrees_remaining
