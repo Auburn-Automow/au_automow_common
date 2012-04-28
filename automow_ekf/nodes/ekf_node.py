@@ -6,7 +6,7 @@ from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
 from ax2550.msg import StampedEncoders
-from power_control_board.msg import CutterControl
+from automow_node.msg import Automow_PCB
 from automow_ekf.msg import States
 
 from tf.transformations import euler_from_quaternion
@@ -39,8 +39,6 @@ class AutomowEKF_Node:
             self.output_states_file = self.output_states_dir + "ekf_states-" + \
                     time.strftime('%F-%H-%M') + ".csv"
             self.output_file = open(self.output_states_file,'w')
-    
-           
 
         self.location_initilized = False
         self.heading_initilized = False
@@ -60,33 +58,37 @@ class AutomowEKF_Node:
             self.enc_sub = rospy.Subscriber("encoders",
                     StampedEncoders,
                     self.encoders_cb)
-        else: 
-            rospy.loginfo("You aren't using the wheel encoders, expect bad results")
+    
+        if self.imu_used:
+            rospy.loginfo("Adding IMU to the EKF")
+            self.imu_sub = rospy.Subscriber("imu/data",
+                    Imu,
+                    self.imu_cb)
 
-        rospy.loginfo("Adding IMU to the EKF")
-        self.imu_sub = rospy.Subscriber("imu/data",
-                Imu,
-                self.imu_cb)
-
-        rospy.loginfo("Adding GPS to the EKF")
-        self.gps_sub = rospy.Subscriber("gps/odometry",
-                Odometry,
-                self.gps_cb)
+        if self.gps_used:
+            rospy.loginfo("Adding GPS to the EKF")
+            self.gps_sub = rospy.Subscriber("gps/odometry",
+                    Odometry,
+                    self.gps_cb)
+        else:
+            y = np.array([0, 0], dtype=np.double)
+            covar = np.diag(np.array([0.001, 0.001]))
+            self.ekf.measurementUpdateGPS(y, covar)
+            self.filter_time = rospy.Time.now()
+            self.location_initilized = True
 
         if self.cutters_used or self.adaptive_cutters:
             rospy.loginfo("Subscribing to the cutter status")
-            self.cut_sub = rospy.Subscriber("/CutterControl",
-                    CutterControl,
+            self.cut_sub = rospy.Subscriber("/automow_pcb/status",
+                    Automow_PCB,
                     self.cutter_cb)
             if self.adaptive_cutters:
                 rospy.loginfo("P matrix will change on cutter status")
 
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
-        
         self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
         self.odometry_timer.start()
-    
         if self.publish_states:
             self.states_pub = rospy.Publisher("ekf/states",States) 
  
@@ -134,24 +136,24 @@ class AutomowEKF_Node:
             self.states_pub.publish(States(self.ekf.getStateList(),self.ekf.getPList()))
         return
     
-    def cutter_cb(self,data):
+    def cutter_cb(self, data):
         if self.adaptive_cutters:
             """ This is questionable... 
             Basically, I'm going to spike the P matrix values for heading and 
             heading bias right after the cutters come on."""
             # Cutters come on
-            if (data.LeftControl and not self.cutter_l) or \
-                    (data.RightControl and not self.cutter_r):
+            if (data.cutter_1 and not self.cutter_l) or \
+                    (data.cutter_2 and not self.cutter_r):
                         rospy.loginfo("Cutters came on! Fire ze missles!")
                         self.ekf.P[3,3] = 1e2
                         self.ekf.P[6,6] = 1e6
-            if (not data.LeftControl and self.cutter_l) or \
-                    (not data.RightControl and self.cutter_r):
+            if (not data.cutter_1 and self.cutter_l) or \
+                    (not data.cutter_2 and self.cutter_r):
                         rospy.loginfo("Cutters turned off! Fire ze missles!")
                         self.ekf.P[3,3] = 1e2
                         self.ekf.P[6,6] = 1e6
-        self.cutter_l = int(data.LeftControl)
-        self.cutter_r = int(data.RightControl)
+        self.cutter_l = int(data.cutter_1)
+        self.cutter_r = int(data.cutter_2)
         return
         
     def encoders_cb(self,data):
@@ -208,9 +210,7 @@ class AutomowEKF_Node:
 def main():
     rospy.init_node('ekf_node')
     ekf_node = AutomowEKF_Node()
-    
     rospy.spin()
-    
     ekf_node.odometry_timer.cancel()
 
 if __name__ == '__main__':
