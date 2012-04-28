@@ -112,7 +112,7 @@ class AutomowEKF:
         self.G[5,5] = dt
         self.G[6,6] = dt
         return
-    
+
     def timeUpdate(self,u,time):
         dt = time - self.__prev_time
         self.__prev_time = time

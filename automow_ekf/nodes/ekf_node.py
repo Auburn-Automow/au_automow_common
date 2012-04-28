@@ -34,6 +34,8 @@ class AutomowEKF_Node:
         self.adaptive_cutters = rospy.get_param("~adaptive_cutters",False)
         self.publish_states = rospy.get_param("~publish_states",False)
 
+        self.encoder_resolution = 1000 
+
         if self.output_states:
             import time
             self.output_states_file = self.output_states_dir + "ekf_states-" + \
@@ -58,6 +60,7 @@ class AutomowEKF_Node:
             self.enc_sub = rospy.Subscriber("encoders",
                     StampedEncoders,
                     self.encoders_cb)
+            self.enc_prev_time = rospy.Time.now()
     
         if self.imu_used:
             rospy.loginfo("Adding IMU to the EKF")
@@ -159,6 +162,11 @@ class AutomowEKF_Node:
     def encoders_cb(self,data):
         u = np.array([data.encoders.left_wheel, data.encoders.right_wheel], \
                 dtype=np.double)
+
+        # Multiply measurement by radians/encoder tick.
+        u *= (2 * np.pi)/self.encoder_resolution
+        u /= data.encoders.time_delta
+
         if self.adaptive_encoders:
             self.ekf.Q[0,0] = abs(u[0]) * 0.05
             self.ekf.Q[1,1] = abs(u[1]) * 0.05
