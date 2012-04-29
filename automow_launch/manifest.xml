@@ -8,10 +8,9 @@
     <license>BSD</license>
     <review status="unreviewed" notes="" />
     <url>http://ros.org/wiki/automow_launch</url>
-    <depend package="automow_robot_model" />
-    <depend package="robot_pose_ekf" />
+    <depend package="automow_description" />
+    <depend package="automow_ekf" />
     <depend package="ax2550" />
-    <depend package="atomic_imu" />
     <depend package="magellan_dg14" />
     <depend package="hokuyo_node" />
     <depend package="automow_image_processing" />
