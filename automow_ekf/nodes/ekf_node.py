@@ -9,7 +9,8 @@ from ax2550.msg import StampedEncoders
 from automow_node.msg import Automow_PCB
 from automow_ekf.msg import States
 
-from tf.transformations import euler_from_quaternion
+from tf.transformations import euler_from_quaternion as efq
+from tf.transformations import quaternion_from_euler as qfe
 import tf
 
 from automow_ekf import AutomowEKF
@@ -29,7 +30,8 @@ class AutomowEKF_Node:
         self.time_delay = rospy.get_param("~time_delay",0.0)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         self.output_states = rospy.get_param("~output_states",False)
-        self.output_states_dir = rospy.get_param("~output_states_dir","~/.ros/")
+        self.output_states_dir = \
+            rospy.get_param("~output_states_dir","~/.ros/")
         self.adaptive_encoders = rospy.get_param("~adaptive_encoders",False)
         self.adaptive_cutters = rospy.get_param("~adaptive_cutters",False)
         self.publish_states = rospy.get_param("~publish_states",False)
@@ -38,8 +40,8 @@ class AutomowEKF_Node:
 
         if self.output_states:
             import time
-            self.output_states_file = self.output_states_dir + "ekf_states-" + \
-                    time.strftime('%F-%H-%M') + ".csv"
+            self.output_states_file = self.output_states_dir + "ekf_states-" \
+                    + time.strftime('%F-%H-%M') + ".csv"
             self.output_file = open(self.output_states_file,'w')
 
         self.location_initilized = False
@@ -90,7 +92,8 @@ class AutomowEKF_Node:
 
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
-        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
+        self.odometry_timer = threading.Timer(self.publish_rate,
+                                              self.odometry_cb)
         self.odometry_timer.start()
         if self.publish_states:
             self.states_pub = rospy.Publisher("ekf/states",States) 
@@ -98,7 +101,8 @@ class AutomowEKF_Node:
     def odometry_cb(self):
         if rospy.is_shutdown():
             return
-        self.odometry_timer = threading.Timer(self.publish_rate, self.odometry_cb)
+        self.odometry_timer = threading.Timer(self.publish_rate,
+                                              self.odometry_cb)
         self.odometry_timer.start()
         if not self.location_initilized or not self.heading_initilized:
             return
@@ -108,8 +112,9 @@ class AutomowEKF_Node:
         msg.header.stamp = self.filter_time  
         msg.header.frame_id = self.output_frame
         # Position
-        msg.pose.pose.position = Vector3(self.ekf.getEasting(),self.ekf.getNorthing(),0)
-        quat = tf.transformations.quaternion_from_euler(0,0,self.ekf.getYaw())
+        msg.pose.pose.position = Vector3(self.ekf.getEasting(),
+                                         self.ekf.getNorthing(), 0)
+        quat = qfe(0, 0, self.ekf.getYaw())
         msg.pose.pose.orientation.x = quat[0]
         msg.pose.pose.orientation.y = quat[1]
         msg.pose.pose.orientation.z = quat[2]
@@ -122,7 +127,7 @@ class AutomowEKF_Node:
  
         br = tf.TransformBroadcaster()
         br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
-                         tf.transformations.quaternion_from_euler(0, 0, self.ekf.getYaw()),
+                         qfe(0, 0, self.ekf.getYaw()),
                          self.filter_time,
                          "base_footprint",
                          self.output_frame)
@@ -136,7 +141,8 @@ class AutomowEKF_Node:
             self.output_file.write(string)
 
         if self.publish_states:
-            self.states_pub.publish(States(self.ekf.getStateList(),self.ekf.getPList()))
+            self.states_pub.publish(States(self.ekf.getStateList(),
+                                           self.ekf.getPList()))
         return
     
     def cutter_cb(self, data):
@@ -186,8 +192,8 @@ class AutomowEKF_Node:
                 return
         if not self.heading_initilized:
             self.heading_initilized = True
-        (r,p,yaw) = euler_from_quaternion([data.orientation.x, data.orientation.y, \
-                data.orientation.z, data.orientation.w])
+        (r,p,yaw) = efq([data.orientation.x, data.orientation.y, \
+                         data.orientation.z, data.orientation.w])
         # This is supposed to correct for the coordinate differences
         self.ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
         self.filter_time = data.header.stamp
@@ -201,9 +207,10 @@ class AutomowEKF_Node:
             self.location_initilized = True
         y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], \
                 dtype=np.double)
-        # The Kalman Filter expects a time-varying measurement noise matrix.  The GPS 
-        # also has a nasty tendency to over-estimate the accuracy of the position, so
-        # we create a floor of 2cm variance to prevent it from getting "too accurate"
+        # The Kalman Filter expects a time-varying measurement noise matrix.
+        # The GPS also has a nasty tendency to over-estimate the accuracy of 
+        # the position, so we create a floor of 2cm variance to prevent it 
+        # from getting "too accurate"
         e_covar = data.pose.covariance[0]
         if e_covar < 0.004:
             e_covar = 0.004
