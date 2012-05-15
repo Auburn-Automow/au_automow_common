@@ -37,6 +37,9 @@
 
   <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
+  <node pkg="magellan_dg14" type="dg14_driver" name="magellan_dg14"
+      output="screen"/>
+
   <!-- Nodelet Manager 
   <node pkg="nodelet" type="nodelet" name="openni_manager" output="screen" respawn="true" args="manager"/>
 
