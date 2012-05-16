@@ -47,4 +47,4 @@ class CutterControlNode(object):
 
 
 if __name__ == '__main__':
-    main()
+    ccn = CutterControlNode()
