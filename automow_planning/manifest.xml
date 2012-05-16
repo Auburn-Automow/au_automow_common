@@ -1,0 +1,21 @@
+<package>
+  <description brief="automow_planning">
+
+     automow_planning
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/automow_planning</url>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="roslib"/>
+  <depend package="tf"/>
+  <depend package="geometry_msgs"/>
+  <depend package="automow_pcb"/>
+  <depend package="automow_maps"/>
+
+</package>
+
+
