@@ -6,10 +6,10 @@ field polygon as a geometry_msgs/PolygonStamped for use in
 other nodes and for visualization in rviz.
 """
 
-import roslib; roslib.load_manifest('automow_planning')
+import roslib; roslib.load_manifest('automow_maps')
 import rospy
 
-from geometry_msgs.msg import PolygonStamped
+from geometry_msgs.msg import PolygonStamped, Point32, Polygon
 
 class FieldPublisherNode(object):
     """
@@ -20,7 +20,7 @@ class FieldPublisherNode(object):
         rospy.init_node('field_publisher')
 
         # Get ROS parameters
-        self.field_file_name = rospy.get_param("~field_file_name", "field.csv")
+        self.field_polygon = rospy.get_param("~field_polygon")
         self.field_frame_id = rospy.get_param("~field_frame_id", "odom")
 
         # Setup publishers and subscribers
@@ -34,29 +34,19 @@ class FieldPublisherNode(object):
             rospy.spin()
 
     def read_field_file(self):
-        file_handle = None
-        try:
-            file_handle = open(self.field_file_name, 'r')
-        except OSError as e:
-            rospy.logerr("Failed to open field file: %s"%str(e))
-            return False
-        lines = file_handle.read()
-        lines = lines.split("\n")
         self.field_polygon_msg = PolygonStamped()
         self.field_polygon_msg.header.stamp = rospy.Time.now()
         self.field_polygon_msg.header.frame_id = self.field_frame_id
-        line_count = 0
-        for line in lines:
-            line_count += 1
-            line = line.strip()
-            if line == "":
-                continue
-            tokens = line.split(",")
-            if len(tokens) != 3:
-                rospy.logerr("Invalid field file at line %i"%line_count)
-                return False
-            (east, north, fix_type_id) = tokens
-            self.field_polygon_msg.polygon.append(Point32(east, north, 0.0))
+        polygon_points = []
+        point_count = 0
+        for point in self.field_polygon:
+            point_count += 1
+            if point['fix_type'] < 3:
+                rospy.logwarn('Point %i has a low quality fix type of %i'
+                              % (point_count, point['fix_type']))
+            (easting, northing) = (point['easting'], point['northing'])
+            polygon_points.append(Point32(easting, northing, 0.0))
+        self.field_polygon_msg.polygon = Polygon(polygon_points)
         return True
 
 if __name__ == '__main__':
