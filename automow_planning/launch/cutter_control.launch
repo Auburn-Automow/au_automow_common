@@ -1,0 +1,13 @@
+<launch>
+    <node pkg="automow_planning" type="cutter_control.py" name="cutter_control"
+          output="screen">
+        <!-- Frame id of the left cutter -->
+        <param name="left_cutter_frame_id" value="left_cutter" />
+        <!-- Frame id of the right cutter -->
+        <param name="right_cutter_frame_id" value="right_cutter" />
+        <!-- Radius of the cutting blades in meters -->
+        <param name="cutter_radius" type="float" value="0.1778" />
+        <!-- Rate at which the cutter positions will be checked -->
+        <param name="check_rate" type="float" value="10.0" />
+    </node>
+</launch>

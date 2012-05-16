@@ -32,7 +32,6 @@ class CutterControlNode(object):
         rospy.init_node('cutter_control')
 
         # ROS params
-        self.field_frame_id = rospy.get_param("~field_frame_id", "odom")
         self.left_cutter_frame_id = \
             rospy.get_param("~left_cutter_frame_id", "left_cutter")
         self.right_cutter_frame_id = \
@@ -49,6 +48,7 @@ class CutterControlNode(object):
 
         # Setup initial variables
         self.field_shape = None
+        self.field_frame_id = None
 
         # Set the initial cutter status to False
         set_cutter_states(False, False)
@@ -78,6 +78,7 @@ class CutterControlNode(object):
         for point in msg.polygon.points:
             temp_points.append(float(point))
         self.field_shape = geo.Polygon(temp_points)
+        self.field_frame_id = msg.header.frame_id
 
     def get_cutter_shape(self, field_frame, cutter_frame):
         """
@@ -115,7 +116,7 @@ class CutterControlNode(object):
         in the field polygon.
         """
         # Gate to prevent this when the field_shape has not been received
-        if self.field_shape = None:
+        if self.field_shape == None or self.field_frame_id == None:
             return
         # Get the left cutter
         left_cutter = get_cutter_shape(self.field_frame_id,
