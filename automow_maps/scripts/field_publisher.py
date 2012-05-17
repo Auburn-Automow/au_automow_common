@@ -45,7 +45,7 @@ class FieldPublisherNode(object):
                 rospy.logwarn('Point %i has a low quality fix type of %i'
                               % (point_count, point['fix_type']))
             (easting, northing) = (point['easting'], point['northing'])
-            polygon_points.append(Point32(easting, northing, 0.0))
+            polygon_points.append(Point32(float(easting), float(northing), 0))
         self.field_polygon_msg.polygon = Polygon(polygon_points)
         return True
 
