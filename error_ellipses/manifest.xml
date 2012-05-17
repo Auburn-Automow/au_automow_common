@@ -1,0 +1,17 @@
+<package>
+  <description brief="error_ellipses">
+
+     error_ellipses
+
+  </description>
+  <author>William Woodall</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/error_ellipses</url>
+  <depend package="rospy"/>
+  <depend package="nav_msgs"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+
