@@ -1,13 +1,94 @@
 <launch>
+    <group ns="odom_only">
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
+        output="screen" >
+        <param name="odom_used" value="true"/>
+        <param name="imu_used" value="false"/>
+        <param name="gps_used" value="false"/>
+        <param name="cutters_used" value="false"/>
+
+        <param name="decimate_ahrs_by_factor" value="5"/>
+
+        <param name="output_tf" value="false"/>
+        <param name="output_frame" value="/odom"/>
+
+        <param name="adaptive_encoders" value="false"/>
+        <param name="publish_states" value="true"/>
+        <param name="output_states" value="false"/>
+    </node>
+    </group>
+
+    <group ns="gps_imu">
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
+        output="screen" >
+        <param name="odom_used" value="false"/>
+        <param name="imu_used" value="true"/>
+        <param name="gps_used" value="true"/>
+        <param name="cutters_used" value="false"/>
+
+        <param name="decimate_ahrs_by_factor" value="5"/>
+
+        <param name="output_tf" value="false"/>
+        <param name="output_frame" value="/odom"/>
+
+        <param name="adaptive_encoders" value="false"/>
+        <param name="publish_states" value="true"/>
+        <param name="output_states" value="false"/>
+    </node>
+    </group>
+
+    <group ns="noimu">
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
+        output="screen" >
+        <param name="odom_used" value="true"/>
+        <param name="imu_used" value="false"/>
+        <param name="gps_used" value="true"/>
+        <param name="cutters_used" value="false"/>
+
+        <param name="decimate_ahrs_by_factor" value="5"/>
+
+        <param name="output_tf" value="false"/>
+        <param name="output_frame" value="/odom"/>
+
+        <param name="adaptive_encoders" value="false"/>
+        <param name="publish_states" value="true"/>
+        <param name="output_states" value="false"/>
+    </node>
+    </group>
+    <group ns="nogps">
     <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
         output="screen" >
         <param name="odom_used" value="true"/>
         <param name="imu_used" value="true"/>
         <param name="gps_used" value="false"/>
-        <param name="cutters_used" value="true"/>
-        <param name="output_frame" value="odom_combined"/>
-        <param name="adaptive_encoders" value="true"/>
-        <param name="adaptive_cutters" value="true"/>
+        <param name="cutters_used" value="false"/>
+
+        <param name="decimate_ahrs_by_factor" value="5"/>
+
+        <param name="output_tf" value="false"/>
+        <param name="output_frame" value="/odom"/>
+
+        <param name="adaptive_encoders" value="false"/>
         <param name="publish_states" value="true"/>
+        <param name="output_states" value="false"/>
     </node>
+    </group>
+    <group ns="all">
+    <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
+        output="screen" >
+        <param name="odom_used" value="true"/>
+        <param name="imu_used" value="true"/>
+        <param name="gps_used" value="true"/>
+        <param name="cutters_used" value="false"/>
+
+        <param name="decimate_ahrs_by_factor" value="5"/>
+
+        <param name="output_frame" value="/odom"/>
+
+        <param name="adaptive_encoders" value="false"/>
+        <param name="publish_states" value="true"/>
+        <param name="output_states" value="false"/>
+    </node>
+    </group>
+
 </launch>

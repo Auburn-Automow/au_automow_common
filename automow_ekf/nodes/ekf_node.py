@@ -6,6 +6,7 @@ from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
 from ax2550.msg import StampedEncoders
+from magellan_dg14.msg import UTMFix
 from automow_node.msg import Automow_PCB
 from automow_ekf.msg import States
 
@@ -21,19 +22,21 @@ import threading
 class AutomowEKF_Node:
     def __init__(self):
         # Load Parameters
-        self.odom_used = rospy.get_param("~odom_used",True)
-        self.imu_used = rospy.get_param("~imu_used",True)
-        self.gps_used = rospy.get_param("~gps_used",True)
-        self.cutters_used = rospy.get_param("~cutters_used",False)
+        self.odom_used = rospy.get_param("~odom_used", True)
+        self.imu_used = rospy.get_param("~imu_used", True)
+        self.gps_used = rospy.get_param("~gps_used", True)
+        self.cutters_used = rospy.get_param("~cutters_used", False)
+
         self.decimate_ahrs = rospy.get_param("~decimate_ahrs_by_factor",0)
         self.publish_rate = 1.0/rospy.get_param("~output_publish_rate", 25)
         self.time_delay = rospy.get_param("~time_delay",0.0)
+        
+        self.output_tf = rospy.get_param("~output_tf", True)
         self.output_frame = rospy.get_param("~output_frame","odom_combined")
         self.output_states = rospy.get_param("~output_states",False)
-        self.output_states_dir = \
-            rospy.get_param("~output_states_dir","~/.ros/")
+        self.output_states_dir = rospy.get_param("~output_states_dir","/home/mjcarroll/.ros/")
+
         self.adaptive_encoders = rospy.get_param("~adaptive_encoders",False)
-        self.adaptive_cutters = rospy.get_param("~adaptive_cutters",False)
         self.publish_states = rospy.get_param("~publish_states",False)
 
         self.encoder_resolution = 1000 
@@ -59,36 +62,45 @@ class AutomowEKF_Node:
         # Subscribers
         if self.odom_used:
             rospy.loginfo("Adding Encoders to the EKF")
-            self.enc_sub = rospy.Subscriber("encoders",
+            self.enc_sub = rospy.Subscriber("/encoders",
                     StampedEncoders,
                     self.encoders_cb)
             self.enc_prev_time = rospy.Time.now()
     
         if self.imu_used:
             rospy.loginfo("Adding IMU to the EKF")
-            self.imu_sub = rospy.Subscriber("imu/data",
+            self.imu_sub = rospy.Subscriber("/imu/data",
                     Imu,
                     self.imu_cb)
+        else:
+            rospy.loginfo("IMU will not be used.")
+            self.ekf.measurementUpdateAHRS(0)
+            self.filter_time = rospy.Time.now()
+            self.heading_initilized = True
 
         if self.gps_used:
             rospy.loginfo("Adding GPS to the EKF")
-            self.gps_sub = rospy.Subscriber("gps/odometry",
+            self.gps_sub = rospy.Subscriber("/magellan_dg14/odometry",
                     Odometry,
                     self.gps_cb)
+            self.gps_fix_sub = rospy.Subscriber("/magellan_dg14/utm_fix",
+                    UTMFix,
+                    self.gps_fix_cb)
+            self.gps_bad = False
         else:
+            rospy.loginfo("GPS will not be used")
             y = np.array([0, 0], dtype=np.double)
             covar = np.diag(np.array([0.001, 0.001]))
             self.ekf.measurementUpdateGPS(y, covar)
             self.filter_time = rospy.Time.now()
             self.location_initilized = True
 
-        if self.cutters_used or self.adaptive_cutters:
+        if self.cutters_used: 
             rospy.loginfo("Subscribing to the cutter status")
             self.cut_sub = rospy.Subscriber("/automow_pcb/status",
                     Automow_PCB,
                     self.cutter_cb)
-            if self.adaptive_cutters:
-                rospy.loginfo("P matrix will change on cutter status")
+            rospy.loginfo("P matrix will change on cutter status")
 
         # Publishers
         self.odom_pub = rospy.Publisher("ekf/odom",Odometry)
@@ -125,12 +137,14 @@ class AutomowEKF_Node:
         msg.twist.twist.angular = Vector3(0,0,self.w)
         self.odom_pub.publish(msg)
  
-        br = tf.TransformBroadcaster()
-        br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
-                         qfe(0, 0, self.ekf.getYaw()),
-                         self.filter_time,
-                         "base_footprint",
-                         self.output_frame)
+
+        if self.output_tf:
+            br = tf.TransformBroadcaster()
+            br.sendTransform((self.ekf.getEasting(), self.ekf.getNorthing(), 0),
+                             qfe(0, 0, self.ekf.getYaw()),
+                             self.filter_time,
+                             "/base_footprint",
+                             self.output_frame)
         if self.output_states:
             string = str(self.filter_time) + "," + \
                     self.ekf.getStateString()
@@ -146,21 +160,17 @@ class AutomowEKF_Node:
         return
     
     def cutter_cb(self, data):
-        if self.adaptive_cutters:
-            """ This is questionable... 
-            Basically, I'm going to spike the P matrix values for heading and 
-            heading bias right after the cutters come on."""
-            # Cutters come on
-            if (data.cutter_1 and not self.cutter_l) or \
-                    (data.cutter_2 and not self.cutter_r):
-                        rospy.loginfo("Cutters came on! Fire ze missles!")
-                        self.ekf.P[3,3] = 1e2
-                        self.ekf.P[6,6] = 1e6
-            if (not data.cutter_1 and self.cutter_l) or \
-                    (not data.cutter_2 and self.cutter_r):
-                        rospy.loginfo("Cutters turned off! Fire ze missles!")
-                        self.ekf.P[3,3] = 1e2
-                        self.ekf.P[6,6] = 1e6
+        # Cutters come on
+        if (data.cutter_1 and not self.cutter_l) or \
+                (data.cutter_2 and not self.cutter_r):
+                    rospy.loginfo("Cutters came on! Fire ze missles!")
+                    self.ekf.P[2,2] = 1e2
+                    self.ekf.P[6,6] = 1e6
+        if (not data.cutter_1 and self.cutter_l) or \
+                (not data.cutter_2 and self.cutter_r):
+                    rospy.loginfo("Cutters turned off! Fire ze missles!")
+                    self.ekf.P[2,2] = 1e2
+                    self.ekf.P[6,6] = 1e6
         self.cutter_l = int(data.cutter_1)
         self.cutter_r = int(data.cutter_2)
         return
@@ -195,14 +205,17 @@ class AutomowEKF_Node:
         (r,p,yaw) = efq([data.orientation.x, data.orientation.y, \
                          data.orientation.z, data.orientation.w])
         # This is supposed to correct for the coordinate differences
-        self.ekf.measurementUpdateAHRS(yaw-np.pi/2.0)    
+        self.ekf.measurementUpdateAHRS(yaw + np.pi/2)    
         self.filter_time = data.header.stamp
         return
 
+    def gps_fix_cb(self, data):
+        if data.fix_type < 3:
+            self.gps_bad = True
+        else:
+            self.gps_bad = False
+
     def gps_cb(self,data):
-        if not self.gps_used:
-            if self.location_initilized:
-                return
         if not self.location_initilized:
             self.location_initilized = True
         y = np.array([data.pose.pose.position.x, data.pose.pose.position.y], \
@@ -217,9 +230,10 @@ class AutomowEKF_Node:
         n_covar = data.pose.covariance[4]
         if n_covar < 0.004:
             n_covar = 0.004
-        covar = np.diag(np.array([e_covar*10, n_covar*10]))
-        self.ekf.measurementUpdateGPS(y, covar)
-        self.filter_time = data.header.stamp
+        if not self.gps_bad:
+            covar = np.diag(np.array([e_covar, n_covar]))
+            self.ekf.measurementUpdateGPS(y, covar)
+            self.filter_time = data.header.stamp
         return
 
 def main():
