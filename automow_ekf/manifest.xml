@@ -16,6 +16,7 @@
   <depend package="tf"/>
   <depend package="ax2550"/>
   <depend package="automow_node"/>
+  <depend package="magellan_dg14"/>
 </package>
 
 
