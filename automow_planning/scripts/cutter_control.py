@@ -41,7 +41,6 @@ class CutterControlNode(object):
 
         # Setup publishers and subscribers
         rospy.Subscriber('/field_shape', PolygonStamped, self.field_callback)
-        self.cutter_pub = rospy.Publisher('/CutterControl', CutterControl)
 
         # Setup ROS service
         set_cutter_states = rospy.ServiceProxy('cutters', Cutters)
@@ -65,7 +64,6 @@ class CutterControlNode(object):
             except exceptions as e:
                 rospy.logwarn("Exception checking cutters: %s" % str(e))
                 continue
-            rospy.spin_once()
             check_rate.sleep()
 
     def field_callback(self, msg):
@@ -76,7 +74,7 @@ class CutterControlNode(object):
         # Convert the PolygonStamped into a shapely polygon
         temp_points = []
         for point in msg.polygon.points:
-            temp_points.append(float(point))
+            temp_points.append( (float(point.x), float(point.y)) )
         self.field_shape = geo.Polygon(temp_points)
         self.field_frame_id = msg.header.frame_id
 

@@ -6,8 +6,8 @@
         <!-- Frame id of the right cutter -->
         <param name="right_cutter_frame_id" value="right_cutter" />
         <!-- Radius of the cutting blades in meters -->
-        <param name="cutter_radius" type="float" value="0.1778" />
+        <param name="cutter_radius" type="double" value="0.1778" />
         <!-- Rate at which the cutter positions will be checked -->
-        <param name="check_rate" type="float" value="10.0" />
+        <param name="check_rate" type="double" value="10.0" />
     </node>
 </launch>
