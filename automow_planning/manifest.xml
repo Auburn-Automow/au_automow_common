@@ -4,20 +4,18 @@
      automow_planning
 
   </description>
-  <author>John Harrison</author>
+  <author>William Woodall</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/automow_planning</url>
-  <depend package="nav_msgs" />
-  <depend package="rospy" />
-  <depend package="actionlib"/>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="roslib"/>
   <depend package="tf"/>
-  <depend package="move_base_msgs"/>
-  <depend package="automow_node"/>
-  
-  <rosdep name="lbgeos"/>
-  <rosdep name="shapely"/>
-  <rosdep name="python-numpy"/>
-  <rosdep name="python-scipy"/>
-  <rosdep name="python-imaging"/>
+  <depend package="geometry_msgs"/>
+  <depend package="automow_pcb"/>
+  <depend package="automow_maps"/>
+
 </package>
+
+

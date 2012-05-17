@@ -1,3 +1,0 @@
-<launch>
-    <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
-</launch>

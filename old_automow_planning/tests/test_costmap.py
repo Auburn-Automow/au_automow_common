@@ -1,9 +1,11 @@
 #!/opt/local/bin/python
 import sys
 import os
-sys.path.append("../src")
-from costmap import Costmap2D
-from maptools import *
+src_path = os.path.abspath(os.path.join(os.path.abspath(__file__), "../src"))
+print src_path
+sys.path.append(src_path)
+from automow_planning.costmap import Costmap2D
+from automow_planning.maptools import *
 
 from math import *
 import time
