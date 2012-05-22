@@ -163,7 +163,7 @@
     <joint name="deck_joint" type="fixed">
         <parent link="base_link"/>
         <child link="deck_link"/>
-        <origin xyz="${(.73 - .215 + .06)} 0 ${d_height}"/>
+        <origin xyz="${(.73 - .215 + .06)} 0 ${d_height}" rpy="0 0 ${M_PI/4}"/>
     </joint>
 
     <xacro:property name="blade_diameter" value="0.356"/>
@@ -295,19 +295,17 @@
     -->
     <link name="bumblebee">
         <xacro:default_inertial mass="0.0001"/>
- <!--        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.04 0.16 0.4"/>
-            </geometry>
-        </visual>
-        <collision>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.04 0.16 0.4"/>
-            </geometry>
-        </collision> -->
     </link>
+
+    <link name="bumblebee_optical">
+        <xacro:default_inertial mass="0.0001"/>
+    </link>
+
+    <joint name="bumblebee_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
+        <parent link="bumblebee"/>
+        <child link="bumblebee_optical"/>
+    </joint>
 
     <joint name="bumblee_kinect_joint" type="fixed">
         <origin xyz="0 0 0.10" rpy="0 0 0"/>
