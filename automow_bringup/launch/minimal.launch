@@ -40,7 +40,43 @@
   <node pkg="magellan_dg14" type="dg14_driver" name="magellan_dg14"
       output="screen"/>
 
-  <!-- Nodelet Manager 
+  <!--
+  <node pkg="camera1394" type="camera1394_node" name="camera1394_node" output="screen">
+      <param name="guid" value="" />
+      <param name="video_mode" value="format7_mode3" />
+      <param name="multicam" value="stereo_interlaced" />
+      <param name="frame_id" value="bumblebee_optical" />
+      <param name="format7_color_coding" value="raw16"/>
+      <param name="left_camera_info_url"
+          value="file:///home/mjcarroll/.ros/camera_info/left.yaml" />
+      <param name="right_camera_info_url"
+          value="file:///home/mjcarroll/.ros/camera_info/right.yaml" />
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager"/>
+
+  <node pkg="nodelet" type="nodelet" name="image_proc_debayer_l"
+	args="load image_proc/debayer camera_nodelet_manager">
+    <remap from="camera_info" to="camera/camera_info" />
+    <remap from="image_color" to="camera/image_color" />
+    <remap from="image_mono" to="camera/image_mono" />
+    <remap from="image_raw" to="camera/image_raw" />
+  </node>
+  <node pkg="nodelet" type="nodelet" name="image_proc_rect_l"
+	args="load image_proc/rectify camera_nodelet_manager">
+    <remap from="camera_info" to="camera/camera_info" />
+    <remap from="image_mono" to="camera/image_mono" />
+    <remap from="image_rect" to="camera/image_rect" />
+  </node>
+  <node pkg="nodelet" type="nodelet" name="image_proc_rect_color_l"
+	args="load image_proc/rectify camera_nodelet_manager">
+    <remap from="camera_info" to="camera/camera_info" />
+    <remap from="image_mono" to="camera/image_color" />
+    <remap from="image_rect" to="camera/image_rect_color" />
+  </node>
+  -->
+
+<!-- Nodelet Manager 
   <node pkg="nodelet" type="nodelet" name="openni_manager" output="screen" respawn="true" args="manager"/>
 
   <node pkg="nodelet" type="nodelet" name="openni_camera" args="load openni_camera/OpenNINodelet openni_manager" respawn="true">
