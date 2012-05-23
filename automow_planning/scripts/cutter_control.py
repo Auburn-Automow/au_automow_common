@@ -6,8 +6,10 @@ positions and controls the cutting blades accordingly.
 
 This node subscribes to the field_shape, which is published
 as a geometry_msgs/PolygonStamped.  It also uses the tf provided
-by the state published to figure out the position of the cutting
-blades at any given time.
+by the state publisher to figure out the position of the cutting
+blades at any given time, cutting them on if the blades are in the field
+and cutting them off otherwise.  It cuts them on and off using the 
+service provided by the automow_pcb node.
 
 This node uses the shapely library to figure out if the cutters
 are mostly in the field or out of the field.
