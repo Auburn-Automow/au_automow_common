@@ -13,11 +13,16 @@ a service call, start feeding path waypoints as actionlib goals to move base.
 import roslib; roslib.load_manifest('automow_planning')
 import rospy
 import tf
+from tf.transformations import quaternion_from_euler as qfe
+from actionlib import SimpleActionClient
+
 import numpy as np
 
-from geometry_msgs.msg import PolygonStamped, Point
+from geometry_msgs.msg import PolygonStamped, Point, PoseStamped
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker, MarkerArray
+from nav_msgs.msg import Path, Odometry
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 import shapely.geometry as geo
 
@@ -38,7 +43,7 @@ class PathPlannerNode(object):
         self.path_marker_pub = rospy.Publisher('visualization_marker',
                                                MarkerArray,
                                                latch=True)
-        '''TODO: setup actionlib'''
+        self.Subscriber('/odom', Odometry, self.odom_callback)
 
         # Setup initial variables
         self.field_shape = None
@@ -47,6 +52,9 @@ class PathPlannerNode(object):
         self.path_status = None
         self.path_markers = None
         self.start_path_following = False
+        self.robot_pose = None
+        self.goal_state = None
+        self.current_destination = None
 
         # Spin until shutdown or we are ready for path following
         rate = rospy.Rate(10.0)
@@ -57,10 +65,9 @@ class PathPlannerNode(object):
             return
         # Setup path following
         self.setup_path_following()
-        # Iterate on path following and ROS spinning
+        # Iterate on path following
         while not rospy.is_shutdown():
             self.step_path_following()
-            rate.sleep()
 
     def field_callback(self, msg):
         """
@@ -73,9 +80,15 @@ class PathPlannerNode(object):
             temp_points.append( (float(point.x), float(point.y)) )
         self.field_shape = geo.Polygon(temp_points)
         self.field_frame_id = msg.header.frame_id
-        self.plan_path(self.field_shape)
 
-    def plan_path(self, field_polygon):
+    def odom_callback(self, msg):
+        """
+        Watches for the robot's Odometry data, which is used in the path 
+        planning as the initial robot position.
+        """
+        self.robot_pose = msg
+
+    def plan_path(self, field_polygon, origin=None):
         """
         This is called after a field polygon has been received.
 
@@ -92,10 +105,13 @@ class PathPlannerNode(object):
         # Decompose the rotated field into a series of waypoints
         from automow_planning.coverage import decompose
         transformed_path = decompose(transformed_field_polygon,
+                                     origin=origin,
                                      width=self.cut_spacing)
         # Rotate the transformed path back into the source frame
         from automow_planning.maptools import rotate_from
         self.path = rotate_from(np.array(transformed_path), rotation)
+        # Calculate headings and extend the waypoints with them
+        self.calculate_headings(self.path)
         # Set the path_status to 'not_visited'
         self.path_status = []
         for waypoint in self.path:
@@ -103,7 +119,62 @@ class PathPlannerNode(object):
         # Visualize the data
         self.visualize_path(self.path, self.path_status)
 
-    def visualize_path(self, path, path_status):
+    def calculate_headings(self, path):
+        """
+        Calculates the headings between paths and adds them to the waypoints.
+        """
+        for index, waypoint in enumerate(path):
+            # If the end, copy the previous heading
+            if index == len(path)-1:
+                path[index].append(path[index-1][2])
+                continue
+            # Calculate the angle between this waypoint and the next
+            dx = path[index+1][0] - path[index][0]
+            dy = path[index+1][1] - path[index][1]
+            from math import atan2
+            heading = atan2(dx, dy)
+            path[index].append(heading)
+
+    def visualize_path(self, path, path_status=None):
+        """
+        Convenience function, calls both visualize_path{as_path, as_marker}
+        """
+        self.visualize_path_as_path(path, path_status)
+        self.visualize_path_as_marker(path, path_status)
+
+    def visualize_path_as_path(self, path, path_status=None):
+        """
+        Publishes a nav_msgs/Path msg containing the planned path.
+
+        If path_status is not None then the only waypoints put in the
+        nav_msgs/Path msg will be ones that are 'not_visited' or 'visiting'.
+        """
+        now = rospy.Time.now()
+        msg = Path()
+        msg.header.stamp = now
+        msg.header.frame_id = self.field_frame_id
+        for index, waypoint in enumerate(path):
+            # Only put 'not_visited', 'visiting', and the most recent 'visited'
+            # in the path msg
+            if path_status != None: # If not set, ignore
+                if path_status[index] == 'visited': # if this one is visited
+                    try:
+                        # if the next one is visited too
+                        if path_status[index+1] == 'visited':
+                            # Then continue, because this one doesn't belong 
+                            # in the path msg
+                            continue
+                    except KeyError as e: # incase index+1 is too big
+                        pass
+            # Otherwise if belongs, put it in
+            pose_msg = PoseStamped()
+            pose_msg.header.stamp = now
+            pose_msg.header.frame_id = self.field_frame_id
+            pose_msg.pose.position.x = waypoint[0]
+            pose_msg.pose.position.y = waypoint[1]
+            msg.poses.append(pose_msg)
+
+    def visualize_path_as_marker(self, path, path_status):
         """
         Publishes visualization Markers to represent the planned path.
 
@@ -176,8 +247,53 @@ class PathPlannerNode(object):
     def setup_path_following(self):
         """
         Sets up the node for following the planned path.
+
+        Will wait until the initial robot pose is set and until
+        the move_base actionlib service is available.
         """
-        pass
+        # Create the actionlib service
+        self.move_base_client = SimpleActionClient('move_base', MoveBaseAction)
+        connected_to_move_base = False
+        dur = rospy.Duration(1.0)
+        # Wait for the robot position
+        while self.robot_pose == None and not connected_to_move_base:
+            # Wait for the server for a while
+            connected_to_move_base = self.move_base_client.wait_for_server(dur)
+            # Check to make sure ROS is ok still
+            if rospy.is_shutdown(): return
+            # Update the user on the status of this process
+            msg = "Still waiting on "
+            if self.robot_pose == None:
+                msg += "initial robot pose "
+            if self.robot_pose == None and not connected_to_move_base:
+                msg += "and "
+            if not connected_to_move_base:
+                msg += "connection to move_base's actionlib server "
+            msg += "before starting planning."
+            rospy.loginfo(msg)
+        # Now we should plan a path using the robot's initial pose
+        origin = (self.robot_pose.pose.pose.position.x,
+                  self.robot_pose.pose.pose.position.y)
+        self.plan_path(self.field_shape, origin)
+        # Now we are ready to start feeding move_base waypoints
+        return
+
+    def get_next_waypoint_index(self):
+        """
+        Figures out what the index of the next waypoint is.
+
+        Iterates through the path_status's and finds the visiting one,
+        or the next not_visited one if not visiting on exists.
+        """
+        for index, status in enumerate(self.path_status):
+            if status == 'visited':
+                continue
+            if status == 'visiting':
+                return index
+            if status == 'not_visited':
+                return index
+        # If I get here then there are no not_visited and we are done.
+        return None
 
     def step_path_following(self):
         """
@@ -185,7 +301,53 @@ class PathPlannerNode(object):
         should be sent, if a timeout has occurred, or if path following
         needs to be paused.
         """
-        pass
+        # Get the next (or current) waypoint
+        current_waypoint_index = self.get_next_waypoint_index()
+        # If the index is None, then we are done path planning
+        if current_waypoint_index == None:
+            return
+        # Get the waypoint and status
+        current_waypoint = self.path[current_waypoint_index]
+        current_waypoint_status = self.path_status[current_waypoint_index]
+        # If the status is visited
+        if current_waypoint_status == 'visited':
+            # This shouldn't happen...
+            return
+        # If the status is not_visited then we need to push the goal
+        if current_waypoint_status == 'not_visited':
+            # Cancel any current goals
+            self.move_base_client.cancel_all_goals()
+            # Set it to visiting
+            self.path_status[current_waypoint_index] = 'visiting'
+            # Push the goal to the actionlib server
+            destination = MoveBaseGoal()
+            destination.target_pose.header.frame_id = self.field_frame_id
+            destination.target_pose.header.stamp = rospy.Time.now()
+            # Set the target location
+            destination.target_pose.pose.pose.position.x = current_waypoint[0]
+            destination.target_pose.pose.pose.position.y = current_waypoint[1]
+            # Set the heading
+            quat = qfe(0, 0, radians(current_waypoint[2]))
+            destination.target_pose.pose.orientation.x = quat[0]
+            destination.target_pose.pose.orientation.y = quat[1]
+            destination.target_pose.pose.orientation.z = quat[2]
+            destination.target_pose.pose.orientation.w = quat[3]
+            # Send the desired destination to the actionlib server
+            rospy.loginfo("Sending waypoint (%f, %f)@%f"%current_waypoint)
+            self.current_destination = destination
+            self.move_base_client.send_goal(destination)
+        # If the status is visiting, then we just need to monitor the status
+        if current_waypoint_status == 'visiting':
+            temp_state = self.move_base_client.get_state()
+            # Figure out the msg and action based on the state
+            msg = "Current waypoint (%f, %f)@%f is " % current_waypoint
+            msg += temp_state
+            if temp_state in ['ABORTED', 'SUCCEEDED']:
+                self.path_status[current_waypoint_index] = 'visited'
+            else:
+                duration = rospy.Duration(1.0/10.0)
+                if self.move_base_client.wait_for_result(dur):
+                    self.path_status[current_waypoint_index] = 'visited'
 
 if __name__ == '__main__':
     ppn = PathPlannerNode()
