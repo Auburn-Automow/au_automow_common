@@ -43,6 +43,7 @@ class CutterControlNode(object):
 
         # Setup publishers and subscribers
         rospy.Subscriber('/field_shape', PolygonStamped, self.field_callback)
+        self.listener = tf.TransformListener()
 
         # Setup ROS service
         set_cutter_states = rospy.ServiceProxy('cutters', Cutters)
@@ -58,6 +59,7 @@ class CutterControlNode(object):
         while not rospy.is_shutdown():
             exceptions = (tf.LookupException,
                           tf.ConnectivityException,
+                          tf.ExtrapolationException,
                           rospy.ServiceException)
             try:
                 # Update the proper cutter states
@@ -119,10 +121,10 @@ class CutterControlNode(object):
         if self.field_shape == None or self.field_frame_id == None:
             return
         # Get the left cutter
-        left_cutter = get_cutter_shape(self.field_frame_id,
+        left_cutter = self.get_cutter_shape(self.field_frame_id,
                                        self.left_cutter_frame_id)
         # Get the right cutter
-        right_cutter = get_cutter_shape(self.field_frame_id,
+        right_cutter = self.get_cutter_shape(self.field_frame_id,
                                         self.right_cutter_frame_id)
         # Check to see if the left cutter is in the field polygon
         left_cutter_state = self.is_cutter_in_field(left_cutter)
