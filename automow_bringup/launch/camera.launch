@@ -8,9 +8,9 @@
       <param name="frame_id" value="bumblebee_optical" />
       <param name="format7_color_coding" value="raw16"/>
       <param name="left_camera_info_url"
-          value="file:///home/mjcarroll/.ros/camera_info/left.yaml" />
+          value="file://$(find automow_bringup)/camera_info/left.yaml" />
       <param name="right_camera_info_url"
-          value="file:///home/mjcarroll/.ros/camera_info/right.yaml" />
+          value="file://$(find automow_bringup)/camera_info/right.yaml" />
       <remap from="camera" to="/"/>
   </node>
 
