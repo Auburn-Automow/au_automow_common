@@ -105,11 +105,18 @@
     <param name="speckle_range" value="5"/>
   </node>
 
-  <node pkg="nodelet" type="nodelet" name="disp_to_points"
+  <node pkg="nodelet" type="nodelet" name="disp_to_points2"
     args="load stereo_image_proc/point_cloud2 camera_nodelet_manager">
     <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
     <remap from="left/camera_info" to="left_out/camera_info"/>
     <remap from="right/camera_info" to="right_out/camera_info"/>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="disp_to_points"
+      args="load stereo_image_proc/point_cloud camera_nodelet_manager">
+      <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
+      <remap from="left/camera_info" to="left_out/camera_info"/>
+      <remap from="right/camera_info" to="right_out/camera_info"/>
   </node>
 
   </group>
