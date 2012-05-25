@@ -1,6 +1,6 @@
 <launch>
 	<arg name="field_file"
-		 default="$(find automow_maps)/maps/field_example.yaml" />
+		 default="$(find automow_maps)/maps/survey_solarhouse_may30.yaml" />
 
     <node pkg="automow_maps" type="field_publisher.py" name="field_publisher"
           output="screen" >

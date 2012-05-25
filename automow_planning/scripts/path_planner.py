@@ -17,6 +17,7 @@ from tf.transformations import quaternion_from_euler as qfe
 from actionlib import SimpleActionClient
 
 import numpy as np
+from math import radians
 
 from geometry_msgs.msg import PolygonStamped, Point, PoseStamped
 from std_msgs.msg import ColorRGBA
@@ -43,7 +44,7 @@ class PathPlannerNode(object):
         self.path_marker_pub = rospy.Publisher('visualization_marker',
                                                MarkerArray,
                                                latch=True)
-        self.Subscriber('/odom', Odometry, self.odom_callback)
+        rospy.Subscriber('/odom', Odometry, self.odom_callback)
 
         # Setup initial variables
         self.field_shape = None
@@ -51,7 +52,7 @@ class PathPlannerNode(object):
         self.path = None
         self.path_status = None
         self.path_markers = None
-        self.start_path_following = False
+        self.start_path_following = True
         self.robot_pose = None
         self.goal_state = None
         self.current_destination = None
@@ -111,7 +112,7 @@ class PathPlannerNode(object):
         from automow_planning.maptools import rotate_from
         self.path = rotate_from(np.array(transformed_path), rotation)
         # Calculate headings and extend the waypoints with them
-        self.calculate_headings(self.path)
+        self.path = self.calculate_headings(self.path)
         # Set the path_status to 'not_visited'
         self.path_status = []
         for waypoint in self.path:
@@ -123,17 +124,21 @@ class PathPlannerNode(object):
         """
         Calculates the headings between paths and adds them to the waypoints.
         """
+        new_path = []
         for index, waypoint in enumerate(path):
+            new_path.append(list(path[index]))
             # If the end, copy the previous heading
             if index == len(path)-1:
-                path[index].append(path[index-1][2])
+                new_path[index].append(new_path[index-1][2])
                 continue
             # Calculate the angle between this waypoint and the next
             dx = path[index+1][0] - path[index][0]
             dy = path[index+1][1] - path[index][1]
-            from math import atan2
-            heading = atan2(dx, dy)
-            path[index].append(heading)
+            from math import atan2, pi
+            heading = atan2(dy, dx)
+            heading += pi
+            new_path[index].append(heading)
+        return new_path
 
     def visualize_path(self, path, path_status=None):
         """
@@ -256,9 +261,12 @@ class PathPlannerNode(object):
         connected_to_move_base = False
         dur = rospy.Duration(1.0)
         # Wait for the robot position
-        while self.robot_pose == None and not connected_to_move_base:
+        while self.robot_pose == None or not connected_to_move_base:
             # Wait for the server for a while
-            connected_to_move_base = self.move_base_client.wait_for_server(dur)
+            if not connected_to_move_base:
+                connected_to_move_base = self.move_base_client.wait_for_server(dur)
+            else:
+                rospy.Rate(1.0).sleep()
             # Check to make sure ROS is ok still
             if rospy.is_shutdown(): return
             # Update the user on the status of this process
@@ -272,6 +280,7 @@ class PathPlannerNode(object):
             msg += "before starting planning."
             rospy.loginfo(msg)
         # Now we should plan a path using the robot's initial pose
+        print(type(self.robot_pose))
         origin = (self.robot_pose.pose.pose.position.x,
                   self.robot_pose.pose.pose.position.y)
         self.plan_path(self.field_shape, origin)
@@ -324,8 +333,8 @@ class PathPlannerNode(object):
             destination.target_pose.header.frame_id = self.field_frame_id
             destination.target_pose.header.stamp = rospy.Time.now()
             # Set the target location
-            destination.target_pose.pose.pose.position.x = current_waypoint[0]
-            destination.target_pose.pose.pose.position.y = current_waypoint[1]
+            destination.target_pose.pose.position.x = current_waypoint[0]
+            destination.target_pose.pose.position.y = current_waypoint[1]
             # Set the heading
             quat = qfe(0, 0, radians(current_waypoint[2]))
             destination.target_pose.pose.orientation.x = quat[0]
@@ -333,20 +342,20 @@ class PathPlannerNode(object):
             destination.target_pose.pose.orientation.z = quat[2]
             destination.target_pose.pose.orientation.w = quat[3]
             # Send the desired destination to the actionlib server
-            rospy.loginfo("Sending waypoint (%f, %f)@%f"%current_waypoint)
+            rospy.loginfo("Sending waypoint (%f, %f)@%f" % tuple(current_waypoint))
             self.current_destination = destination
             self.move_base_client.send_goal(destination)
         # If the status is visiting, then we just need to monitor the status
         if current_waypoint_status == 'visiting':
-            temp_state = self.move_base_client.get_state()
+            temp_state = self.move_base_client.get_goal_status_text()
             # Figure out the msg and action based on the state
-            msg = "Current waypoint (%f, %f)@%f is " % current_waypoint
+            msg = "Current waypoint (%f, %f)@%f is " % tuple(current_waypoint)
             msg += temp_state
             if temp_state in ['ABORTED', 'SUCCEEDED']:
                 self.path_status[current_waypoint_index] = 'visited'
             else:
                 duration = rospy.Duration(1.0/10.0)
-                if self.move_base_client.wait_for_result(dur):
+                if self.move_base_client.wait_for_result(duration):
                     self.path_status[current_waypoint_index] = 'visited'
 
 if __name__ == '__main__':

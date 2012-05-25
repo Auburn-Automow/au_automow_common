@@ -9,13 +9,15 @@
       <rosparam command="load" file="$(find automow_bringup)/config/diagnostics.yaml" />
   </node>
 
-  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
+  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen">
+      <remap from="odom" to="ax2550/odom"/>
+  </node>
 
   <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
       <param name="port" type="str" value="/dev/laser" />
       <param name="frame_id" type="str" value="/laser" />
-      <param name="min_ang" value="-2.15" />
-      <param name="max_ang" value="2.2" />
+      <param name="min_ang" value="-2" />
+      <param name="max_ang" value="2" />
       <param name="cluster" value="1" />
       <param name="skip" value="0"/>
       <param name="intensity" value="false"/>

@@ -6,5 +6,6 @@
 		  output="screen">
 		<!-- Spacing between cut lines in meters -->
 		<param name="cut_spacing" type="double" value="0.5" />
+		<remap from="odom" to="ekf/odom"/>
 	</node>
 </launch>
