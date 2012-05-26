@@ -40,7 +40,10 @@
   <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
   <node pkg="magellan_dg14" type="dg14_driver" name="magellan_dg14"
-      output="screen"/>
+      output="screen">
+    <param name="easting_offset" value="641733.6623"/>
+    <param name="northing_offset" value="3606768.27"/>
+  </node>
 
   <include file="$(find automow_bringup)/launch/camera.launch" />
 
@@ -60,5 +63,6 @@
     <rosparam command="load" file="$(find openni_camera)/info/openni_params.yaml" />
   </node>
   -->
+  
 
 </launch>

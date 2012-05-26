@@ -24,6 +24,9 @@ class RenderArea(QtGui.QWidget):
         rospy.init_node("field_surveyor")
         rospy.Subscriber("/magellan_dg14/utm_fix", UTMFix, self.onUTMFixMsg)
 
+        self.easting_offset = rospy.get_param('/magellan_dg14/easting_offset')
+        self.northing_offset = rospy.get_param('/magellan_dg14/northing_offset')
+
         newFont = self.font()
         newFont.setPixelSize(12)
         self.setFont(newFont)
@@ -31,6 +34,7 @@ class RenderArea(QtGui.QWidget):
         self.gps_points = []
         self.current_points = []
         self.averaged_points = []
+        self.current_utm = ['nan', 'nan', 'none']
         self.state = 'not_recording'
 
         fontMetrics = QtGui.QFontMetrics(newFont)
@@ -88,8 +92,8 @@ class RenderArea(QtGui.QWidget):
         painter.save()
         # Correct origin location and rotation
         painter.translate(self.size().width()/2.0, self.size().height()/2.0)
-
         self.drawReticle(painter)
+        self.drawGPSPoints(painter)
         painter.restore()
 
         self.drawMessage(painter)
@@ -101,19 +105,24 @@ class RenderArea(QtGui.QWidget):
         painter.end()
     
     def onUTMFixMsg(self, msg):
-        self.gps_points.append(QtCore.QPointF(msg.easting, msg.northing))
+        easting = msg.easting - self.easting_offset
+        northing = msg.northing - self.northing_offset
+        self.gps_points.append(QtCore.QPointF(easting*10, -northing*10))
+        self.current_utm = [easting, northing, msg.fix_type]
         if self.state == 'recording':
-            entry = (msg.easting, msg.northing, msg.fix_type)
+            entry = (easting, northing, msg.fix_type)
             self.current_points.append(entry)
         self.update()
 
-    def drawGPSPoints(self):
-        painter.setPen(QtCore.Qt.red)
+    def drawGPSPoints(self, painter):
+        pen = QtGui.QPen(QtCore.Qt.red, 3)
+        painter.setPen(pen)
         for point in self.gps_points:
-            painter.drawPointF(point)
-        painter.setPen(QtCore.Qt.blue)
-        for point in self.average_points:
-            painter.drawPointF(QtCore.QPointF(point['easting'], point['northing']))
+            painter.drawPoint(point)
+        pen = QtGui.QPen(QtCore.Qt.blue, 5)
+        painter.setPen(pen)
+        for point in self.averaged_points:
+            painter.drawPoint(QtCore.QPointF(point['easting']*10, -point['northing']*10))
     
     def drawMessage(self, painter):
         """Draws the instructions"""
@@ -124,6 +133,13 @@ class RenderArea(QtGui.QWidget):
         else:
             msg = "Left click to begin averaging, Right click to save to file."
         painter.drawText(self.size().width() - 400, self.size().height() - 10, msg)
+        msg = "UTM easting: %s, northing: %s, fix_type: %s"%(tuple(self.current_utm))
+        painter.drawText(self.size().width() - 400, self.size().height() - 25, msg)
+        if self.state == 'recording':
+            msg = "Number of points averaged: %i"%len(self.current_points)
+        else:
+            msg = "Number of points surveyed: %i, number of gps positions received: %i"%(len(self.averaged_points), len(self.gps_points))
+        painter.drawText(self.size().width() - 400, self.size().height() - 40, msg)
     
     def drawReticle(self, painter):
         """Draws a little reticle at the origin"""

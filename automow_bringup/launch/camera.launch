@@ -1,7 +1,9 @@
 <launch>
 
 <group ns="stereo">
-  <node pkg="camera1394" type="camera1394_node" name="camera1394_node">
+    <!--
+  <node pkg="camera1394" type="camera1394_node" name="camera1394_node"
+      output="screen">
       <param name="guid" value="" />
       <param name="video_mode" value="format7_mode3" />
       <param name="multicam" value="stereo_interlaced" />
@@ -13,8 +15,23 @@
           value="file://$(find automow_bringup)/camera_info/right.yaml" />
       <remap from="camera" to="/"/>
   </node>
+  -->
 
   <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" output="screen"/>
+
+  <node pkg="nodelet" type="nodelet" name="camera_1394"
+      args="load camera1394/driver camera_nodelet_manager">
+    <param name="guid" value="" />
+    <param name="video_mode" value="format7_mode3" />
+    <param name="multicam" value="stereo_interlaced" />
+    <param name="frame_id" value="bumblebee_optical" />
+    <param name="format7_color_coding" value="raw16"/>
+    <param name="left_camera_info_url"
+      value="file://$(find automow_bringup)/camera_info/left.yaml" />
+    <param name="right_camera_info_url"
+      value="file://$(find automow_bringup)/camera_info/right.yaml" />
+    <remap from="camera" to="/"/>
+  </node>
 
   <node pkg="nodelet" type="nodelet" name="image_crop_left"
       args="load image_proc/crop_decimate camera_nodelet_manager">
@@ -77,13 +94,29 @@
     <remap from="right/image_rect" to="right_out/image_rect"/>
     <remap from="left/camera_info" to="left_out/camera_info"/>
     <remap from="right/camera_info" to="right_out/camera_info"/>
+    <param name="prefilter_size" value="9"/>
+    <param name="prefilter_cap" value="20"/>
+    <param name="correlation_window_size" value="15"/>
+    <param name="min_disparity" value="1"/>
+    <param name="disparity_range" value="96"/>
+    <param name="uniqueness_ratio" value="13"/>
+    <param name="texture_threshold" value="100"/>
+    <param name="speckle_size" value="50"/>
+    <param name="speckle_range" value="5"/>
   </node>
 
-  <node pkg="nodelet" type="nodelet" name="disp_to_points"
+  <node pkg="nodelet" type="nodelet" name="disp_to_points2"
     args="load stereo_image_proc/point_cloud2 camera_nodelet_manager">
     <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
     <remap from="left/camera_info" to="left_out/camera_info"/>
     <remap from="right/camera_info" to="right_out/camera_info"/>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="disp_to_points"
+      args="load stereo_image_proc/point_cloud camera_nodelet_manager">
+      <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
+      <remap from="left/camera_info" to="left_out/camera_info"/>
+      <remap from="right/camera_info" to="right_out/camera_info"/>
   </node>
 
   </group>

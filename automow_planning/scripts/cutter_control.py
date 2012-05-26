@@ -26,6 +26,7 @@ import tf
 from geometry_msgs.msg import PolygonStamped, Point
 from nav_msgs.msg import GridCells
 from automow_node.srv import Cutters
+from automow_node.msg import Automow_PCB
 
 import shapely.geometry as geo
 
@@ -196,7 +197,7 @@ class CutterControlNode(object):
         """
         # Gate to prevent this when the field_shape has not been received
         if self.field_shape == None or self.field_frame_id == None:
-            return
+            return (False, False)
         # Get the left cutter
         left_cutter = self.get_cutter_shape(self.field_frame_id,
                                        self.left_cutter_frame_id)

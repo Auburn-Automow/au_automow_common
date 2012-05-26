@@ -273,6 +273,8 @@
     <!--
     Bumblebee related stuff
     -->
+    <link name="bumblebee_pivot"/>
+
     <link name="bumblebee">
         <xacro:default_inertial mass="0.0001"/>
     </link>
@@ -287,9 +289,17 @@
         <child link="bumblebee_optical"/>
     </joint>
 
-    <joint name="bumblee_kinect_joint" type="fixed">
-        <origin xyz="0 0 0.10" rpy="0 0 0"/>
-        <parent link="kinect_link"/>
+    <joint name="bumblebee_pivot_joint" type="fixed">
+        <origin xyz="0.047625 0 0.22225" rpy="0 0 0"/>
+        <parent link="bumblebee_pivot"/>
         <child link="bumblebee"/>
+    </joint>
+
+    <joint name="bumblebee_pivot_base_joint" type="fixed">
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="-3.14" upper="3.14159" effort="1" velocity="1"/> -->
+        <origin xyz="0.76835 0 ${0.5127625 - clearance}" rpy="0 0.57 0"/>
+        <parent link="base_link"/>
+        <child link="bumblebee_pivot"/>
     </joint>
 </robot>
