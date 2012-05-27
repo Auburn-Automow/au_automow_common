@@ -47,6 +47,20 @@
 
   <include file="$(find automow_bringup)/launch/camera.launch" />
 
+  <node pkg="automow_filtering" type="ground_filter" name="ground_filter" output="screen">
+    <param name="paused" value="false"/>
+    <param name="vehicle_frame" value="/base_footprint"/>
+    <param name="downsample" value="true"/>
+    <param name="resolution" value="0.05"/>
+    <param name="z_fitler" value="true"/>
+    <param name="min_z" value="0"/>
+    <param name="max_z" value="0.4"/>
+    <param name="filtering_mode" value="1"/>
+    <param name="max_iterations" value="400"/>
+    <param name="distance_threshold" value="0.1"/>
+    <param name="eps_angle" value="15"/>
+  </node>
+
 <!-- Nodelet Manager 
   <node pkg="nodelet" type="nodelet" name="openni_manager" output="screen" respawn="true" args="manager"/>
 
