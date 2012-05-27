@@ -56,6 +56,7 @@ class PathPlannerNode(object):
         self.robot_pose = None
         self.goal_state = None
         self.current_destination = None
+        self.testing = False
 
         # Spin until shutdown or we are ready for path following
         rate = rospy.Rate(10.0)
@@ -128,15 +129,14 @@ class PathPlannerNode(object):
         for index, waypoint in enumerate(path):
             new_path.append(list(path[index]))
             # If the end, copy the previous heading
-            if index == len(path)-1:
-                new_path[index].append(new_path[index-1][2])
+            if index == 0:
+                new_path[index].append(0)
                 continue
             # Calculate the angle between this waypoint and the next
-            dx = path[index+1][0] - path[index][0]
-            dy = path[index+1][1] - path[index][1]
+            dx = path[index-1][0] - path[index][0]
+            dy = path[index-1][1] - path[index][1]
             from math import atan2, pi
             heading = atan2(dy, dx)
-            heading += pi
             new_path[index].append(heading)
         return new_path
 
@@ -144,7 +144,8 @@ class PathPlannerNode(object):
         """
         Convenience function, calls both visualize_path{as_path, as_marker}
         """
-        self.visualize_path_as_path(path, path_status)
+        # TODO: finish this (path as path viz)
+        # self.visualize_path_as_path(path, path_status)
         self.visualize_path_as_marker(path, path_status)
 
     def visualize_path_as_path(self, path, path_status=None):
@@ -193,13 +194,13 @@ class PathPlannerNode(object):
         # If self.path_markers is None, initialize it
         if self.path_markers == None:
             self.path_markers = MarkerArray()
-        # If there are existing markers, delete them
-        markers_to_delete = MarkerArray()
-        if len(self.path_markers.markers) > 0:
-            for marker in self.path_markers.markers:
-                marker.action = Marker.DELETE
-                markers_to_delete.markers.append(marker)
-            self.path_marker_pub.publish(markers_to_delete)
+        # # If there are existing markers, delete them
+        # markers_to_delete = MarkerArray()
+        # if len(self.path_markers.markers) > 0:
+        #     for marker in self.path_markers.markers:
+        #         marker.action = Marker.DELETE
+        #         markers_to_delete.markers.append(marker)
+        #     self.path_marker_pub.publish(markers_to_delete)
         # Clear the path_markers
         self.path_markers = MarkerArray()
         line_strip_points = []
@@ -210,17 +211,23 @@ class PathPlannerNode(object):
             waypoint_marker.header.frame_id = self.field_frame_id
             waypoint_marker.ns = "waypoints"
             waypoint_marker.id = index
-            waypoint_marker.type = Marker.SPHERE
+            waypoint_marker.type = Marker.ARROW
             if index == 0:
                 waypoint_marker.type = Marker.CUBE
-            waypoint_marker.action = Marker.ADD
-            waypoint_marker.scale.x = 0.25
-            waypoint_marker.scale.y = 0.25
+            waypoint_marker.action = Marker.MODIFY
+            waypoint_marker.scale.x = 1
+            waypoint_marker.scale.y = 1
             waypoint_marker.scale.z = 0.25
             point = Point(waypoint[0], waypoint[1], 0)
             waypoint_marker.pose.position = point
             # Store the point for the line_strip marker
             line_strip_points.append(point)
+            # Set the heading of the ARROW
+            quat = qfe(0, 0, waypoint[2])
+            waypoint_marker.pose.orientation.x = quat[0]
+            waypoint_marker.pose.orientation.y = quat[1]
+            waypoint_marker.pose.orientation.z = quat[2]
+            waypoint_marker.pose.orientation.w = quat[3]
             # Color is based on path_status
             status = path_status[index]
             if status == 'not_visited':
@@ -260,30 +267,41 @@ class PathPlannerNode(object):
         self.move_base_client = SimpleActionClient('move_base', MoveBaseAction)
         connected_to_move_base = False
         dur = rospy.Duration(1.0)
-        # Wait for the robot position
-        while self.robot_pose == None or not connected_to_move_base:
-            # Wait for the server for a while
-            if not connected_to_move_base:
-                connected_to_move_base = self.move_base_client.wait_for_server(dur)
-            else:
-                rospy.Rate(1.0).sleep()
+        # If testing prime the robot_pose
+        if self.testing:
+            self.robot_pose = Odometry()
+            self.robot_pose.pose.pose.position.x = 0
+            self.robot_pose.pose.pose.position.y = 0
+        # Wait for the field shape
+        while self.field_shape == None:
             # Check to make sure ROS is ok still
             if rospy.is_shutdown(): return
-            # Update the user on the status of this process
-            msg = "Still waiting on "
-            if self.robot_pose == None:
-                msg += "initial robot pose "
-            if self.robot_pose == None and not connected_to_move_base:
-                msg += "and "
-            if not connected_to_move_base:
-                msg += "connection to move_base's actionlib server "
-            msg += "before starting planning."
+            # Print message about the waiting
+            msg = "Path Planner: waiting on the field shape."
             rospy.loginfo(msg)
+            rospy.Rate(1.0).sleep()
+        # Wait for the robot position
+        while self.robot_pose == None:
+            # Check to make sure ROS is ok still
+            if rospy.is_shutdown(): return
+            # Print message about the waiting
+            msg = "Path Planner: waiting on initial robot pose."
+            rospy.loginfo(msg)
+            rospy.Rate(1.0).sleep()
         # Now we should plan a path using the robot's initial pose
-        print(type(self.robot_pose))
         origin = (self.robot_pose.pose.pose.position.x,
                   self.robot_pose.pose.pose.position.y)
         self.plan_path(self.field_shape, origin)
+        rospy.loginfo("Path Planner: path planning complete.")
+        # Now wait for move_base
+        while connected_to_move_base:
+            # Wait for the server for a while
+            connected_to_move_base = self.move_base_client.wait_for_server(dur)
+            # Check to make sure ROS is ok still
+            if rospy.is_shutdown(): return
+            # Update the user on the status of this process
+            msg = "Path Planner: waiting on move_base."
+            rospy.loginfo(msg)
         # Now we are ready to start feeding move_base waypoints
         return
 
@@ -310,6 +328,8 @@ class PathPlannerNode(object):
         should be sent, if a timeout has occurred, or if path following
         needs to be paused.
         """
+        # Visualize the data
+        self.visualize_path(self.path, self.path_status)
         # Get the next (or current) waypoint
         current_waypoint_index = self.get_next_waypoint_index()
         # If the index is None, then we are done path planning
