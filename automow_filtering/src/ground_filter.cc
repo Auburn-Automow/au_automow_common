@@ -49,6 +49,8 @@ private:
   PCLPointCloud last_pc;
   bool paused, first_cloud, z_filter, downsample;
   double resolution;
+  int max_iterations;
+  double distance_threshold, eps_angle;
 
 public:
   GroundFilter(ros::NodeHandle n) : 
@@ -61,7 +63,10 @@ public:
     first_cloud(true),
     z_filter(true),
     downsample(false),
-    resolution(0.001f)
+    resolution(0.001f),
+    max_iterations(400),
+    distance_threshold(0.1),
+    eps_angle(15.0)
   {
     pc_sub_ = n_.subscribe("/stereo/points", 1, &GroundFilter::pcCallback, this);
     obstacles_pub_ = n_.advertise<PointCloud2>("/ground_filter/obstacles", 1);
@@ -70,8 +75,13 @@ public:
     server_.setCallback(boost::bind(&GroundFilter::onConfigure, this, _1, _2));
 
     n_.getParam(string("vehicle_fame"), vehicle_frame_);
+    n_.getParam("resolution", resolution);
     n_.getParam("min_z", min_z);
     n_.getParam("max_z", max_z);
+    n_.getParam("filtering_mode", mode_);
+    n_.getParam("max_iterations", max_iterations);
+    n_.getParam("distance_threshold", distance_threshold);
+    n_.getParam("eps_angle", eps_angle);
   }
 
   void onConfigure(automow_filtering::automow_filteringConfig &config, uint32_t level) {
@@ -83,6 +93,9 @@ public:
     max_z = config.max_z;
     paused = config.paused;
     mode_ = config.filtering_mode;
+    max_iterations = config.max_iterations;
+    distance_threshold = config.distance_threshold;
+    eps_angle = config.eps_angle;
     if (paused && !first_cloud) {
       last_pc.header.stamp = ros::Time::now();
       PCLPointCloud pc = last_pc;
@@ -119,7 +132,6 @@ public:
   }
 
   void processPC(PCLPointCloud &pc) {
-    ROS_INFO("Here");
     // Do processing based on the settings
     if (downsample) {
       pcl::VoxelGrid<pcl::PointXYZ> vg;
@@ -163,10 +175,10 @@ public:
     seg.setOptimizeCoefficients(true);
     seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
     seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setMaxIterations(400);
-    seg.setDistanceThreshold(0.1);
+    seg.setMaxIterations(max_iterations); // 400
+    seg.setDistanceThreshold(distance_threshold); // 0.1
     seg.setAxis(Eigen::Vector3f(0,0,1));
-    seg.setEpsAngle(0.15);
+    seg.setEpsAngle(pcl::deg2rad(eps_angle)); // 0.15
     // Filter until the cloud is too small or I "find" the ground plane
     pcl::PointCloud<pcl::PointXYZ> filter_pc(pc);
     pcl::ExtractIndices<pcl::PointXYZ> extract;

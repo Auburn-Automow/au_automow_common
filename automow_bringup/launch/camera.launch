@@ -101,7 +101,7 @@
     <param name="disparity_range" value="96"/>
     <param name="uniqueness_ratio" value="13"/>
     <param name="texture_threshold" value="100"/>
-    <param name="speckle_size" value="50"/>
+    <param name="speckle_size" value="100"/>
     <param name="speckle_range" value="5"/>
   </node>
 
@@ -113,10 +113,10 @@
   </node>
 
   <node pkg="nodelet" type="nodelet" name="disp_to_points"
-      args="load stereo_image_proc/point_cloud camera_nodelet_manager">
-      <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
-      <remap from="left/camera_info" to="left_out/camera_info"/>
-      <remap from="right/camera_info" to="right_out/camera_info"/>
+    args="load stereo_image_proc/point_cloud camera_nodelet_manager">
+    <remap from="left/image_rect_color" to="left_out/image_rect_color"/>
+    <remap from="left/camera_info" to="left_out/camera_info"/>
+    <remap from="right/camera_info" to="right_out/camera_info"/>
   </node>
 
   </group>
