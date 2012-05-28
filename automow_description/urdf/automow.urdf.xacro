@@ -17,7 +17,10 @@
         <color rgba="0.0 0.0 0.0 1.0"/>
     </material>
     <material name="Grey">
-        <color rgba="0.7 0.7 0.7 0.7"/>
+        <color rgba="0.7 0.7 0.7 1.0"/>
+    </material>
+    <material name="Orange">
+        <color rgba="${205/255.0} ${140/255.0} 0.0 1.0"/>
     </material>
 
     <xacro:property name="M_PI" value="3.14159"/>
@@ -32,24 +35,9 @@
         </inertial>
     </xacro:macro>
 
-    <!-- base_footprint is a ficticious frame on the ground below base_link
+    <!-- base_footprint is a fictitious frame on the ground below base_link
      for the navigation stack to properly function -->
-    <link name="base_footprint">
-        <visual>
-         <origin xyz="0 0 0" rpy="0 0 0" />
-         <geometry>
-             <box size="0.001 0.001 0.001" />
-         </geometry>
-         <material name="Green" />
-        </visual>
-
-        <collision>
-          <origin xyz="0 0 0" rpy="0 0 0" />
-         <geometry>
-             <box size="0.001 0.001 0.001" />
-         </geometry>
-        </collision>
-    </link>
+    <link name="base_footprint" />
 
     <!-- base_link is the origin for all of the coordinates on the robot.
       For our case, this will be centered under the wheels of the
@@ -69,11 +57,10 @@
     <link name="base_link">
         <xacro:default_inertial mass="100"/>
         <visual>
-            <origin xyz="${c1_length/2 - 0.215} 0 ${c1_height/2}" rpy="0 0 0" />
+            <origin xyz="-0.2286 0 0" rpy="0 0 0" />
             <geometry>
-                <box size="${c1_length} ${c_width} ${c1_height}" />
+                <mesh filename="package://automow_description/meshes/lawnmower.dae"/>
             </geometry>
-            <material name="Grey" />
         </visual>
     
         <collision>
@@ -85,13 +72,6 @@
     </link>
 
     <link name="base_top">
-        <visual>
-            <origin xyz="${c2_length/2} 0 -${c2_height/2}" rpy="0 0 0" />
-            <geometry>
-                <box size="${c2_length} ${c_width} ${c2_height}" />
-            </geometry>
-            <material name="Grey" />
-        </visual>
         <collision>
             <origin xyz="${c2_length/2} 0 -${c2_height/2}" rpy="0 0 0" />
             <geometry>
@@ -163,7 +143,7 @@
     <joint name="deck_joint" type="fixed">
         <parent link="base_link"/>
         <child link="deck_link"/>
-        <origin xyz="${(.73 - .215 + .06)} 0 ${d_height}"/>
+        <origin xyz="${0.6858} 0 ${d_height}" rpy="0 0 ${-M_PI/4}"/>
     </joint>
 
     <xacro:property name="blade_diameter" value="0.356"/>
@@ -217,7 +197,7 @@
             <geometry>
                 <cylinder radius="0.06" length="0.08"/>
             </geometry>
-            <material name="Red"/>
+            <material name="Orange"/>
         </visual>
         <collision>
             <origin xyz="0 0 -0.02" />
@@ -244,7 +224,7 @@
     </link>
 
     <joint name="laser_joint" type="fixed">
-        <origin xyz="0.9 0.17 ${0.145 - clearance}" rpy="${M_PI} 0 0.785398163"/>
+        <origin xyz="0.9 0.17 ${0.3302 - clearance}" rpy="0 0 0.785398163"/>
         <parent link="base_link" />
         <child link="laser" />
     </joint>
@@ -293,48 +273,33 @@
     <!--
     Bumblebee related stuff
     -->
+    <link name="bumblebee_pivot"/>
+
     <link name="bumblebee">
         <xacro:default_inertial mass="0.0001"/>
- <!--        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.04 0.16 0.4"/>
-            </geometry>
-        </visual>
-        <collision>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <box size="0.04 0.16 0.4"/>
-            </geometry>
-        </collision> -->
     </link>
 
-    <joint name="bumblee_kinect_joint" type="fixed">
-        <origin xyz="0 0 0.10" rpy="0 0 0"/>
-        <parent link="kinect_link"/>
+    <link name="bumblebee_optical">
+        <xacro:default_inertial mass="0.0001"/>
+    </link>
+
+    <joint name="bumblebee_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}"/>
+        <parent link="bumblebee"/>
+        <child link="bumblebee_optical"/>
+    </joint>
+
+    <joint name="bumblebee_pivot_joint" type="fixed">
+        <origin xyz="0.047625 0 0.22225" rpy="0 0 0"/>
+        <parent link="bumblebee_pivot"/>
         <child link="bumblebee"/>
     </joint>
 
-
-<link name="sick_laser_link">
-<xacro:default_inertial mass="0.0001"/>
-        <visual>
-            <origin xyz="0 0 ${-0.15/2.0 + 0.03}" rpy="0 0 0"/>
-            <geometry>
-                <cylinder radius="${0.09/2.0}" length="0.15"/>
-            </geometry>
-        </visual>
-        <collision>
-            <origin xyz="0 0 ${-0.15/2.0 + 0.03}" rpy="0 0 0"/>
-            <geometry>
-                <cylinder radius="${0.09/2.0}" length="0.15"/>
-            </geometry>
-        </collision>
-</link>
-
-    <joint name="sick_laser_base_joint" type="fixed">
-        <origin xyz="0.83 -0.1525 ${0.38 - clearance}" rpy="0 0 0"/>
+    <joint name="bumblebee_pivot_base_joint" type="fixed">
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="-3.14" upper="3.14159" effort="1" velocity="1"/> -->
+        <origin xyz="0.76835 0 ${0.5127625 - clearance}" rpy="0 0.57 0"/>
         <parent link="base_link"/>
-        <child link="sick_laser_link"/>
+        <child link="bumblebee_pivot"/>
     </joint>
 </robot>

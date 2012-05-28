@@ -17,6 +17,8 @@
   <depend package="std_msgs"/>
   <depend package="automow_pcb"/>
   <depend package="automow_maps"/>
+  <depend package="actionlib"/>
+  <depend package="move_base_msgs"/>
 
 </package>
 

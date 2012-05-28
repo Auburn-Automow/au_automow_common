@@ -9,13 +9,15 @@
       <rosparam command="load" file="$(find automow_bringup)/config/diagnostics.yaml" />
   </node>
 
-  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen" />
+  <node pkg="ax2550" type="ax2550_node" name="ax2550_node" output="screen">
+      <remap from="odom" to="ax2550/odom"/>
+  </node>
 
   <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
       <param name="port" type="str" value="/dev/laser" />
       <param name="frame_id" type="str" value="/laser" />
-      <param name="min_ang" value="-2.15" />
-      <param name="max_ang" value="2.2" />
+      <param name="min_ang" value="-2" />
+      <param name="max_ang" value="2" />
       <param name="cluster" value="1" />
       <param name="skip" value="0"/>
       <param name="intensity" value="false"/>
@@ -38,9 +40,28 @@
   <node pkg="automow_node" type="diagnostics.py" name="automow_diag"/>
 
   <node pkg="magellan_dg14" type="dg14_driver" name="magellan_dg14"
-      output="screen"/>
+      output="screen">
+    <param name="easting_offset" value="641733.6623"/>
+    <param name="northing_offset" value="3606768.27"/>
+  </node>
 
-  <!-- Nodelet Manager 
+  <include file="$(find automow_bringup)/launch/camera.launch" />
+
+  <node pkg="automow_filtering" type="ground_filter" name="ground_filter" output="screen">
+    <param name="paused" value="false"/>
+    <param name="vehicle_frame" value="/base_footprint"/>
+    <param name="downsample" value="true"/>
+    <param name="resolution" value="0.05"/>
+    <param name="z_fitler" value="true"/>
+    <param name="min_z" value="0"/>
+    <param name="max_z" value="0.4"/>
+    <param name="filtering_mode" value="1"/>
+    <param name="max_iterations" value="400"/>
+    <param name="distance_threshold" value="0.1"/>
+    <param name="eps_angle" value="15"/>
+  </node>
+
+<!-- Nodelet Manager 
   <node pkg="nodelet" type="nodelet" name="openni_manager" output="screen" respawn="true" args="manager"/>
 
   <node pkg="nodelet" type="nodelet" name="openni_camera" args="load openni_camera/OpenNINodelet openni_manager" respawn="true">
@@ -56,5 +77,6 @@
     <rosparam command="load" file="$(find openni_camera)/info/openni_params.yaml" />
   </node>
   -->
+  
 
 </launch>
