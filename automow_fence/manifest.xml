@@ -10,6 +10,8 @@
   <url>http://ros.org/wiki/automow_fence</url>
 
   <depend package="dynamic_reconfigure"/>
+  <depend package="tf"/>
+  <depend package="nav_msgs"/>
 
 </package>
 

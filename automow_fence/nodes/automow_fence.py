@@ -4,9 +4,12 @@ import roslib
 roslib.load_manifest('automow_fence')
 
 import threading
+import time
+import numpy as np
 
 import rospy
 import dynamic_reconfigure.server
+from tf.transformations import euler_from_quaternion as efq
 
 from automow_fence.cfg import ControllerConfig
 from automow_fence.controller import Controller, LineModel
@@ -19,6 +22,8 @@ class AutomowFence(object):
         dynamic_reconfigure.server.Server(ControllerConfig, self.reconfigure)
         self.controller = Controller(0.5, 0.5)
         self.path = None
+        self.pose = np.array([0., 0., 0.])
+
         self.tracking = False
 
         self.controller.heading_error_gain = rospy.get_param("~k_heading", 1.0)
@@ -44,11 +49,21 @@ class AutomowFence(object):
         return config
 
     def odom_cb(self, msg):
-        pass
+        (_, _, yaw) = efq(msg.pose.pose.orientation.x,
+                        msg.pose.pose.orientation.y,
+                        msg.pose.pose.orientation.z,
+                        msg.pose.pose.orientation.w)
+        self.pose = np.array([msg.pose.pose.position.x,
+                              msg.pose.pose.position.y,
+                              yaw])
 
     def controller_cb(self):
         if rospy.is_shutdown():
             return
+
+        if self.tracking:
+            self.controller.calculate_effort()
+
         self.control_timer = threading.Timer(self.publish_rate,
                                              self.controller_cb)
         self.control_timer.start()
