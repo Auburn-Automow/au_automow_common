@@ -117,9 +117,9 @@ class AutomowEKF_Node:
         msg.pose.pose.orientation.z = quat[2]
         msg.pose.pose.orientation.w = quat[3]
 
-        msg.pose.pose.covariance[0, 0] = self.ekf.P[0, 0]
-        msg.pose.pose.covariance[1, 1] = self.ekf.P[1, 1]
-        msg.pose.pose.covariance[6, 6] = self.ekf.P[2, 2]
+        msg.pose.covariance[0] = self.ekf.P[0, 0]
+        msg.pose.covariance[7] = self.ekf.P[1, 1]
+        msg.pose.covariance[15] = self.ekf.P[2, 2]
 
         msg.twist.twist.linear = Vector3(self.v, 0, 0)
         msg.twist.twist.angular = Vector3(0, 0, self.w)

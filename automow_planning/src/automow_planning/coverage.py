@@ -74,9 +74,9 @@ def order_points(lines, initial_origin):
         ps = zip(xs, ys)
         (start, end) = get_furthest(ps, origin)
         results.append(origin)
+        # results.append(start)
         results.append(start)
-        results.append(start)
-        results.append(end)
+        # results.append(end)
         origin = end
     return results
 

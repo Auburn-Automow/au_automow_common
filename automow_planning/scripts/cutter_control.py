@@ -27,6 +27,7 @@ from geometry_msgs.msg import PolygonStamped, Point
 from nav_msgs.msg import GridCells
 from automow_node.srv import Cutters
 from automow_node.msg import Automow_PCB
+from automow_planning.maptools import image2array
 
 import shapely.geometry as geo
 
@@ -45,11 +46,11 @@ class CutterControlNode(object):
         self.right_cutter_frame_id = \
             rospy.get_param("~right_cutter_frame_id", "right_cutter")
         self.cutter_radius = rospy.get_param("~cutter_radius", 0.3556/2.0)
-        self.coverage_resolution = rospy.get_param("~coverage_resolution", 100)
+        self.coverage_resolution = rospy.get_param("~coverage_resolution", 10)
         check_rate = rospy.Rate(rospy.get_param("~check_rate", 10.0))
 
         # Setup publishers and subscribers
-        rospy.Subscriber('/field_shape', PolygonStamped, self.field_callback)
+        rospy.Subscriber('/field/boundry', PolygonStamped, self.field_callback)
         rospy.Subscriber('/automow_pcb/status', Automow_PCB, self.on_status)
         self.grid_cells_pub = rospy.Publisher('/cutter_coverage', GridCells)
         self.listener = tf.TransformListener()
@@ -140,20 +141,24 @@ class CutterControlNode(object):
         # Update the GridCells msg
         self.grid_cells_msg.header.frame_id = self.field_frame_id
         self.grid_cells_msg.header.stamp = rospy.Time.now()
-        self.grid_cells_msg.cell_width = self.coverage_resolution
-        self.grid_cells_msg.cell_height = self.coverage_resolution
+        self.grid_cells_msg.cell_width = 1.0/self.coverage_resolution
+        self.grid_cells_msg.cell_height = 1.0/self.coverage_resolution
         # Add the left cutters
         if self.left_cutter_state: # If the left cutter is on
             points = self.get_raster_shape(left_cutter,
                                            self.coverage_resolution)
-            self.grid_cells_msg.append(points)
+            for point in points:
+                if point not in self.grid_cells_msg.cells:
+                    self.grid_cells_msg.cells.append(point)
         # Add the right cutters
         if self.right_cutter_state:
             points = self.get_raster_shape(right_cutter,
                                            self.coverage_resolution)
-            self.grid_cells_msg.append(points)
+            for point in points:
+                if point not in self.grid_cells_msg.cells:
+                    self.grid_cells_msg.cells.append(point)
         # Publish the updated msg
-        self.grid_cells_pub.publish(self.grid_cells_pub)
+        self.grid_cells_pub.publish(self.grid_cells_msg)
 
     def get_raster_shape(self, cutter, resolution=100):
         """
@@ -184,9 +189,9 @@ class CutterControlNode(object):
             for j, element in enumerate(row):
                 if element != 0:
                     point = Point(i/resolution, j/resolution, 0)
-                    point.x += offset[0]
-                    point.y += offset[1]
-                    cut_pixels.append(pixel_pair)
+                    point.x += int(offset[0]*self.coverage_resolution)/float(self.coverage_resolution)
+                    point.y += int(offset[1]*self.coverage_resolution)/float(self.coverage_resolution)
+                    cut_pixels.append(point)
         return cut_pixels
 
     def check_cutters(self):
@@ -209,8 +214,7 @@ class CutterControlNode(object):
         # Check to see if the right cutter is in the field polygon
         right_cutter_state = self.is_cutter_in_field(right_cutter)
         # Update the coverage map
-        self.update_coverage_map(left_cutter, self.left_cutter_state)
-        self.update_coverage_map(right_cutter, self.right_cutter_state)
+        self.update_coverage_map(left_cutter, right_cutter)
         # Return the new states
         return (left_cutter_state, right_cutter_state)
 

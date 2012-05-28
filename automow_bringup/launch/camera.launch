@@ -99,7 +99,7 @@
     <param name="correlation_window_size" value="15"/>
     <param name="min_disparity" value="1"/>
     <param name="disparity_range" value="96"/>
-    <param name="uniqueness_ratio" value="13"/>
+    <param name="uniqueness_ratio" value="25"/>
     <param name="texture_threshold" value="100"/>
     <param name="speckle_size" value="100"/>
     <param name="speckle_range" value="5"/>
