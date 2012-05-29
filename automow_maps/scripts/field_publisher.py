@@ -60,25 +60,9 @@ class FieldPublisherNode(object):
             polygon_points32.append(Point32(float(easting), float(northing), 0))
         # Put the points into the boundry_msg
         self.boundry_msg.polygon = Polygon(polygon_points32)
-        # # Find the origin
-        # from shapely import geometry
-        # poly = geometry.Polygon(polygon_points)
-        # rp = poly.representative_point()
-        # safety_points = []
-        # cut_area_points = []
-        # for point in polygon_points:
-        #     x = point[0] - rp.x
-        #     y = point[1] - rp.y
-        #     # Scale the points up for the safety points
-        #     sx = x * 1.1
-        #     sy = y * 1.1
-        #     safety_points.append(Point32(sx+rp.x, sy+rp.y, 0))
-        #     # Scale the points down for the cut_area points
-        #     cx = x * 0.9
-        #     cy = y * 0.9
-        #     cut_area_points.append(Point32(cx+rp.x, cy+rp.y, 0))
-        safety_points = self.offset_polygon(polygon_points, -1)
-        cut_area_points = self.offset_polygon(polygon_points, 0.5)
+        # Expand and contract the field shape for safety buffer and cut area
+        safety_points = self.offset_polygon(polygon_points, 2)
+        cut_area_points = self.offset_polygon(polygon_points, -0.5)
         self.safety_msg.polygon = Polygon(safety_points)
         self.cut_area_msg.polygon = Polygon(cut_area_points)
         return True
@@ -87,7 +71,7 @@ class FieldPublisherNode(object):
         import polygon_offset
         from polygon_offset import getinsetpoint
         temp_points = []
-        polygon_offset.OFFSET = offset
+        polygon_offset.OFFSET = -offset
         for i in range(len(points)-2):
             temp_points.append(getinsetpoint(points[i],
                                              points[i+1],

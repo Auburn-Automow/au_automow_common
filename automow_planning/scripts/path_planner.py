@@ -24,6 +24,7 @@ from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker, MarkerArray
 from nav_msgs.msg import Path, Odometry
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from std_srvs.srv import Empty
 
 import shapely.geometry as geo
 
@@ -59,6 +60,8 @@ class PathPlannerNode(object):
         self.testing = False
         self.current_distance = None
         self.previous_destination = None
+        self.clear_costmaps = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
+        self.just_reset = False
 
         # Spin until shutdown or we are ready for path following
         rate = rospy.Rate(10.0)
@@ -68,6 +71,12 @@ class PathPlannerNode(object):
         if rospy.is_shutdown():
             return
         # Setup path following
+        self.setup_path_following(90)
+        # Iterate on path following
+        while not rospy.is_shutdown():
+            if not self.step_path_following():
+                break
+        # Do it again 90 degrees out of phase path following
         self.setup_path_following()
         # Iterate on path following
         while not rospy.is_shutdown():
@@ -93,7 +102,7 @@ class PathPlannerNode(object):
         """
         self.robot_pose = msg
 
-    def plan_path(self, field_polygon, origin=None):
+    def plan_path(self, field_polygon, origin=None, degrees=0):
         """
         This is called after a field polygon has been received.
 
@@ -104,7 +113,7 @@ class PathPlannerNode(object):
         # Get the rotation to align with the longest edge of the polygon
         from automow_planning.maptools import rotation_tf_from_longest_edge, RotationTransform
         rotation = rotation_tf_from_longest_edge(field_polygon)
-        rotation = RotationTransform(rotation.w + 90)
+        rotation = RotationTransform(rotation.w + degrees)
         # Rotate the field polygon
         from automow_planning.maptools import rotate_polygon_to
         transformed_field_polygon = rotate_polygon_to(field_polygon, rotation)
@@ -265,7 +274,7 @@ class PathPlannerNode(object):
         # Publish the marker array
         self.path_marker_pub.publish(self.path_markers)
 
-    def setup_path_following(self):
+    def setup_path_following(self, degrees=0):
         """
         Sets up the node for following the planned path.
 
@@ -300,7 +309,7 @@ class PathPlannerNode(object):
         # Now we should plan a path using the robot's initial pose
         origin = (self.robot_pose.pose.pose.position.x,
                   self.robot_pose.pose.pose.position.y)
-        self.plan_path(self.field_shape, origin)
+        self.plan_path(self.field_shape, origin, degrees)
         rospy.loginfo("Path Planner: path planning complete.")
         # Now wait for move_base
         while connected_to_move_base:
@@ -332,6 +341,7 @@ class PathPlannerNode(object):
         return None
 
     def distance(self, p1, p2):
+        """Returns the distance between two points."""
         from math import sqrt
         dx = p2.target_pose.pose.position.x - p1.target_pose.pose.position.x
         dy = p2.target_pose.pose.position.y - p1.target_pose.pose.position.y
@@ -390,22 +400,33 @@ class PathPlannerNode(object):
             self.move_base_client.send_goal(destination)
             self.previous_destination = destination
         # If the status is visiting, then we just need to monitor the status
+        temp_state = self.move_base_client.get_goal_status_text()
         if current_waypoint_status == 'visiting':
-            temp_state = self.move_base_client.get_goal_status_text()
-            # Figure out the msg and action based on the state
-            msg = "Current waypoint (%f, %f)@%f is " % tuple(current_waypoint)
-            msg += temp_state
             if temp_state in ['ABORTED', 'SUCCEEDED']:
                 self.path_status[current_waypoint_index] = 'visited'
             else:
                 duration = rospy.Duration(1.0)
                 from math import floor
                 count = 0
-                while not self.move_base_client.wait_for_result(duration) and count != floor(self.current_distance*20):
+                while not self.move_base_client.wait_for_result(duration) and count != 4+int(self.current_distance*3):
                     if rospy.is_shutdown(): return False
                     count += 1
-                if count == floor(self.current_distance*20):
-                    rospy.logwarn("Path Planner: move_base goal timeout occurred")
+                if count == 4+int(self.current_distance*3):
+                    rospy.logwarn("Path Planner: move_base goal timeout occurred, clearing costmaps")
+                    # Cancel the goals
+                    self.move_base_client.cancel_all_goals()
+                    # Clear the cost maps
+                    self.clear_costmaps()
+                    # Wait 1 second
+                    rospy.Rate(1.0).sleep()
+                    # Then reset the current goal
+                    if not self.just_reset:
+                        self.just_reset = True
+                        self.path_status[current_waypoint_index] = 'not_visited'
+                    else:
+                        self.just_reset = False
+                        self.path_status[current_waypoint_index] = 'visited'
+                    return True
                 self.path_status[current_waypoint_index] = 'visited'
         return True
 

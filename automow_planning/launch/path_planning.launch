@@ -8,4 +8,6 @@
 		<param name="cut_spacing" type="double" value="0.5" />
 		<remap from="odom" to="ekf/odom"/>
 	</node>
+	<!-- Include the cutter control and coverage tracking -->
+	<include file="$(find automow_planning)/launch/cutter_control.launch" />
 </launch>

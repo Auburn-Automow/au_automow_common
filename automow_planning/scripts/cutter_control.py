@@ -47,12 +47,12 @@ class CutterControlNode(object):
             rospy.get_param("~right_cutter_frame_id", "right_cutter")
         self.cutter_radius = rospy.get_param("~cutter_radius", 0.3556/2.0)
         self.coverage_resolution = rospy.get_param("~coverage_resolution", 10)
-        check_rate = rospy.Rate(rospy.get_param("~check_rate", 10.0))
+        check_rate = rospy.Rate(rospy.get_param("~check_rate", 20.0))
 
         # Setup publishers and subscribers
         rospy.Subscriber('/field/boundry', PolygonStamped, self.field_callback)
         rospy.Subscriber('/automow_pcb/status', Automow_PCB, self.on_status)
-        self.grid_cells_pub = rospy.Publisher('/cutter_coverage', GridCells)
+        self.grid_cells_pub = rospy.Publisher('/cutter_coverage', GridCells, latch=True)
         self.listener = tf.TransformListener()
 
         # Setup ROS service
@@ -63,12 +63,14 @@ class CutterControlNode(object):
         self.field_frame_id = None
         self.left_cutter_state = False
         self.right_cutter_state = False
+        self.cutter_pixels = None
         self.grid_cells_msg = GridCells()
 
         # Set the initial cutter status to False
         set_cutter_states(False, False)
 
         # Spin
+        count = 0
         while not rospy.is_shutdown():
             exceptions = (tf.LookupException,
                           tf.ConnectivityException,
@@ -77,6 +79,11 @@ class CutterControlNode(object):
                 # Update the proper cutter states
                 left_state, right_state = self.check_cutters()
                 set_cutter_states(left_state, right_state)
+                if count == 20:
+                    self.grid_cells_pub.publish(self.grid_cells_msg)
+                    count = 0
+                else:
+                    count += 1
             except tf.ExtrapolationException as e:
                 continue
             except exceptions as e:
@@ -143,6 +150,7 @@ class CutterControlNode(object):
         self.grid_cells_msg.header.stamp = rospy.Time.now()
         self.grid_cells_msg.cell_width = 1.0/self.coverage_resolution
         self.grid_cells_msg.cell_height = 1.0/self.coverage_resolution
+        num_of_cells = len(self.grid_cells_msg.cells)
         # Add the left cutters
         if self.left_cutter_state: # If the left cutter is on
             points = self.get_raster_shape(left_cutter,
@@ -157,12 +165,10 @@ class CutterControlNode(object):
             for point in points:
                 if point not in self.grid_cells_msg.cells:
                     self.grid_cells_msg.cells.append(point)
-        # Publish the updated msg
-        self.grid_cells_pub.publish(self.grid_cells_msg)
 
-    def get_raster_shape(self, cutter, resolution=100):
+    def setup_raster_shape(self, cutter, resolution=100):
         """
-        Returns the locations, as Point's, of pixels that represent the cutter.
+        Creates the rasterized version of the cutter.
         """
         # Get the shape in the image frame
         cutter_coords = []
@@ -189,10 +195,20 @@ class CutterControlNode(object):
             for j, element in enumerate(row):
                 if element != 0:
                     point = Point(i/resolution, j/resolution, 0)
-                    point.x += int(offset[0]*self.coverage_resolution)/float(self.coverage_resolution)
-                    point.y += int(offset[1]*self.coverage_resolution)/float(self.coverage_resolution)
                     cut_pixels.append(point)
-        return cut_pixels
+        self.cutter_pixels = cut_pixels
+
+    def get_raster_shape(self, cutter, resolution=100):
+        """
+        Returns the locations, as Point's, of pixels that represent the cutter.
+        """
+        offset = (cutter.bounds[0], cutter.bounds[1])
+        if self.cutter_pixels == None:
+            self.setup_raster_shape(cutter, resolution)
+        for point in self.cutter_pixels:
+            point.x += int(offset[0]*self.coverage_resolution)/float(self.coverage_resolution)
+            point.y += int(offset[1]*self.coverage_resolution)/float(self.coverage_resolution)
+        return self.cutter_pixels
 
     def check_cutters(self):
         """
@@ -214,7 +230,7 @@ class CutterControlNode(object):
         # Check to see if the right cutter is in the field polygon
         right_cutter_state = self.is_cutter_in_field(right_cutter)
         # Update the coverage map
-        self.update_coverage_map(left_cutter, right_cutter)
+        # self.update_coverage_map(left_cutter, right_cutter)
         # Return the new states
         return (left_cutter_state, right_cutter_state)
 
