@@ -8,6 +8,21 @@
         <!-- Radius of the cutting blades in meters -->
         <param name="cutter_radius" type="double" value="0.1778" />
         <!-- Rate at which the cutter positions will be checked -->
-        <param name="check_rate" type="double" value="10.0" />
+        <param name="check_rate" type="double" value="20.0" />
+    </node>
+    <node pkg="automow_planning" type="cutting_coverage.py" name="cutting_coverge"
+          output="screen">
+        <!-- Frame id of the left cutter -->
+        <param name="left_cutter_frame_id" value="left_cutter" />
+        <!-- Frame id of the right cutter -->
+        <param name="right_cutter_frame_id" value="right_cutter" />
+        <!-- Radius of the cutting blades in meters -->
+        <param name="cutter_radius" type="double" value="0.1778" />
+        <!-- Resolution of the coverage map in meters -->
+        <param name="resolution" type="double" value="0.05" />
+        <!-- Rate at which the coverage will be published -->
+        <param name="publish_rate" type="double" value="1.0" />
+        <!-- Rate at which the cutter positions will be checked -->
+        <param name="check_rate" type="double" value="20.0" />
     </node>
 </launch>

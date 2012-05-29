@@ -71,13 +71,13 @@ class PathPlannerNode(object):
         if rospy.is_shutdown():
             return
         # Setup path following
-        self.setup_path_following(90)
+        self.setup_path_following()
         # Iterate on path following
         while not rospy.is_shutdown():
             if not self.step_path_following():
                 break
         # Do it again 90 degrees out of phase path following
-        self.setup_path_following()
+        self.setup_path_following(90)
         # Iterate on path following
         while not rospy.is_shutdown():
             if not self.step_path_following():
@@ -295,7 +295,7 @@ class PathPlannerNode(object):
             # Check to make sure ROS is ok still
             if rospy.is_shutdown(): return
             # Print message about the waiting
-            msg = "Path Planner: waiting on the field shape."
+            msg = "Qualification: waiting on the field shape."
             rospy.loginfo(msg)
             rospy.Rate(1.0).sleep()
         # Wait for the robot position
@@ -303,7 +303,7 @@ class PathPlannerNode(object):
             # Check to make sure ROS is ok still
             if rospy.is_shutdown(): return
             # Print message about the waiting
-            msg = "Path Planner: waiting on initial robot pose."
+            msg = "Qualification: waiting on initial robot pose."
             rospy.loginfo(msg)
             rospy.Rate(1.0).sleep()
         # Now we should plan a path using the robot's initial pose
@@ -312,7 +312,7 @@ class PathPlannerNode(object):
         self.plan_path(self.field_shape, origin, degrees)
         rospy.loginfo("Path Planner: path planning complete.")
         # Now wait for move_base
-        while connected_to_move_base:
+        while not connected_to_move_base:
             # Wait for the server for a while
             connected_to_move_base = self.move_base_client.wait_for_server(dur)
             # Check to make sure ROS is ok still
@@ -408,10 +408,10 @@ class PathPlannerNode(object):
                 duration = rospy.Duration(1.0)
                 from math import floor
                 count = 0
-                while not self.move_base_client.wait_for_result(duration) and count != 4+int(self.current_distance*3):
+                while not self.move_base_client.wait_for_result(duration) and count != 5+int(self.current_distance*3):
                     if rospy.is_shutdown(): return False
                     count += 1
-                if count == 4+int(self.current_distance*3):
+                if count == 5+int(self.current_distance*3):
                     rospy.logwarn("Path Planner: move_base goal timeout occurred, clearing costmaps")
                     # Cancel the goals
                     self.move_base_client.cancel_all_goals()

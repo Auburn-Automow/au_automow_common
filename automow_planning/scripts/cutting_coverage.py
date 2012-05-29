@@ -34,7 +34,7 @@ class CuttingCoverage(object):
         self.right_cutter_frame_id = \
             rospy.get_param("~right_cutter_frame_id", "right_cutter")
         self.cutter_radius = rospy.get_param("~cutter_radius", 0.3556/2.0)
-        self.coverage_resolution = rospy.get_param("~coverage_resolution", 10)
+        self.coverage_resolution = 1.0/rospy.get_param("~coverage_resolution", 0.1)
         publish_rate = rospy.Rate(rospy.get_param("~publish_rate", 1.0))
         self.check_rate = rospy.Rate(rospy.get_param("~check_rate", 20.0))
 

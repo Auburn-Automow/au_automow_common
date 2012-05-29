@@ -62,9 +62,10 @@ class CutterControlNode(object):
 
         # Set the initial cutter status to False
         set_cutter_states(False, False)
+        self.current_left_state = False
+        self.current_right_state = False
 
         # Spin
-        count = 0
         while not rospy.is_shutdown():
             exceptions = (tf.LookupException,
                           tf.ConnectivityException,
@@ -72,12 +73,10 @@ class CutterControlNode(object):
             try:
                 # Update the proper cutter states
                 left_state, right_state = self.check_cutters()
-                set_cutter_states(left_state, right_state)
-                if count == 20:
-                    self.grid_cells_pub.publish(self.grid_cells_msg)
-                    count = 0
-                else:
-                    count += 1
+                if self.current_left_state != left_state or self.current_right_state != right_state:
+                    set_cutter_states(left_state, right_state)
+                self.current_left_state = left_state
+                self.current_right_state = right_state
             except tf.ExtrapolationException as e:
                 continue
             except exceptions as e:

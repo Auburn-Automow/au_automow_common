@@ -58,7 +58,7 @@
     <param name="downsample" value="true"/>
     <param name="resolution" value="0.05"/>
     <param name="z_fitler" value="true"/>
-    <param name="min_z" value="0"/>
+    <param name="min_z" value="-0.2"/>
     <param name="max_z" value="0.4"/>
     <param name="filtering_mode" value="1"/>
     <param name="max_iterations" value="400"/>
