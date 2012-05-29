@@ -41,8 +41,13 @@
 
   <node pkg="magellan_dg14" type="dg14_driver" name="magellan_dg14"
       output="screen">
+      <!-- Solar House Surveyed Marker 
     <param name="easting_offset" value="641733.6623"/>
     <param name="northing_offset" value="3606768.27"/>
+    -->
+    <!-- Solar House Pseudo Marker -->
+    <param name="easting_offset" value="641729.7636"/>
+    <param name="northing_offset" value="3606791.7479"/>
   </node>
 
   <include file="$(find automow_bringup)/launch/camera.launch" />
