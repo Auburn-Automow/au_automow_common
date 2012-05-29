@@ -132,14 +132,14 @@ class RenderArea(QtGui.QWidget):
             msg = "Left click to save this average, Right click to cancel it"
         else:
             msg = "Left click to begin averaging, Right click to save to file."
-        painter.drawText(self.size().width() - 400, self.size().height() - 10, msg)
+        painter.drawText(self.size().width() - 500, self.size().height() - 10, msg)
         msg = "UTM easting: %s, northing: %s, fix_type: %s"%(tuple(self.current_utm))
-        painter.drawText(self.size().width() - 400, self.size().height() - 25, msg)
+        painter.drawText(self.size().width() - 500, self.size().height() - 25, msg)
         if self.state == 'recording':
             msg = "Number of points averaged: %i"%len(self.current_points)
         else:
             msg = "Number of points surveyed: %i, number of gps positions received: %i"%(len(self.averaged_points), len(self.gps_points))
-        painter.drawText(self.size().width() - 400, self.size().height() - 40, msg)
+        painter.drawText(self.size().width() - 500, self.size().height() - 40, msg)
     
     def drawReticle(self, painter):
         """Draws a little reticle at the origin"""
