@@ -147,8 +147,8 @@ class AutomowEKF_Node:
         u /= data.encoders.time_delta
 
         if self.adaptive_encoders:
-            self.ekf.Q[0, 0] = abs(u[0]) * 0.08
-            self.ekf.Q[1, 1] = abs(u[1]) * 0.08
+            self.ekf.Q[0, 0] = abs(u[0]) * 0.1
+            self.ekf.Q[1, 1] = abs(u[1]) * 0.1
 
         (self.v, self.w) = self.ekf.timeUpdate(u,  data.header.stamp.to_sec())
         self.filter_time = data.header.stamp
@@ -189,11 +189,11 @@ class AutomowEKF_Node:
         # the position,  so we create a floor of 2cm variance to prevent it
         # from getting "too accurate"
         e_covar = data.pose.covariance[0]
-        if e_covar < 0.0004:
-            e_covar = 0.0004
+        if e_covar < 0.004:
+            e_covar = 0.004
         n_covar = data.pose.covariance[4]
-        if n_covar < 0.0004:
-            n_covar = 0.0004
+        if n_covar < 0.004:
+            n_covar = 0.004
         if not self.gps_bad:
             covar = np.diag(np.array([e_covar,  n_covar]))
             self.ekf.measurementUpdateGPS(y,  covar)

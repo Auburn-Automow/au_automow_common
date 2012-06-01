@@ -17,7 +17,7 @@
       <param name="port" type="str" value="/dev/laser" />
       <param name="frame_id" type="str" value="/laser" />
       <param name="min_ang" value="-2" />
-      <param name="max_ang" value="2" />
+      <param name="max_ang" value="1.9" />
       <param name="cluster" value="1" />
       <param name="skip" value="0"/>
       <param name="intensity" value="false"/>
@@ -45,9 +45,16 @@
     <param name="easting_offset" value="641733.6623"/>
     <param name="northing_offset" value="3606768.27"/>
     -->
-    <!-- Solar House Pseudo Marker -->
+    <!-- Solar House Pseudo Marker 
     <param name="easting_offset" value="641729.7636"/>
     <param name="northing_offset" value="3606791.7479"/>
+    -->
+    <!-- Competition 
+    <param name="easting_offset" value="755547.7924"/>
+    <param name="northing_offset" value="4403938.3780"/> -->
+    <!-- Competition new offset -->
+    <param name="easting_offset" value="755596.9745036363"/>
+    <param name="northing_offset" value="4403974.4422945458"/>
   </node>
 
   <include file="$(find automow_bringup)/launch/camera.launch" />
@@ -56,7 +63,7 @@
     <param name="paused" value="false"/>
     <param name="vehicle_frame" value="/base_footprint"/>
     <param name="downsample" value="true"/>
-    <param name="resolution" value="0.05"/>
+    <param name="resolution" value="0.1"/>
     <param name="z_fitler" value="true"/>
     <param name="min_z" value="-0.2"/>
     <param name="max_z" value="0.4"/>

@@ -55,6 +55,7 @@
         <param name="output_states" value="false"/>
     </node>
     </group>
+
     <group ns="nogps">
     <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
         output="screen" >
@@ -73,6 +74,7 @@
         <param name="output_states" value="false"/>
     </node>
     </group>
+
     <group ns="all">
     <node name="automow_ekf" pkg="automow_ekf" type="ekf_node.py"
         output="screen" >

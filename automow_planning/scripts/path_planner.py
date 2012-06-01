@@ -70,18 +70,20 @@ class PathPlannerNode(object):
         # If shutdown, return now
         if rospy.is_shutdown():
             return
-        # Setup path following
-        self.setup_path_following()
-        # Iterate on path following
+        # Run until stopped
+        heading = 0
         while not rospy.is_shutdown():
-            if not self.step_path_following():
-                break
-        # Do it again 90 degrees out of phase path following
-        self.setup_path_following(90)
-        # Iterate on path following
-        while not rospy.is_shutdown():
-            if not self.step_path_following():
-                break
+            # Setup path following
+            self.setup_path_following(heading)    
+            # Iterate on path following
+            while not rospy.is_shutdown():
+                if not self.step_path_following():
+                    break
+            # Rotate 90 degrees, repeat
+            if heading == 0:
+                heading = 90
+            else:
+                heading = 0
 
     def field_callback(self, msg):
         """
@@ -408,10 +410,10 @@ class PathPlannerNode(object):
                 duration = rospy.Duration(1.0)
                 from math import floor
                 count = 0
-                while not self.move_base_client.wait_for_result(duration) and count != 5+int(self.current_distance*3):
+                while not self.move_base_client.wait_for_result(duration) and count != 6+int(self.current_distance*4):
                     if rospy.is_shutdown(): return False
                     count += 1
-                if count == 5+int(self.current_distance*3):
+                if count == 6+int(self.current_distance*4):
                     rospy.logwarn("Path Planner: move_base goal timeout occurred, clearing costmaps")
                     # Cancel the goals
                     self.move_base_client.cancel_all_goals()
